@@ -20,25 +20,27 @@
 
 <h2>Inventory</h2>
 <div>
+  <!-- ปุ่ม Base -->
+  <button onclick="equip('base', 'image/base.png')">Base ปกติ</button>
+  <button onclick="equip('base', 'image/base2.png')">Base 2</button>
+  
+  <!-- ปุ่ม Hat -->
   <button onclick="equip('hat', 'image/hat1.png')">หมวกแดง</button>
   <button onclick="equip('hat', 'image/hat2.png')">หมวกฟ้า</button>
+  
+  <!-- ปุ่ม Shirt -->
   <button onclick="equip('shirt', 'image/shirt1.png')">เสื้อเหลือง</button>
   <button onclick="equip('shirt', 'image/shirt2.png')">เสื้อเขียว</button>
 </div>
 
 <script>
-  // ตัวอย่าง Database จำลอง
   const studentData = {
-    name: "นักเรียนA",
-    totalScore: 25,
-    level: 2,
-    unlockedItems: ["hat1","shirt1","shirt2"] 
+    unlockedItems: ["hat1","shirt1","shirt2"] // ไอเทมที่ปลดล็อค
   };
 
-  // ฟังก์ชันเช็คว่าไอเทมปลดล็อคไหม
   function equip(type, src) {
-    const itemName = src.match(/\/(\w+)\.png$/)[1]; // ดึงชื่อไฟล์
-    if(studentData.unlockedItems.includes(itemName)) {
+    const itemName = src.split('/').pop().split('.')[0].toLowerCase(); // ดึงชื่อไฟล์ไม่ sensitive
+    if(type === 'base' || studentData.unlockedItems.includes(itemName)) {
       document.getElementById(type).src = src;
     } else {
       alert("ไอเทมนี้ยังไม่ปลดล็อค!");
