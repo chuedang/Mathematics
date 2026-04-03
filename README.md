@@ -13,26 +13,26 @@
 
 <h1>ทดลองแต่งตัวตัวละคร</h1>
 <div id="character">
-  <img id="base" class="layer" src="images/base.png" alt="Base">
+  <img id="base" class="layer" src="image/base.png" alt="Base">
   <img id="hat" class="layer" src="" alt="Hat">
   <img id="shirt" class="layer" src="" alt="Shirt">
 </div>
 
 <h2>Inventory</h2>
 <div>
-  <button onclick="equip('hat', 'images/hat1.png')">หมวกแดง</button>
-  <button onclick="equip('hat', 'images/hat2.png')">หมวกฟ้า</button>
-  <button onclick="equip('shirt', 'images/shirt1.png')">เสื้อเหลือง</button>
-  <button onclick="equip('shirt', 'images/shirt2.png')">เสื้อเขียว</button>
+  <button onclick="equip('hat', 'image/hat1.png')">หมวกแดง</button>
+  <button onclick="equip('hat', 'image/hat2.png')">หมวกฟ้า</button>
+  <button onclick="equip('shirt', 'image/shirt1.png')">เสื้อเหลือง</button>
+  <button onclick="equip('shirt', 'image/shirt2.png')">เสื้อเขียว</button>
 </div>
 
 <script>
   // ตัวอย่าง Database จำลอง
   const studentData = {
     name: "นักเรียนA",
-    totalScore: 25,    // คะแนนที่ครูใส่
-    level: 2,          // กำหนดจากคะแนน
-    unlockedItems: ["hat1","shirt1","shirt2"]  // รายการไอเทมที่ปลดล็อค
+    totalScore: 25,
+    level: 2,
+    unlockedItems: ["hat1","shirt1","shirt2"] 
   };
 
   // ฟังก์ชันเช็คว่าไอเทมปลดล็อคไหม
