@@ -21,13 +21,10 @@
 <h2>Inventory</h2>
 <div>
   <!-- ปุ่ม Base -->
-  <button onclick="equip('base', 'image/base.png')">Base ปกติ</button>
-  <button onclick="equip('base', 'image/base2.png')">Base 2</button>
-  
+  <button onclick="equip('base', 'image/base.png')">Base</button>
   <!-- ปุ่ม Hat -->
   <button onclick="equip('hat', 'image/hat1.png')">หมวกแดง</button>
   <button onclick="equip('hat', 'image/hat2.png')">หมวกฟ้า</button>
-  
   <!-- ปุ่ม Shirt -->
   <button onclick="equip('shirt', 'image/shirt1.png')">เสื้อเหลือง</button>
   <button onclick="equip('shirt', 'image/shirt2.png')">เสื้อเขียว</button>
