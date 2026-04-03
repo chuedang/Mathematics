@@ -1,45 +1,50 @@
-<style>
-    /* พื้นที่แสดงตัวละคร */
-    #character-container {
-      position: relative;
-      width: 300px;  
-      height: 400px;
-      margin: 0 auto;
-      background-color: #fff;
-      border: 2px solid #333;
-      overflow: hidden;
-    }
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RPG นักเรียน</title>
+</head>
+<body>
+<h1>RPG นักเรียน</h1>
+<div id="students"></div>
 
-    /* Base: ตัวละครหลัก */
-    #base {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%; /* ให้ Base เต็มกรอบเป็นหลัก */
-      height: 100%;
-      object-fit: contain;
-      z-index: 1;
-    }
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbx0c3-4rg-8zlecIsmMCAh6J2KmC1QxGYOsEPoLeB-lTKv6t_7KxhVkJiOwry8dacN7-Q/exec";
 
-    /* --- ส่วนที่แก้ไข: บังคับขนาดของตกแต่ง --- */
-    .item-layer {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      display: none; 
-      /* บังคับไม่ให้ใช้ขนาดจริงของไฟล์ภาพ */
-      height: auto !important; 
-    }
+// โหลดข้อมูลนักเรียน
+async function loadStudents() {
+  const res = await fetch(API_URL);
+  const students = await res.json();
+  
+  const container = document.getElementById("students");
+  container.innerHTML = "";
+  students.forEach(s => {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <b>${s.ชื่อ}</b> | คะแนน: ${s.คะแนน} | เลเวล: ${s.เลเวล}
+      <button onclick="addScore('${s.ชื่อ}')">+10 คะแนน</button>
+    `;
+    container.appendChild(div);
+  });
+}
 
-    #hat {
-      z-index: 10;
-      width: 120px !important; /* ใช้ px จะคุมง่ายกว่า % ในกรณีนี้ */
-      top: 20px;               /* ปรับระยะจากขอบบนของกรอบลงมาที่หัว */
-    }
+// เพิ่มคะแนนนักเรียน
+async function addScore(name) {
+  // ดึงข้อมูลเก่า, เพิ่ม 10
+  const res = await fetch(API_URL);
+  const students = await res.json();
+  const student = students.find(s => s.ชื่อ === name);
+  const newScore = Number(student.คะแนน) + 10;
+  
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({ ชื่อ: name, คะแนน: newScore }),
+    headers: { "Content-Type": "application/json" }
+  });
+  
+  loadStudents(); // รีโหลดข้อมูล
+}
 
-    #shirt {
-      z-index: 5;
-      width: 180px !important; /* ปรับขนาดเสื้อให้กว้างกว่าหมวก */
-      top: 120px;              /* ปรับระยะลงมาให้ตรงช่วงตัว */
-    }
-</style>
+loadStudents();
+</script>
+</body>
+</html>
