@@ -1,47 +1,289 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>RPG นักเรียน</title>
+<meta charset="utf-8">
+<title>Cat RPG Adventure - Multi-Class System</title>
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Mitr', sans-serif; background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%); margin:0; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  #dashboard { display:none; gap: 20px; align-items: flex-start; max-width: 1200px; padding: 20px; flex-wrap: wrap; justify-content: center; }
+  
+  /* Login Section */
+  .login-container { background: white; padding: 35px; border-radius: 25px; text-align: center; width: 300px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+  .login-container input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid #ddd; font-family: 'Mitr'; box-sizing: border-box; }
+  #loginBtn { width: 100%; padding: 12px; color: white; border: none; border-radius: 12px; font-family: 'Mitr'; transition: 0.3s; font-weight: 500; }
+  .btn-loading { background-color: #95a5a6 !important; cursor: not-allowed !important; }
+  .btn-ready { background-color: #2ecc71 !important; cursor: pointer !important; }
+
+  /* UI Cards */
+  .mission-card { background: white; border-radius: 25px; padding: 20px; width: 260px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid #ffcc33; max-height: 550px; overflow-y: auto; }
+  .mission-item { background: #fffdf0; padding: 12px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #ffeaa7; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+  .mission-name { font-weight: 500; color: #444; }
+  .status-text { font-size: 11px; font-weight: bold; }
+  .status-done { color: #27ae60; }
+  .status-pending { color: #e67e22; }
+
+  .student-card { background: white; border-radius: 25px; padding: 25px; width: 280px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 2px solid #fff; position: relative; }
+  .avatar-container { width: 180px; height: 180px; margin: 0 auto 15px; background: #f9f9f9; border-radius: 50%; border: 6px solid #fff; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+  
+  /* Layering Setup */
+  #avatar-base { width: auto; height: 85%; z-index: 1; image-rendering: pixelated; }
+  #shirt-overlay { position: absolute; z-index: 2; display: none; transform: translate(-50%, 0); left: 50%; pointer-events: none; image-rendering: pixelated; }
+  #hat-overlay { position: absolute; z-index: 3; display: none; transform: translate(-50%, 0); left: 50%; pointer-events: none; image-rendering: pixelated; }
+  #full-set-overlay { position: absolute; z-index: 4; display: none; transform: translate(-50%, -50%); left: 50%; top: 50%; image-rendering: pixelated; }
+
+  /* Tab System */
+  .inventory-card { background: white; border-radius: 25px; padding: 20px; width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); min-height: 480px; }
+  .tab-menu { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+  .tab-btn { flex: 1; padding: 8px; border: none; border-radius: 10px; background: #f8f9fa; cursor: pointer; font-family: 'Mitr'; font-size: 14px; transition: 0.3s; }
+  .tab-btn.active { background: #3498db; color: white; }
+  .tab-content { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 380px; overflow-y: auto; padding: 5px; }
+  .tab-content.active { display: grid; }
+
+  /* Item Slots */
+  .item-slot { background: #fafafa; border: 2px solid #eee; border-radius: 15px; padding: 10px; cursor: pointer; text-align: center; transition: 0.2s; position: relative; }
+  .item-slot:hover:not(.locked) { border-color: #3498db; transform: translateY(-2px); }
+  .item-slot.locked { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; background: #f0f0f0; }
+  .item-slot img { width: 50px; height: 50px; object-fit: contain; }
+  .item-name { font-size: 11px; display: block; margin-top: 5px; color: #666; }
+  .lvl-badge { position: absolute; top: 5px; right: 5px; font-size: 9px; background: #e74c3c; color: white; padding: 2px 5px; border-radius: 8px; font-weight: bold; }
+
+  /* Buttons */
+  .btn-save { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 12px; cursor: pointer; font-family: 'Mitr'; margin-top: 15px; }
+  .btn-clear { width: 100%; padding: 10px; background: #fafafa; color: #888; border: none; border-radius: 12px; cursor: pointer; font-family: 'Mitr'; margin-top: 8px; font-size: 13px; }
+  .btn-logout { width: 100%; padding: 10px; background: #ffe0e0; color: #e74c3c; border: none; border-radius: 12px; cursor: pointer; font-family: 'Mitr'; margin-top: 20px; font-size: 13px; border: 1px dashed #e74c3c; }
+</style>
 </head>
 <body>
-<h1>RPG นักเรียน</h1>
-<div id="students"></div>
+
+<div class="login-container" id="loginPage">
+  <h2>🐾 Cat RPG Adventure</h2>
+  <input type="text" id="username" placeholder="รหัสนักเรียน">
+  <input type="password" id="password" placeholder="รหัสผ่าน">
+  <button id="loginBtn" class="btn-loading" onclick="login()" disabled>กำลังเชื่อมต่ออาณาจักร...</button>
+</div>
+
+<div id="dashboard">
+  <div class="mission-card">
+    <h4>📜 บันทึกการเดินทาง</h4>
+    <div id="mission-list"></div>
+  </div>
+
+  <div class="student-card">
+    <div class="avatar-container">
+      <img id="avatar-base" src="https://img1.pic.in.th/images/Gemini_Generated_Image_v4dyj4v4dyj4v4dy-removebg-preview.md.png">
+      <img id="shirt-overlay">
+      <img id="hat-overlay">
+      <img id="full-set-overlay">
+    </div>
+    <h3 id="displayName">-</h3>
+    <div>
+      <b style="color:#e67e22">⭐ เลเวล: <span id="displayLevel">1</span></b><br>
+      <small>💰 คะแนน: <span id="displayScore">0</span></small><br>
+      <small id="displayClass" style="color:#7f8c8d"></small>
+    </div>
+    <button class="btn-save" id="saveBtn" onclick="saveDressing()">💾 บันทึกการแต่งตัว</button>
+    <button class="btn-clear" onclick="clearAll()">✖ ถอดชุดทั้งหมด</button>
+    <button class="btn-logout" onclick="logout()">🏃 กลับเมือง (Logout)</button>
+  </div>
+
+  <div class="inventory-card">
+    <div class="tab-menu">
+      <button class="tab-btn active" onclick="openTab('tab-shirts', this)">👚 เสื้อ</button>
+      <button class="tab-btn" onclick="openTab('tab-hats', this)">🎩 หมวก</button>
+      <button class="tab-btn" onclick="openTab('tab-sets', this)">✨ ชุดพิเศษ</button>
+    </div>
+    <div id="tab-shirts" class="tab-content active"></div>
+    <div id="tab-hats" class="tab-content"></div>
+    <div id="tab-sets" class="tab-content"></div>
+  </div>
+</div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbx0c3-4rg-8zlecIsmMCAh6J2KmC1QxGYOsEPoLeB-lTKv6t_7KxhVkJiOwry8dacN7-Q/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwe5K9ldGw5kNbfYb5Zo3crl9GqlUo-GqI2uYnYfHlH5nmaTK1tx31OKFEXj3OR5ky6QQ/exec"; 
+let studentsData = [];
+let currentStudent = null;
 
-// โหลดข้อมูลนักเรียน
-async function loadStudents() {
-  const res = await fetch(API_URL);
-  const students = await res.json();
-  
-  const container = document.getElementById("students");
-  container.innerHTML = "";
-  students.forEach(s => {
-    const div = document.createElement("div");
-    div.innerHTML = `
-      <b>${s.ชื่อ}</b> | คะแนน: ${s.คะแนน} | เลเวล: ${s.เลเวล}
-      <button onclick="addScore('${s.ชื่อ}')">+10 คะแนน</button>
-    `;
-    container.appendChild(div);
-  });
+// ข้อมูลห้องสมุดไอเทม (เหมือนเดิม)
+const shirtLibrary = [
+  { id: "s1", name: "เขียวเมี๊ยว", minLvl: 0, url: "https://img2.pic.in.th/Gemini_Generated_Image_4tdjo64tdjo64tdj-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+  { id: "s2", name: "ชมพูเมี๊ยว", minLvl: 5, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_bwizh0bwizh0bwiz-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+  { id: "s3", name: "เหลืองร่าเริง", minLvl: 10, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_3q5fny3q5fny3q5f-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+  { id: "s4", name: "ฟ้าใสเเมี๊ยว", minLvl: 15, url: "https://img2.pic.in.th/Gemini_Generated_Image_r5h5awr5h5awr5h5-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+  { id: "s5", name: "ขาวเมี๊ยว", minLvl: 25, url: "https://img2.pic.in.th/Gemini_Generated_Image_5t9ee35t9ee35t9e-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+  { id: "s6", name: "ม่วงราตรี", minLvl: 30, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_3rhvou3rhvou3rhv-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+  { id: "s7", name: "เสื้อนินจา", minLvl: 40, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_xwz3ddxwz3ddxwz3-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+  { id: "s8", name: "ผู้ดีอังกฤษ", minLvl: 45, url: "https://img2.pic.in.th/Gemini_Generated_Image_or6ug8or6ug8or6u-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+  { id: "s9", name: "ชุดหรูหรา", minLvl: 55, url: "https://img2.pic.in.th/Gemini_Generated_Image_auy35yauy35yauy3-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+  { id: "s10", name: "จักรพรรดิ", minLvl: 60, url: "https://img2.pic.in.th/Gemini_Generated_Image_yezjphyezjphyezj-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+  { id: "s11", name: "คิตตี้", minLvl: 65, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_m8y2yvm8y2yvm8y2-removebg-preview.png", config: { top: 47, left: 49, width: 48 } },
+  { id: "s12", name: "คุโรมิ", minLvl: 70, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_2rz3th2rz3th2rz3-removebg-preview.png", config: { top: 47, left: 49, width: 48 } }
+];
+
+const hatLibrary = [
+  { id: "h1", name: "มาดแมน", minLvl: 0, url: "https://img2.pic.in.th/Gemini_Generated_Image_wt258awt258awt25__1_-removebg-preview.png", config: { top: 5, left: 47, width: 52 } },
+  { id: "h2", name: "ชมพูฤดูหนาว", minLvl: 5, url: "https://img2.pic.in.th/Gemini_Generated_Image_wt258awt258awt25-removebg-preview.png", config: { top: 1, left: 50, width: 50 } },
+  { id: "h3", name: "ฟางน่ารัก", minLvl: 10, url: "https://img2.pic.in.th/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy_-_Copy_-_Copy-removebg-preview.png", config: { top: 11, left: 50, width: 62 } },
+  { id: "h4", name: "หมวกนักคิด", minLvl: 15, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy_-_Copy-removebg-preview.png", config: { top: 5, left: 45, width: 60 } },
+  { id: "h5", name: "หมวกผู้ดี", minLvl: 20, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy-removebg-preview.png", config: { top: 2, left: 48, width: 65 } },
+  { id: "h6", name: "หมวกท่องเที่ยว", minLvl: 25, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g-removebg-preview.png", config: { top: 10, left: 48, width: 60 } },
+  { id: "h7", name: "Kitty Red", minLvl: 30, url: "https://img1.pic.in.th/images/Kitty2.png", config: { top: 10, left: 48, width: 46 } },
+  { id: "h8", name: "Kitty Pink", minLvl: 35, url: "https://img1.pic.in.th/images/Kitty1.png", config: { top: 18, left: 46, width: 46 } },
+  { id: "h9", name: "Kitty Gab", minLvl: 40, url: "https://img2.pic.in.th/KittyGab.png", config: { top: 10, left: 48, width: 60 } },
+  { id: "h10", name: "Kuromi 01", minLvl: 45, url: "https://img2.pic.in.th/Kuromi01.png", config: { top: 18, left: 46, width: 46 } },
+  { id: "h11", name: "Kuromi 02", minLvl: 50, url: "https://img1.pic.in.th/images/Kuromi02.png", config: { top: 9, left: 47, width: 55 } },
+  { id: "h12", name: "Kuromi 03", minLvl: 60, url: "https://img2.pic.in.th/Kuromi03.png", config: { top: 9, left: 47, width: 53 } }
+];
+
+const fullSetLibrary = [
+  { id: "Farmer-cat", name: "แมวชาวสวน", minLvl: 0, url: "https://img2.pic.in.th/Farmer-cat.png", config: { width: 70 } },
+  { id: "Chef-cat", name: "แมวพ่อครัว", minLvl: 60, url: "https://img1.pic.in.th/images/Chef-cat.png", config: { width: 70 } },
+  { id: "Research-cat", name: "แมวนักวิจัย", minLvl: 65, url: "https://img2.pic.in.th/Research-cat.png", config: { width: 70 } },
+  { id: "Magic-cat", name: "แมววิซาร์ด", minLvl: 70, url: "https://img1.pic.in.th/images/Magic-cat.png", config: { width: 70 } },
+  { id: "Galaxy-cat", name: "แมวกาแล็กซี่", minLvl: 75, url: "https://img2.pic.in.th/Galaxy-cat.png", config: { width: 80 } },
+  { id: "Overlord-cat", name: "ราชาเหมียว", minLvl: 80, url: "https://img2.pic.in.th/Overlord-cat.md.png", config: { width: 150 } }
+];
+
+// ฟังก์ชันโหลดข้อมูลเริ่มต้น
+async function loadStudents(){
+  const btn = document.getElementById("loginBtn");
+  try {
+    const res = await fetch(API_URL);
+    studentsData = await res.json();
+    btn.disabled = false;
+    btn.classList.remove("btn-loading");
+    btn.classList.add("btn-ready");
+    btn.textContent = "เข้าสู่ระบบ";
+  } catch(e) { btn.textContent = "อาณาจักรปิดปรับปรุง..."; }
 }
 
-// เพิ่มคะแนนนักเรียน
-async function addScore(name) {
-  // ดึงข้อมูลเก่า, เพิ่ม 10
-  const res = await fetch(API_URL);
-  const students = await res.json();
-  const student = students.find(s => s.ชื่อ === name);
-  const newScore = Number(student.คะแนน) + 10;
+function openTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+function login(){
+  const name = document.getElementById("username").value.trim();
+  const pwd = document.getElementById("password").value.trim();
+  currentStudent = studentsData.find(s => String(s.ชื่อ) === name && String(s.รหัส) === pwd);
+  if(!currentStudent) return alert("รหัสผ่านไม่ถูกต้อง หรือคุณไม่ได้อยู่ในอาณาจักรนี้เมี๊ยว!");
   
-  await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ ชื่อ: name, คะแนน: newScore }),
-    headers: { "Content-Type": "application/json" }
-  });
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("dashboard").style.display = "flex";
+  document.getElementById("displayName").textContent = currentStudent.ชื่อ;
+  document.getElementById("displayScore").textContent = currentStudent.คะแนน;
+  document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
+  document.getElementById("displayClass").textContent = "สังกัด: " + (currentStudent.ชั้น || "ไม่ระบุ");
   
-  loadStudents(); // รีโหลดข้อมูล
+  renderInventory();
+  renderMissions();
+  
+  // โหลดชุดเดิม (แยกหมวก/เสื้อ/ชุดพิเศษ)
+  if(currentStudent.หมวก && fullSetLibrary.some(s => currentStudent.หมวก.includes(s.url))) {
+    applyFullSet(currentStudent.หมวก);
+  } else {
+    if(currentStudent.หมวก) applyHat(currentStudent.หมวก);
+    if(currentStudent.เสื้อ) applyShirt(currentStudent.เสื้อ);
+  }
+}
+
+function logout() {
+  currentStudent = null;
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("loginPage").style.display = "block";
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+  clearAll();
+}
+
+function renderInventory() {
+  const myLvl = parseInt(currentStudent.เลเวล) || 0;
+  const createItem = (item, type) => {
+    const locked = myLvl < item.minLvl;
+    const action = type === 'shirt' ? `applyShirt('${item.url}')` : (type === 'hat' ? `applyHat('${item.url}')` : `applyFullSet('${item.url}')`);
+    return `<div class="item-slot ${locked ? 'locked' : ''}" onclick="${locked ? '' : action}">${locked ? `<span class="lvl-badge">Lv.${item.minLvl}</span>` : ''}<img src="${item.url}"><span class="item-name">${item.name}</span></div>`;
+  };
+  document.getElementById("tab-shirts").innerHTML = shirtLibrary.map(s => createItem(s, 'shirt')).join('');
+  document.getElementById("tab-hats").innerHTML = hatLibrary.map(h => createItem(h, 'hat')).join('');
+  document.getElementById("tab-sets").innerHTML = fullSetLibrary.map(s => createItem(s, 'set')).join('');
+}
+
+// ระบบแต่งตัว (แยกเลเยอร์)
+function applyShirt(url) {
+  document.getElementById("full-set-overlay").style.display = "none";
+  document.getElementById("avatar-base").style.visibility = "visible";
+  const shirt = document.getElementById("shirt-overlay");
+  const data = shirtLibrary.find(s => url === s.url);
+  shirt.src = url; shirt.style.display = "block";
+  shirt.style.top = data.config.top + "%"; shirt.style.left = data.config.left + "%"; shirt.style.width = data.config.width + "%";
+}
+
+function applyHat(url) {
+  document.getElementById("full-set-overlay").style.display = "none";
+  document.getElementById("avatar-base").style.visibility = "visible";
+  const hat = document.getElementById("hat-overlay");
+  const data = hatLibrary.find(h => url === h.url);
+  hat.src = url; hat.style.display = "block";
+  hat.style.top = data.config.top + "%"; hat.style.left = data.config.left + "%"; hat.style.width = data.config.width + "%";
+}
+
+function applyFullSet(url) {
+  document.getElementById("avatar-base").style.visibility = "hidden";
+  document.getElementById("hat-overlay").style.display = "none";
+  document.getElementById("shirt-overlay").style.display = "none";
+  const set = document.getElementById("full-set-overlay");
+  const data = fullSetLibrary.find(s => url === s.url);
+  set.src = url; set.style.display = "block"; set.style.width = data.config.width + "%";
+}
+
+function clearAll() {
+  document.getElementById("full-set-overlay").style.display = "none";
+  document.getElementById("shirt-overlay").style.display = "none";
+  document.getElementById("hat-overlay").style.display = "none";
+  document.getElementById("avatar-base").style.visibility = "visible";
+}
+
+function renderMissions() {
+  const cont = document.getElementById("mission-list");
+  if(!currentStudent.ภารกิจ) return cont.innerHTML = "ไม่มีภารกิจในขณะนี้";
+  cont.innerHTML = currentStudent.ภารกิจ.map(m => {
+    const score = parseFloat(m.score);
+    const isDone = score > 0;
+    return `
+    <div class="mission-item">
+      <span class="mission-name">📍 ${m.name}</span>
+      <span class="status-text ${isDone ? 'status-done' : 'status-pending'}">
+        ${isDone ? `พิชิตสำเร็จ! 🏆 (+${score})` : 'ความท้าทายยังคงอยู่ ⚔️'}
+      </span>
+    </div>`;
+  }).join('');
+}
+
+async function saveDressing() {
+  const btn = document.getElementById("saveBtn");
+  let hatUrl = "";
+  let shirtUrl = "";
+  let fullSetUrl = "";
+
+  // ตรวจสอบว่าใส่ชุดอะไรอยู่บ้าง
+  if(document.getElementById("full-set-overlay").style.display === "block") {
+    fullSetUrl = document.getElementById("full-set-overlay").src;
+  } else {
+    if(document.getElementById("hat-overlay").style.display === "block") hatUrl = document.getElementById("hat-overlay").src;
+    if(document.getElementById("shirt-overlay").style.display === "block") shirtUrl = document.getElementById("shirt-overlay").src;
+  }
+  
+  btn.disabled = true; btn.textContent = "กำลังบันทึกตำนาน...";
+  
+  const saveUrl = `${API_URL}?action=saveDressing&name=${encodeURIComponent(currentStudent.ชื่อ)}&hat=${encodeURIComponent(hatUrl)}&shirt=${encodeURIComponent(shirtUrl)}&fullset=${encodeURIComponent(fullSetUrl)}`;
+  
+  try {
+    await fetch(saveUrl, { mode: 'no-cors' });
+    alert("บันทึกการแต่งตัวสำเร็จแล้วเมี๊ยว!");
+  } catch (e) { alert("เกิดข้อผิดพลาดในการสื่อสารกับอาณาจักร"); }
+  finally { btn.disabled = false; btn.textContent = "💾 บันทึกการแต่งตัว"; }
 }
 
 loadStudents();
