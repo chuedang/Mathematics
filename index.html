@@ -199,18 +199,28 @@
     document.getElementById("tab-sets").innerHTML = draw(fullSetLibrary, 'f');
   }
 
-  function renderMissions() {
+    function renderMissions() {
     const list = document.getElementById("mission-list");
     if(!currentStudent.ภารกิจ || currentStudent.ภารกิจ.length === 0) {
       list.innerHTML = "<h4>📜 ภารกิจ</h4><p style='text-align:center;'>ไม่มีภารกิจ</p>";
       return;
     }
-    const html = currentStudent.ภารกิจ.map(m => {
+
+    const html = currentStudent.ภารกิจ.map((m, index) => {
       const isDone = parseFloat(m.score) > 0;
-      const mName = m.name.toUpperCase();
-      let typeClass = "type-default";
-      if(mName.includes("H-O")) typeClass = "type-ho";
-      else if(mName.includes("P-W")) typeClass = "type-pw";
+      
+      /* Logic การแยกสีตามคอลัมน์ใน Google Sheet:
+         โดยปกติข้อมูลภารกิจตัวแรกจะเริ่มที่คอลัมน์ H (Index 0 ใน Array ภารกิจ)
+         - คอลัมน์ H ถึง O มีทั้งหมด 8 ช่อง (Index 0 - 7) -> สีส้ม (กลางภาค)
+         - คอลัมน์ P ถึง W มีทั้งหมด 8 ช่อง (Index 8 - 15) -> สีม่วง (ปลายภาค)
+      */
+      
+      let typeClass = "type-default"; // สีเขียวปกติ
+      if (index >= 0 && index <= 7) {
+        typeClass = "type-ho"; // สีส้ม (กลางภาค)
+      } else if (index >= 8 && index <= 15) {
+        typeClass = "type-pw"; // สีม่วง (ปลายภาค)
+      }
 
       return `
         <div class="mission-item ${typeClass}">
@@ -219,8 +229,10 @@
           ${isDone ? `<div style="font-size:11px; color:#27ae60; margin-top:5px;">ได้รับ +${m.score} คะแนน</div>` : ''}
         </div>`;
     }).join('');
+    
     list.innerHTML = "<h4 style='text-align:center; margin-top:0; color:#634d3a;'>📜 บันทึกภารกิจ</h4>" + html;
   }
+
 
   function applyShirt(url){
     document.getElementById("full-set-overlay").style.display="none";
