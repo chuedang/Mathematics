@@ -271,7 +271,7 @@ function runGame() {
     ctx.translate(60, birdY); 
     
     // 1. ปรับขนาดความสูงรวมลงมาให้ไม่ใหญ่เกินไป (จาก 120 -> 100)
-    const catHeight = 100; 
+    const catHeight = 80; 
     
     // 2. คำนวณความกว้างแมวตามสัดส่วนจริง (Ratio)
     const catWidth = (avatarImg.naturalWidth / avatarImg.naturalHeight) * catHeight;
@@ -294,7 +294,7 @@ function runGame() {
         if(document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
             const hatWidth = (hatImg.naturalWidth / hatImg.naturalHeight) * catHeight * 0.9;
             // ลบออกอีก 5-10 พิกเซลเพื่อให้หมวกลอยขึ้นสูงกว่าเดิม
-            const hT = ((activeHatConfig.config.top / 100) * catHeight - (catHeight/2)) - 8; 
+            const hT = ((activeHatConfig.config.top / 100) * catHeight - (catHeight/2)) - 15; 
             ctx.drawImage(hatImg, -hatWidth/2, hT, hatWidth, catHeight);
         }
     }
