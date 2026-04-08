@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Cat RPG Adventure v2.6</title>
+  <title>Cat RPG Adventure v2.7</title>
   <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     * { touch-action: pan-y; -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
@@ -37,10 +37,10 @@
     .lvl-badge { position: absolute; top: 2px; right: 2px; font-size: 8px; background: #e74c3c; color: white; padding: 2px 4px; border-radius: 5px; font-weight: bold; }
     .locked { opacity: 0.4; filter: grayscale(1); }
 
-    /* Mission */
+    /* Mission สีกราฟิกแบ่งตามคอลัมน์ H-O และ P-W */
     .mission-item { padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 8px solid #ccc; font-size: 14px; }
-    .type-ho { background: #fff4e6 !important; border-left-color: #f39c12 !important; }
-    .type-pw { background: #f3e5f5 !important; border-left-color: #8e44ad !important; }
+    .type-ho { background: #fff4e6 !important; border-left-color: #f39c12 !important; } /* กลางภาค (H-O) */
+    .type-pw { background: #f3e5f5 !important; border-left-color: #8e44ad !important; } /* ปลายภาค (P-W) */
     .type-default { background: #f1f8e9; border-left-color: #27ae60; }
     .status-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; float: right; color: white; }
     .done-bg { background: #27ae60; }
@@ -128,9 +128,13 @@
     { id: "h2", name: "ชมพูฤดูหนาว", minLvl: 5, url: "https://img2.pic.in.th/Gemini_Generated_Image_wt258awt258awt25-removebg-preview.png", config: { top: 1, left: 50, width: 50 } },
     { id: "h3", name: "ฟางน่ารัก", minLvl: 10, url: "https://img2.pic.in.th/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy_-_Copy_-_Copy-removebg-preview.png", config: { top: 11, left: 50, width: 62 } },
     { id: "h4", name: "หมวกนักคิด", minLvl: 20, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy_-_Copy-removebg-preview.png", config: { top: 5, left: 45, width: 60 } },
-    { id: "h5", name: "หมวกผู้ดี", minLvl: 35, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy-removebg-preview.png", config: { top: 2, left: 48, width: 65 } },
-    { id: "h6", name: "หมวกท่องเที่ยว", minLvl: 50, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g-removebg-preview.png", config: { top: 10, left: 48, width: 60 } },
-    { id: "h11", name: "Kuromi 02", minLvl: 75, url: "https://img1.pic.in.th/images/Kuromi02.png", config: { top: 9, left: 47, width: 55 } },
+    { id: "h5", name: "หมวกผู้ดี", minLvl: 30, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy-removebg-preview.png", config: { top: 2, left: 48, width: 65 } },
+    { id: "h6", name: "หมวกท่องเที่ยว", minLvl: 40, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g-removebg-preview.png", config: { top: 10, left: 48, width: 60 } },
+    { id: "h7", name: "Kitty Red", minLvl: 50, url: "https://img1.pic.in.th/images/Kitty2.png", config: { top: 10, left: 48, width: 46 } },
+    { id: "h8", name: "Kitty Pink", minLvl: 60, url: "https://img1.pic.in.th/images/Kitty1.png", config: { top: 18, left: 46, width: 46 } },
+    { id: "h9", name: "Kitty Gab", minLvl: 70, url: "https://img2.pic.in.th/KittyGab.png", config: { top: 10, left: 48, width: 60 } },
+    { id: "h10", name: "Kuromi 01", minLvl: 75, url: "https://img2.pic.in.th/Kuromi01.png", config: { top: 18, left: 46, width: 46 } },
+    { id: "h11", name: "Kuromi 02", minLvl: 80, url: "https://img1.pic.in.th/images/Kuromi02.png", config: { top: 9, left: 47, width: 55 } },
     { id: "h12", name: "Kuromi 03", minLvl: 83, url: "https://img2.pic.in.th/Kuromi03.png", config: { top: 9, left: 47, width: 53 } }
   ];
 
@@ -160,7 +164,7 @@
     currentStudent = studentsData.find(s => String(s.รหัสเข้า) === u && String(s.รหัสผ่าน) === p);
     if(!currentStudent) return alert("รหัสผิดเมี๊ยว!");
 
-    // สูตร Level = 10 * sqrt(Score)
+    // สูตรใหม่: Level = 10 * sqrt(Score)
     const score = parseFloat(currentStudent.คะแนน) || 0;
     const calculatedLevel = Math.floor(10 * Math.sqrt(score));
     currentStudent.เลเวล = calculatedLevel; 
@@ -206,6 +210,7 @@
     const html = currentStudent.ภารกิจ.map((m, index) => {
       const isDone = parseFloat(m.score) > 0;
       let typeClass = "type-default";
+      // แยกตามคอลัมน์: H-O (0-7) = ส้ม, P-W (8-15) = ม่วง
       if (index >= 0 && index <= 7) typeClass = "type-ho";
       else if (index >= 8 && index <= 15) typeClass = "type-pw";
 
