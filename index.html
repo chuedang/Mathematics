@@ -283,19 +283,24 @@ function runGame() {
         // วาดตัวแมว
         ctx.drawImage(avatarImg, -catWidth/2, -catHeight/2, catWidth, catHeight);
 
-        // 3. วาดเสื้อ (ปรับสเกลความกว้างให้เล็กลง 10% เพื่อให้รัดรูปขึ้น)
-        if(document.getElementById("shirt-overlay").style.display === "block" && activeShirtConfig) {
-            const shirtWidth = (shirtImg.naturalWidth / shirtImg.naturalHeight) * catHeight * 0.9;
-            const sT = (activeShirtConfig.config.top / 100) * catHeight - (catHeight/2);
-            ctx.drawImage(shirtImg, -shirtWidth/2, sT, shirtWidth, catHeight);
-        }
+       // --- แก้ไขเฉพาะจุดวาดเสื้อและหมวกในฟังก์ชัน runGame ---
 
-        // 4. วาดหมวก (ขยับขึ้นด้วยการลบระยะเพิ่ม)
-        if(document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
-            const hatWidth = (hatImg.naturalWidth / hatImg.naturalHeight) * catHeight * 0.9;
-            // ลบออกอีก 5-10 พิกเซลเพื่อให้หมวกลอยขึ้นสูงกว่าเดิม
-            const hT = ((activeHatConfig.config.top / 100) * catHeight - (catHeight/2)) - 15; 
-            ctx.drawImage(hatImg, -hatWidth/2, hT, hatWidth, catHeight);
+// 3. วาดเสื้อ (ปรับให้ลดขนาดตาม Config % ของเสื้อตัวนั้นๆ)
+if (document.getElementById("shirt-overlay").style.display === "block" && activeShirtConfig) {
+    // คำนวณความกว้างเสื้อ: (ความกว้างภาพจริง / ความสูงภาพจริง) * ความสูงแมว * (เปอร์เซ็นต์ความกว้างใน config / 100)
+    // เพิ่มตัวคูณ 1.1 หรือ 1.2 เพื่อให้ชุดดูสมส่วนกับตัวละครในเกม
+    const shirtWidth = (shirtImg.naturalWidth / shirtImg.naturalHeight) * catHeight * (activeShirtConfig.config.width / 100) * 1.1;
+    const sT = (activeShirtConfig.config.top / 100) * catHeight - (catHeight / 2);
+    ctx.drawImage(shirtImg, -shirtWidth / 2, sT, shirtWidth, catHeight * (activeShirtConfig.config.width / 100) * 1.1);
+}
+
+// 4. วาดหมวก (ปรับให้ลดขนาดตาม Config % ของหมวกใบนั้นๆ)
+if (document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
+    // ใช้หลักการเดียวกันกับเสื้อ เพื่อให้หมวกลดขนาดตามที่ตั้งค่าไว้
+    const hatWidth = (hatImg.naturalWidth / hatImg.naturalHeight) * catHeight * (activeHatConfig.config.width / 100) * 1.1;
+    // ปรับค่า hT ให้สูงขึ้น (- 10 หรือมากกว่าตามต้องการ)
+    const hT = ((activeHatConfig.config.top / 100) * catHeight - (catHeight / 2)) - 10; 
+    ctx.drawImage(hatImg, -hatWidth / 2, hT, hatWidth, catHeight * (activeHatConfig.config.width / 100) * 1.1);
         }
     }
     ctx.restore();
