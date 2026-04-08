@@ -58,21 +58,32 @@
     <button id="loginBtn" onclick="login()" disabled>กำลังโหลดอาณาจักร...</button>
   </div>
 
-  <div id="dashboard">
-    <div class="student-card">
-      <div class="avatar-container">
-        <img id="avatar-base" src="https://img1.pic.in.th/images/Gemini_Generated_Image_v4dyj4v4dyj4v4dy-removebg-preview.md.png">
-        <img id="shirt-overlay">
-        <img id="hat-overlay">
-        <img id="full-set-overlay">
-      </div>
-      <h3 id="displayName" style="margin: 5px 0;">-</h3>
-      <p style="margin: 5px 0;">⭐ เลเวล <span id="displayLevel">1</span> | 💰 <span id="displayScore">0</span></p>
-      
-      <button class="btn-save" id="saveBtn" onclick="saveDressing()">💾 บันทึกชุด</button>
-      <button class="btn-clear" onclick="clearDressing()">❌ ถอดชุดทั้งหมด</button>
-      <button class="btn-logout" onclick="logout()">ออกจากเกม</button>
+<div class="student-card">
+  <div class="avatar-container">
+    <img id="avatar-base" src="https://img1.pic.in.th/images/Gemini_Generated_Image_v4dyj4v4dyj4v4dy-removebg-preview.md.png">
+    <img id="shirt-overlay">
+    <img id="hat-overlay">
+    <img id="full-set-overlay">
+  </div>
+  
+  <div style="text-align: center; margin-top: 10px;">
+    <h3 id="displayName" style="margin: 0; font-size: 20px; color: #634d3a;">-</h3>
+    
+    <div style="display: flex; justify-content: center; gap: 15px; margin: 8px 0; font-size: 14px;">
+      <span style="background: #fff4e6; color: #d35400; padding: 4px 12px; border-radius: 20px; font-weight: 500;">
+        ⭐ เลเวล <span id="displayLevel">1</span>
+      </span>
     </div>
+    
+    <div style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">
+      🏆 คะแนนสะสม: <span id="displayScore" style="color: #2c3e50; font-weight: bold;">0</span> แต้ม
+    </div>
+  </div>
+  
+  <button class="btn-save" id="saveBtn" onclick="saveDressing()">💾 บันทึกชุด</button>
+  <button class="btn-clear" onclick="clearDressing()">❌ ถอดชุดทั้งหมด</button>
+  <button class="btn-logout" onclick="logout()">ออกจากเกม</button>
+</div>
 
     <div class="inventory-card">
       <div class="tab-menu">
