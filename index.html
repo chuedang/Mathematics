@@ -6,60 +6,72 @@
 <title>Cat RPG Adventure</title>
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+  /* ล็อคพื้นหลังและปรับการแสดงผลหลัก */
   body { 
     font-family: 'Mitr', sans-serif; 
-    background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%); 
-    margin:0; 
-    display:flex; 
-    justify-content:center; 
-    align-items: flex-start; /* เปลี่ยนเป็นเริ่มจากด้านบนเพื่อให้เลื่อนลงได้เมื่อจอเล็ก */
-    min-height:100vh;
-    touch-action: pan-y; /* อนุญาตให้เลื่อนแค่แนวตั้ง กันการถ่างนิ้วซูม */
+    background: #e2d1c3; 
+    margin: 0; 
+    padding: 0; /* เอา padding ออกเพื่อให้ชิดขอบ */
+    display: block; /* เปลี่ยนจาก flex เป็น block เพื่อให้เลื่อนลงแนวตั้งได้ธรรมชาติ */
+    overflow-x: hidden; /* กันจอส่ายซ้ายขวา */
   }
-
+  
   #dashboard { 
-    display:none; 
+    display: none; 
+    flex-direction: column; /* บังคับเรียงแนวตั้งเสมอ */
+    align-items: center; 
+    padding: 15px 10px;
     gap: 20px; 
-    align-items: flex-start; 
-    max-width: 1200px; 
-    padding: 20px; 
-    flex-wrap: wrap; 
-    justify-content: center;
-    width: 100%; /* ให้กว้างเต็มจอ */
-  }
-  
-  /* --- UI เดิมของคุณครูที่ปรับให้เข้ากับมือถือขึ้นนิดหน่อย --- */
-  @media (max-width: 768px) {
-    #dashboard { 
-      padding: 10px; /* ลดระยะห่างขอบจอลงเพื่อให้ของข้างในดูใหญ่ขึ้น */
-      gap: 15px;
-    }
-    .student-card, .inventory-card, .mission-card {
-      width: 92% !important; /* ขยายการ์ดให้กว้างเกือบเต็มจอมือถือ */
-      max-width: 400px;
-    }
+    width: 100%;
+    box-sizing: border-box;
   }
 
-  /* สไตล์การ์ดคงเดิมตามภาพที่คุณครูส่งมา */
-  .login-container { background: white; padding: 35px; border-radius: 25px; text-align: center; width: 300px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); margin-top: 50px; }
-  .login-container input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid #ddd; font-family: 'Mitr'; box-sizing: border-box; }
-  
-  .mission-card { background: white; border-radius: 25px; padding: 20px; width: 260px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid #ffcc33; max-height: 550px; overflow-y: auto; }
-  .student-card { background: white; border-radius: 25px; padding: 25px; width: 280px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 2px solid #fff; position: relative; }
-  .inventory-card { background: white; border-radius: 25px; padding: 20px; width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); min-height: 480px; }
-  
-  /* เพิ่มเติม: ทำให้ไอเทมในมือถือกดง่ายขึ้นแต่หน้าตาเหมือนเดิม */
-  .item-slot { background: #fafafa; border: 2px solid #eee; border-radius: 15px; padding: 10px; cursor: pointer; text-align: center; transition: 0.2s; position: relative; }
-  .item-slot img { width: 50px; height: 50px; object-fit: contain; }
-  
-  .tab-content { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 380px; overflow-y: auto; padding: 5px; }
-  .tab-content.active { display: grid; }
-  
-  /* Layering ตัวละคร */
-  .avatar-container { width: 180px; height: 180px; margin: 0 auto 15px; background: #f9f9f9; border-radius: 50%; border: 6px solid #fff; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-  #avatar-base { width: auto; height: 85%; z-index: 1; image-rendering: pixelated; }
-  #shirt-overlay, #hat-overlay { position: absolute; z-index: 2; display: none; transform: translate(-50%, 0); left: 50%; pointer-events: none; image-rendering: pixelated; }
-  #full-set-overlay { position: absolute; z-index: 4; display: none; transform: translate(-50%, -50%); left: 50%; top: 50%; image-rendering: pixelated; }
+  /* ปรับการ์ดทุกใบให้ใหญ่เต็มหน้าจอ */
+  .student-card, .inventory-card, .mission-card { 
+    width: 100% !important; 
+    max-width: 500px !important; /* ใหญ่สุดไม่เกินนี้เพื่อความสวยงาม */
+    box-sizing: border-box;
+    margin-bottom: 10px;
+  }
+
+  /* ปรับขนาดตัวละครให้เด่นขึ้นในมือถือ */
+  .avatar-container { 
+    width: 200px; 
+    height: 200px; 
+    margin: 0 auto 15px;
+  }
+
+  /* ปรับช่องไอเทมให้กดง่ายขึ้น (ขยายขนาด) */
+  .tab-content { 
+    grid-template-columns: repeat(3, 1fr) !important; 
+    gap: 12px; 
+    max-height: none !important; /* ให้ยืดตามจำนวนไอเทม ไม่ต้องมี scroll ซ้อน scroll */
+    overflow: visible !important;
+  }
+
+  .item-slot { 
+    padding: 15px 5px; /* เพิ่มพื้นที่กด */
+    min-height: 100px;
+  }
+
+  .item-slot img {
+    max-width: 65px; /* ขยายรูปไอเทม */
+    height: 65px;
+  }
+
+  /* ปรับปุ่มให้ใหญ่สะใจนิ้วมือ */
+  #loginBtn, .btn-save, .btn-logout { 
+    padding: 18px !important; 
+    font-size: 18px !important; 
+    border-radius: 20px !important;
+  }
+
+  /* ปรับ Login ให้อยู่กลางจอสวยๆ */
+  .login-container {
+    margin: 60px auto;
+    width: 90%;
+    max-width: 350px;
+  }
 </style>
 </head>
 <body>
