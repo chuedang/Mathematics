@@ -3,61 +3,67 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Cat RPG Adventure v2.3</title>
+  <title>Cat RPG Adventure v2.4</title>
   <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-    /* ล็อคการแสดงผลพื้นฐาน */
     * { touch-action: pan-y; -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
     body { font-family: 'Mitr', sans-serif; background: #e2d1c3; margin: 0; padding: 0; overflow-x: hidden; width: 100vw; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 
     /* หน้า Login */
-    #loginPage { background: white; padding: 35px 30px; border-radius: 30px; width: 90%; max-width: 340px; margin-top: 60px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.1); z-index: 100; }
+    #loginPage { background: white; padding: 35px 30px; border-radius: 30px; width: 90%; max-width: 340px; margin-top: 60px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
     .login-input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #ddd; font-family: 'Mitr'; font-size: 16px; outline: none; }
-    #loginBtn { background: #2ecc71; color: white; border: none; padding: 15px; border-radius: 15px; width: 100%; font-family: 'Mitr'; font-size: 16px; cursor: pointer; transition: 0.3s; }
-    #loginBtn:disabled { background: #ccc; cursor: not-allowed; }
+    #loginBtn { background: #2ecc71; color: white; border: none; padding: 15px; border-radius: 15px; width: 100%; font-family: 'Mitr'; font-size: 16px; cursor: pointer; }
+    #loginBtn:disabled { background: #95a5a6; cursor: not-allowed; }
 
-    /* หน้า Dashboard (ซ่อนไว้ตั้งแต่แรก) */
+    /* หน้า Dashboard */
     #dashboard { display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px 0; gap: 20px; }
     .student-card, .inventory-card, .mission-card { background: white; border-radius: 25px; padding: 20px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
 
-    /* ระบบตัวละคร */
+    /* Avatar */
     .avatar-container { width: 180px; height: 180px; margin: 0 auto 15px; background: #f9f9f9; border-radius: 50%; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 5px solid #fff; }
     #avatar-base { width: auto; height: 85%; z-index: 1; image-rendering: pixelated; }
     #shirt-overlay, #hat-overlay { position: absolute; z-index: 2; display: none; transform: translateX(-50%); left: 50%; pointer-events: none; image-rendering: pixelated; }
     #full-set-overlay { position: absolute; z-index: 4; display: none; transform: translate(-50%, -50%); left: 50%; top: 50%; image-rendering: pixelated; }
 
-    /* คลังไอเทม */
+    /* Inventory & Tabs */
     .tab-menu { display: flex; gap: 5px; margin-bottom: 15px; }
-    .tab-btn { flex: 1; padding: 12px 5px; border: none; border-radius: 12px; background: #f0f0f0; font-family: 'Mitr'; font-size: 14px; cursor: pointer; }
+    .tab-btn { flex: 1; padding: 12px 5px; border: none; border-radius: 12px; background: #f0f0f0; font-family: 'Mitr'; font-size: 14px; }
     .tab-btn.active { background: #3498db; color: white; }
     .tab-content { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 5px; }
     .tab-content.active { display: grid; }
-    
-    .item-slot { background: #fafafa; border: 2px solid #eee; border-radius: 15px; padding: 10px; text-align: center; position: relative; transition: 0.2s; }
+    .item-slot { background: #fafafa; border: 2px solid #eee; border-radius: 15px; padding: 10px; text-align: center; position: relative; }
     .item-slot img { width: 100%; height: 55px; object-fit: contain; }
     .item-name { font-size: 9px; color: #777; display: block; margin-top: 5px; line-height: 1.1; }
-    
     .lvl-badge { position: absolute; top: 2px; right: 2px; font-size: 8px; background: #e74c3c; color: white; padding: 2px 4px; border-radius: 5px; font-weight: bold; }
     .locked { opacity: 0.4; filter: grayscale(1); }
 
-    /* ภารกิจ */
-    .mission-item { background: #fffdf0; padding: 12px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #ffeaa7; font-size: 14px; }
-    .status-done { color: #27ae60; font-weight: bold; }
-    .status-pending { color: #e67e22; }
+    /* Mission สีกราฟิกแบ่งตามประเภท */
+    .mission-item { padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 8px solid #ccc; font-size: 14px; position: relative; }
+    .type-ho { background: #fff4e6; border-left-color: #f39c12; } /* กลางภาค - ส้ม */
+    .type-pw { background: #f3e5f5; border-left-color: #8e44ad; } /* ปลายภาค - ม่วง */
+    .type-default { background: #f1f8e9; border-left-color: #27ae60; } /* ทั่วไป - เขียว */
+    .status-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; float: right; }
+    .done-bg { background: #27ae60; color: white; }
+    .wait-bg { background: #bdc3c7; color: white; }
 
-    /* ปุ่มต่างๆ */
-    .btn-save { background: #3498db; color: white; border: none; padding: 15px; border-radius: 18px; width: 100%; font-family: 'Mitr'; font-size: 16px; cursor: pointer; margin-top: 10px; }
-    .btn-clear { background: none; border: none; color: #999; font-size: 13px; margin: 10px 0; cursor: pointer; text-decoration: underline; width: 100%; }
+    /* ปุ่มกดสไตล์ RPG */
+    .btn-save { background: #3498db; color: white; border: none; padding: 15px; border-radius: 18px; width: 100%; font-family: 'Mitr'; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 #2980b9; margin-top: 10px; }
+    .btn-save:active { transform: translateY(2px); box-shadow: 0 2px 0 #2980b9; }
+    
+    .btn-clear { background: #95a5a6; color: white; border: none; padding: 10px; border-radius: 12px; width: 100%; font-family: 'Mitr'; font-size: 13px; cursor: pointer; margin-top: 15px; box-shadow: 0 3px 0 #7f8c8d; }
+    .btn-clear:active { transform: translateY(2px); box-shadow: 0 1px 0 #7f8c8d; }
+    
     .btn-logout { background: none; color: #e74c3c; border: 1px dashed #e74c3c; padding: 12px; border-radius: 15px; width: 100%; margin-top: 10px; font-family: 'Mitr'; cursor: pointer; }
   </style>
 </head>
 <body>
 
   <div id="loginPage">
-    <h2 style="margin-bottom: 20px; color: #634d3a;">🐾 Cat RPG</h2>
+    <h2 style="margin-bottom: 10px; color: #634d3a;">🐾 Cat RPG</h2>
+    <p id="loadText" style="font-size: 12px; color: #95a5a6; margin-bottom: 20px;">กำลังรวบรวมพลังเวท...</p>
     <input type="text" id="username" class="login-input" placeholder="รหัสนักเรียน (ID)">
     <input type="password" id="password" class="login-input" placeholder="รหัสผ่าน">
-    <button id="loginBtn" onclick="login()" disabled>กำลังโหลดข้อมูล...</button>
+    <button id="loginBtn" onclick="login()" disabled>รอสักครู่...</button>
   </div>
 
   <div id="dashboard">
@@ -71,8 +77,8 @@
       
       <div style="text-align: center;">
         <h3 id="displayName" style="margin: 0; font-size: 20px; color: #634d3a;">-</h3>
-        <div style="display: flex; justify-content: center; gap: 15px; margin: 8px 0; font-size: 14px;">
-          <span style="background: #fff4e6; color: #d35400; padding: 4px 12px; border-radius: 20px; font-weight: 500;">⭐ เลเวล <span id="displayLevel">1</span></span>
+        <div style="display: flex; justify-content: center; gap: 15px; margin: 8px 0;">
+          <span style="background: #fff4e6; color: #d35400; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 500;">⭐ เลเวล <span id="displayLevel">1</span></span>
         </div>
         <div style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">
           🏆 คะแนนสะสม: <span id="displayScore" style="color: #2c3e50; font-weight: bold;">0</span> แต้ม
@@ -96,7 +102,7 @@
     </div>
 
     <div class="mission-card" id="mission-list">
-      <h4 style="text-align: center; margin-top: 0;">📜 บันทึกภารกิจ</h4>
+      <h4 style="text-align: center; margin-top: 0; color: #634d3a;">📜 บันทึกภารกิจ</h4>
     </div>
   </div>
 
@@ -105,13 +111,13 @@
   let studentsData = [];
   let currentStudent = null;
 
-  // คลังไอเทม
+  // คลังไอเทม (เหมือนเดิม)
   const shirtLibrary = [
     { id: "s1", name: "เขียวเมี๊ยว", minLvl: 0, url: "https://img2.pic.in.th/Gemini_Generated_Image_4tdjo64tdjo64tdj-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
     { id: "s2", name: "ชมพูเมี๊ยว", minLvl: 5, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_bwizh0bwizh0bwiz-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
     { id: "s3", name: "เหลืองร่าเริง", minLvl: 10, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_3q5fny3q5fny3q5f-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
     { id: "s4", name: "ฟ้าใสเเมี๊ยว", minLvl: 15, url: "https://img2.pic.in.th/Gemini_Generated_Image_r5h5awr5h5awr5h5-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s5", name: "ขาวเมี๊ยว", minLvl: 25, url: "https://img2.pic.in.th/Gemini_Generated_Image_5t9ee35t9ee35t9e-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
+    { id: "s5", name: "ขาวเเมี๊ยว", minLvl: 25, url: "https://img2.pic.in.th/Gemini_Generated_Image_5t9ee35t9ee35t9e-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
     { id: "s6", name: "ม่วงราตรี", minLvl: 30, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_3rhvou3rhvou3rhv-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
     { id: "s7", name: "เสื้อนินจา", minLvl: 40, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_xwz3ddxwz3ddxwz3-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
     { id: "s8", name: "ผู้ดีอังกฤษ", minLvl: 45, url: "https://img2.pic.in.th/Gemini_Generated_Image_or6ug8or6ug8or6u-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
@@ -149,9 +155,12 @@
     try {
       const res = await fetch(API_URL + "?t=" + new Date().getTime());
       studentsData = await res.json();
+      document.getElementById("loadText").textContent = "พลังเวทพร้อมแล้ว!";
       document.getElementById("loginBtn").disabled = false;
-      document.getElementById("loginBtn").textContent = "เข้าสู่ระบบ";
-    } catch(e) { document.getElementById("loginBtn").textContent = "Error!"; }
+      document.getElementById("loginBtn").textContent = "เปิดประตูอาณาจักร";
+    } catch(e) { 
+      document.getElementById("loadText").textContent = "การเชื่อมต่อล้มเหลว..."; 
+    }
   }
 
   function login(){
@@ -162,7 +171,6 @@
 
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("dashboard").style.display = "flex";
-    
     document.getElementById("displayName").textContent = currentStudent.ชื่อ;
     document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
     document.getElementById("displayScore").textContent = currentStudent.คะแนน;
@@ -196,14 +204,23 @@
   function renderMissions() {
     const list = document.getElementById("mission-list");
     if(!currentStudent.ภารกิจ || currentStudent.ภารกิจ.length === 0) {
-      list.innerHTML = "<h4 style='text-align:center;'>📜 บันทึกภารกิจ</h4><p style='text-align:center; color:#999;'>ไม่มีภารกิจในขณะนี้</p>";
+      list.innerHTML = "<h4>📜 ภารกิจ</h4><p style='text-align:center;'>ไม่มีภารกิจ</p>";
       return;
     }
     const html = currentStudent.ภารกิจ.map(m => {
       const isDone = parseFloat(m.score) > 0;
-      return `<div class="mission-item"><div style="display:flex; justify-content:space-between; align-items:center;"><span>📍 <b>${m.name}</b></span><span class="${isDone ? 'status-done' : 'status-pending'}" style="font-size:12px;">${isDone ? 'สำเร็จ' : 'กำลังทำ'}</span></div>${isDone ? `<div style="font-size:11px; color:#27ae60; margin-top:5px;">ได้รับ +${m.score} คะแนน</div>` : ''}</div>`;
+      let typeClass = "type-default";
+      if(m.name.includes("H-O")) typeClass = "type-ho";
+      if(m.name.includes("P-W")) typeClass = "type-pw";
+
+      return `
+        <div class="mission-item ${typeClass}">
+          <span class="status-badge ${isDone ? 'done-bg' : 'wait-bg'}">${isDone ? 'สำเร็จ' : 'รอรับการทดสอบ'}</span>
+          <b>${m.name}</b>
+          ${isDone ? `<div style="font-size:11px; color:#27ae60; margin-top:5px;">ได้รับ +${m.score} คะแนน</div>` : ''}
+        </div>`;
     }).join('');
-    list.innerHTML = "<h4 style='text-align:center; margin-top:0;'>📜 บันทึกภารกิจ</h4>" + html;
+    list.innerHTML = "<h4 style='text-align:center; margin-top:0; color:#634d3a;'>📜 บันทึกภารกิจ</h4>" + html;
   }
 
   function applyShirt(url){
@@ -240,7 +257,7 @@
 
   async function saveDressing() {
     const btn = document.getElementById("saveBtn");
-    btn.disabled = true; btn.textContent = "บันทึก...";
+    btn.disabled = true; btn.textContent = "กำลังร่ายมนต์บันทึก...";
     let h="", s="", f="";
     if(document.getElementById("full-set-overlay").style.display==="block") f=document.getElementById("full-set-overlay").src;
     else {
@@ -248,7 +265,7 @@
       if(document.getElementById("shirt-overlay").style.display==="block") s=document.getElementById("shirt-overlay").src;
     }
     const url = `${API_URL}?action=saveDressing&id=${encodeURIComponent(currentStudent.รหัสเข้า)}&hat=${encodeURIComponent(h)}&shirt=${encodeURIComponent(s)}&fullset=${encodeURIComponent(f)}`;
-    try { await fetch(url, {mode:'no-cors'}); alert("บันทึกชุดสำเร็จเมี๊ยว!"); } catch(e) { alert("พลาด!"); }
+    try { await fetch(url, {mode:'no-cors'}); alert("บันทึกชุดลงอาณาจักรสำเร็จ!"); } catch(e) { alert("เวทมนตร์ขัดข้อง!"); }
     btn.disabled = false; btn.textContent = "💾 บันทึกชุด";
   }
 
