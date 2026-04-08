@@ -261,40 +261,49 @@
   function gameJump() { if(!isGameOver) birdV = -6.5; }
   function closeGame() { isGameOver = true; cancelAnimationFrame(gameFrame); document.getElementById("gameOverlay").style.display = "none"; }
 
-  // --- ส่วนนี้คือฟังก์ชันวาดแมวในเกมที่เมี๊ยวปรับปรุงใหม่ ---
 function runGame() {
     if(isGameOver) return;
     ctx.clearRect(0,0,300,400);
-    ctx.fillStyle = "#87CEEB"; ctx.fillRect(0,0,300,400);
+    ctx.fillStyle = "#87CEEB"; ctx.fillRect(0,0,300,400); // BG
     birdV += 0.32; birdY += birdV;
     
     ctx.save();
-    ctx.translate(60, birdY); 
+    ctx.translate(60, birdY); // เลื่อนแมวมาขวาอีกนิด
     
-    // 1. กำหนดขนาดตัวแมว
-    const catSize = 120; 
+    // 🔥 1. กำหนดความสูงของแมวที่เราต้องการในเกม (เช่น 120px)
+    const catHeight = 120; 
+    
+    // 🔥 2. คำนวณความกว้างที่ถูกต้องตามสัดส่วนจริงของไฟล์ภาพ (Aspect Ratio)
+    // สูตร: catWidth = (ความกว้างจริง / ความสูงจริง) * ความสูงที่เราต้องการ
+    const catWidth = (avatarImg.naturalWidth / avatarImg.naturalHeight) * catHeight;
+    
+    // --- เริ่มวาดตามลำดับ Layer (ล่างไปบน) ---
+    
+    // 🔥 3. วาดตัวแมว (ล่างสุด) - ใช้ Width ที่คำนวณมาใหม่
+    ctx.drawImage(avatarImg, -catWidth/2, -catHeight/2, catWidth, catHeight);
+    
+    // --- เช็คชุดที่ใส่ ---
     
     if(document.getElementById("full-set-overlay").style.display === "block") {
-        // วาดชุดเซต (ถ้ามี)
-        ctx.drawImage(setImg, -catSize/2, -catSize/2, catSize, catSize);
+        // 🔥 วาดชุดเซต (ถ้ามี) - ใช้ Width ตามสัดส่วนภาพเซต
+        const setWidth = (setImg.naturalWidth / setImg.naturalHeight) * catHeight;
+        ctx.drawImage(setImg, -setWidth/2, -catHeight/2, setWidth, catHeight);
     } else {
-        // 2. วาดตัวแมวเปล่าๆ
-        ctx.drawImage(avatarImg, -catSize/2, -catSize/2, catSize, catSize);
-
-        // 3. วาดเสื้อ (ปรับขนาดให้เล็กลงเพื่อความพอดี)
+        // 🔥 4. วาดเสื้อ (ทับแมว) - ใช้ Width ตามสัดส่วนภาพเสื้อ
         if(document.getElementById("shirt-overlay").style.display === "block" && activeShirtConfig) {
-            // คำนวณขนาดเสื้อ: (ความกว้างจาก Config / 100) * ขนาดแมว * 0.85 (ตัวคูณลดขนาด)
-            const sW = (activeShirtConfig.config.width / 100) * catSize * 0.85; 
-            // คำนวณตำแหน่ง Top: (ค่า Top จาก Config / 100) * ขนาดแมว - (ขนาดแมว/2)
-            const sT = (activeShirtConfig.config.top / 100) * catSize - (catSize/2);
-            ctx.drawImage(shirtImg, -sW/2, sT, sW, sW);
+            const shirtHeight = catHeight; // เสื้อสูงเท่าแมว
+            const shirtWidth = (shirtImg.naturalWidth / shirtImg.naturalHeight) * shirtHeight;
+            // คำนวณตำแหน่ง Top: (ค่า Top จาก Config / 100) * ความสูงแมว - (ความสูงแมว/2)
+            const sT = (activeShirtConfig.config.top / 100) * catHeight - (catHeight/2);
+            ctx.drawImage(shirtImg, -shirtWidth/2, sT, shirtWidth, shirtHeight);
         }
 
-        // 4. วาดหมวก (ปรับขนาดให้เล็กลงเพื่อให้เข้ากับหัวแมว)
+        // 🔥 5. วาดหมวก (บนสุด) - ใช้ Width ตามสัดส่วนภาพหมวก
         if(document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
-            const hW = (activeHatConfig.config.width / 100) * catSize * 0.85;
-            const hT = (activeHatConfig.config.top / 100) * catSize - (catSize/2);
-            ctx.drawImage(hatImg, -hW/2, hT, hW, hW);
+            const hatHeight = catHeight; // หมวกสูงเท่าแมว
+            const hatWidth = (hatImg.naturalWidth / hatImg.naturalHeight) * hatHeight;
+            const hT = (activeHatConfig.config.top / 100) * catHeight - (catHeight/2);
+            ctx.drawImage(hatImg, -hatWidth/2, hT, hatWidth, hatHeight);
         }
     }
     ctx.restore();
