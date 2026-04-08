@@ -261,37 +261,45 @@
   function gameJump() { if(!isGameOver) birdV = -6.5; }
   function closeGame() { isGameOver = true; cancelAnimationFrame(gameFrame); document.getElementById("gameOverlay").style.display = "none"; }
 
-  function runGame() {
+  // --- ส่วนนี้คือฟังก์ชันวาดแมวในเกมที่เมี๊ยวปรับปรุงใหม่ ---
+function runGame() {
     if(isGameOver) return;
     ctx.clearRect(0,0,300,400);
     ctx.fillStyle = "#87CEEB"; ctx.fillRect(0,0,300,400);
     birdV += 0.32; birdY += birdV;
     
     ctx.save();
-    ctx.translate(60, birdY); // เลื่อนแมวมาขวาอีกนิด
+    ctx.translate(60, birdY); 
     
-    const renderSize = 120; // ปรับขนาดแมวในเกมให้ใหญ่ขึ้นกว่าเดิม (Giant Cat)
+    // 1. กำหนดขนาดตัวแมว
+    const catSize = 120; 
     
     if(document.getElementById("full-set-overlay").style.display === "block") {
-      // ดึงสเกลจาก config ของชุดเซตด้วย
-      let currentSetUrl = document.getElementById("full-set-overlay").src;
-      let setData = fullSetLibrary.find(i=>currentSetUrl.includes(i.url));
-      let setScale = setData ? (setData.config.width / 70) : 1;
-      ctx.drawImage(setImg, -(renderSize*setScale)/2, -(renderSize*setScale)/2, renderSize*setScale, renderSize*setScale);
+        // วาดชุดเซต (ถ้ามี)
+        ctx.drawImage(setImg, -catSize/2, -catSize/2, catSize, catSize);
     } else {
-      ctx.drawImage(avatarImg, -renderSize/2, -renderSize/2, renderSize, renderSize);
-      if(document.getElementById("shirt-overlay").style.display === "block" && activeShirtConfig) {
-        const sW = (activeShirtConfig.config.width / 100) * (renderSize / 0.85);
-        const sT = (activeShirtConfig.config.top / 100) * (renderSize / 0.85) - (renderSize/2);
-        ctx.drawImage(shirtImg, -sW/2, sT, sW, sW);
-      }
-      if(document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
-        const hW = (activeHatConfig.config.width / 100) * (renderSize / 0.85);
-        const hT = (activeHatConfig.config.top / 100) * (renderSize / 0.85) - (renderSize/2);
-        ctx.drawImage(hatImg, -hW/2, hT, hW, hW);
-      }
+        // 2. วาดตัวแมวเปล่าๆ
+        ctx.drawImage(avatarImg, -catSize/2, -catSize/2, catSize, catSize);
+
+        // 3. วาดเสื้อ (ปรับขนาดให้เล็กลงเพื่อความพอดี)
+        if(document.getElementById("shirt-overlay").style.display === "block" && activeShirtConfig) {
+            // คำนวณขนาดเสื้อ: (ความกว้างจาก Config / 100) * ขนาดแมว * 0.85 (ตัวคูณลดขนาด)
+            const sW = (activeShirtConfig.config.width / 100) * catSize * 0.85; 
+            // คำนวณตำแหน่ง Top: (ค่า Top จาก Config / 100) * ขนาดแมว - (ขนาดแมว/2)
+            const sT = (activeShirtConfig.config.top / 100) * catSize - (catSize/2);
+            ctx.drawImage(shirtImg, -sW/2, sT, sW, sW);
+        }
+
+        // 4. วาดหมวก (ปรับขนาดให้เล็กลงเพื่อให้เข้ากับหัวแมว)
+        if(document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
+            const hW = (activeHatConfig.config.width / 100) * catSize * 0.85;
+            const hT = (activeHatConfig.config.top / 100) * catSize - (catSize/2);
+            ctx.drawImage(hatImg, -hW/2, hT, hW, hW);
+        }
     }
     ctx.restore();
+    // ... โค้ดส่วนอื่นๆ คงเดิม ...
+}
 
     if(frameCount % 80 === 0) obstacles.push({x:300, w:50, h:80 + Math.random()*120, passed: false});
     frameCount++;
