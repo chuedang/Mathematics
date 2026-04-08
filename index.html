@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Cat RPG Adventure v3.5</title>
+  <title>Cat RPG Adventure v3.6</title>
   <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     * { touch-action: pan-y; -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
     body { font-family: 'Mitr', sans-serif; background: #e2d1c3; margin: 0; padding: 0; overflow-x: hidden; width: 100vw; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 
-    /* Login Section - Gray loading */
+    /* Login Section */
     #loginPage { background: white; padding: 40px 30px; border-radius: 30px; width: 90%; max-width: 340px; margin-top: 60px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
     .login-input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #ddd; font-family: 'Mitr'; font-size: 16px; outline: none; }
     #loginBtn { background: #2ecc71; color: white; border: none; padding: 15px; border-radius: 15px; width: 100%; font-family: 'Mitr'; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 #27ae60; }
@@ -28,10 +28,10 @@
     }
     .god-aura { box-shadow: 0 0 20px #f1c40f, 0 0 40px #f39c12 !important; border-color: #f1c40f !important; background: radial-gradient(circle, #fff9e6 0%, #ffffff 100%) !important; }
     #avatar-base { width: auto; height: 85%; z-index: 1; image-rendering: pixelated; }
-    #shirt-overlay, #hat-overlay { position: absolute; z-index: 2; display: none; transform: translateX(-50%); left: 50%; pointer-events: none; }
+    #shirt-overlay, #hat-overlay { position: absolute; z-index: 2; display: none; transform: translateX(-50%); pointer-events: none; }
     #full-set-overlay { position: absolute; z-index: 4; display: none; transform: translate(-50%, -50%); left: 50%; top: 50%; }
 
-    /* Inventory Tabs */
+    /* UI Elements */
     .tab-menu { display: flex; gap: 5px; margin-bottom: 15px; }
     .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 12px; background: #f0f0f0; font-family: 'Mitr'; font-size: 13px; cursor: pointer; }
     .tab-btn.active { background: #3498db; color: white; }
@@ -42,13 +42,13 @@
     .lvl-badge { position: absolute; top: 2px; right: 2px; font-size: 8px; background: #e74c3c; color: white; padding: 2px 4px; border-radius: 5px; }
     .locked { opacity: 0.3; filter: grayscale(1); }
 
-    /* Mission Styles */
+    /* Mission */
     .mission-item { padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 8px solid #ccc; font-size: 14px; }
     .status-badge { font-size: 11px; padding: 3px 10px; border-radius: 10px; float: right; color: white; }
     .done-bg { background: #27ae60; }
     .wait-bg { background: #95a5a6; }
 
-    /* Control Buttons */
+    /* Buttons */
     .btn-save { background: #3498db; color: white; border: none; padding: 15px; border-radius: 18px; width: 100%; font-family: 'Mitr'; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 0 #2980b9; }
     .btn-clear { width:100%; background:#95a5a6; color:white; border:none; padding:12px; border-radius:18px; margin-top:10px; font-family:'Mitr'; cursor:pointer; }
     .btn-logout { width:100%; background:none; color:#e74c3c; border:1px dashed #e74c3c; padding:10px; border-radius:18px; margin-top:10px; font-family:'Mitr'; cursor:pointer; }
@@ -133,15 +133,15 @@
     { id: "h1", name: "มาดแมน", minLvl: 0, url: "https://img2.pic.in.th/Gemini_Generated_Image_wt258awt258awt25__1_-removebg-preview.png", config: { top: 5, left: 47, width: 52 } },
     { id: "h2", name: "ชมพูฤดูหนาว", minLvl: 10, url: "https://img2.pic.in.th/Gemini_Generated_Image_wt258awt258awt25-removebg-preview.png", config: { top: 1, left: 50, width: 50 } },
     { id: "h3", name: "ฟางน่ารัก", minLvl: 20, url: "https://img2.pic.in.th/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy_-_Copy_-_Copy-removebg-preview.png", config: { top: 11, left: 50, width: 62 } },
-    { id: "h4", name: "หมวกนักคิด", minLvl: 30, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy_-_Copy-removebg-preview.png", config: { top: 5, left: 25, width: 60 } },
-    { id: "h5", name: "หมวกผู้ดี", minLvl: 40, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy-removebg-preview.png", config: { top: 2, left: 30, width: 65 } },
-    { id: "h6", name: "หมวกท่องเที่ยว", minLvl: 45, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g-removebg-preview.png", config: { top: 10, left: 30, width: 60 } },
-    { id: "h7", name: "Kitty Red", minLvl: 55, url: "https://img1.pic.in.th/images/Kitty2.png", config: { top: 10, left: 30, width: 46 } },
-    { id: "h8", name: "Kitty Pink", minLvl: 65, url: "https://img1.pic.in.th/images/Kitty1.png", config: { top: 18, left: 28, width: 46 } },
-    { id: "h9", name: "Kitty Gab", minLvl: 70, url: "https://img2.pic.in.th/KittyGab.png", config: { top: 10, left: 30, width: 60 } },
-    { id: "h10", name: "Kuromi 01", minLvl: 75, url: "https://img2.pic.in.th/Kuromi01.png", config: { top: 18, left: 28, width: 46 } },
-    { id: "h11", name: "Kuromi 02", minLvl: 77, url: "https://img1.pic.in.th/images/Kuromi02.png", config: { top: 9, left: 25, width: 60 } },
-    { id: "h12", name: "Kuromi 03", minLvl: 80, url: "https://img2.pic.in.th/Kuromi03.png", config: { top: 9, left: 25, width: 60 } }
+    { id: "h4", name: "หมวกนักคิด", minLvl: 30, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy_-_Copy-removebg-preview.png", config: { top: 5, left: 45, width: 60 } },
+    { id: "h5", name: "หมวกผู้ดี", minLvl: 40, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy-removebg-preview.png", config: { top: 2, left: 48, width: 65 } },
+    { id: "h6", name: "หมวกท่องเที่ยว", minLvl: 45, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g-removebg-preview.png", config: { top: 10, left: 48, width: 60 } },
+    { id: "h7", name: "Kitty Red", minLvl: 55, url: "https://img1.pic.in.th/images/Kitty2.png", config: { top: 10, left: 48, width: 46 } },
+    { id: "h8", name: "Kitty Pink", minLvl: 65, url: "https://img1.pic.in.th/images/Kitty1.png", config: { top: 18, left: 46, width: 46 } },
+    { id: "h9", name: "Kitty Gab", minLvl: 70, url: "https://img2.pic.in.th/KittyGab.png", config: { top: 10, left: 48, width: 60 } },
+    { id: "h10", name: "Kuromi 01", minLvl: 75, url: "https://img2.pic.in.th/Kuromi01.png", config: { top: 18, left: 46, width: 46 } },
+    { id: "h11", name: "Kuromi 02", minLvl: 77, url: "https://img1.pic.in.th/images/Kuromi02.png", config: { top: 9, left: 47, width: 55 } },
+    { id: "h12", name: "Kuromi 03", minLvl: 80, url: "https://img2.pic.in.th/Kuromi03.png", config: { top: 9, left: 47, width: 53 } }
   ];
 
   const fullSetLibrary = [
@@ -202,12 +202,18 @@
 
   function applyShirt(url){ 
     const s = document.getElementById("shirt-overlay"); activeShirtConfig = shirtLibrary.find(i=>i.url===url);
-    s.src=url; s.style.display="block"; s.style.top=activeShirtConfig.config.top+"%"; s.style.width=activeShirtConfig.config.width+"%";
+    s.src=url; s.style.display="block"; 
+    s.style.top=activeShirtConfig.config.top+"%"; 
+    s.style.width=activeShirtConfig.config.width+"%";
+    s.style.left=activeShirtConfig.config.left+"%"; // ใช้ค่า Left
     document.getElementById("full-set-overlay").style.display="none"; document.getElementById("avatar-base").style.visibility="visible";
   }
   function applyHat(url){
     const h = document.getElementById("hat-overlay"); activeHatConfig = hatLibrary.find(i=>i.url===url);
-    h.src=url; h.style.display="block"; h.style.top=activeHatConfig.config.top+"%"; h.style.width=activeHatConfig.config.width+"%";
+    h.src=url; h.style.display="block"; 
+    h.style.top=activeHatConfig.config.top+"%"; 
+    h.style.width=activeHatConfig.config.width+"%";
+    h.style.left=activeHatConfig.config.left+"%"; // ใช้ค่า Left
     document.getElementById("full-set-overlay").style.display="none"; document.getElementById("avatar-base").style.visibility="visible";
   }
   function applyFullSet(url){
@@ -238,7 +244,7 @@
     btn.disabled=false; btn.textContent="💾 บันทึกชุด";
   }
 
-  // --- GAME ENGINE (GIANT CAT UPDATE) ---
+  // --- GAME ENGINE ---
   function handleAvatarClick() {
     clickCount++; clearTimeout(clickTimer); clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
     if(clickCount >= 5) { clickCount = 0; openGame(); }
@@ -261,72 +267,63 @@
   function gameJump() { if(!isGameOver) birdV = -6.5; }
   function closeGame() { isGameOver = true; cancelAnimationFrame(gameFrame); document.getElementById("gameOverlay").style.display = "none"; }
 
-function runGame() {
+  function runGame() {
     if(isGameOver) return;
     ctx.clearRect(0,0,300,400);
     ctx.fillStyle = "#87CEEB"; ctx.fillRect(0,0,300,400);
     birdV += 0.32; birdY += birdV;
     
     ctx.save();
-    ctx.translate(60, birdY); 
+    ctx.translate(70, birdY); 
     
-    // 1. ปรับขนาดความสูงรวมลงมาให้ไม่ใหญ่เกินไป (จาก 120 -> 100)
-    const catHeight = 80; 
-    
-    // 2. คำนวณความกว้างแมวตามสัดส่วนจริง (Ratio)
+    const catHeight = 85; // ปรับขนาดที่พอดี (ลดลงจาก 100)
     const catWidth = (avatarImg.naturalWidth / avatarImg.naturalHeight) * catHeight;
     
     if(document.getElementById("full-set-overlay").style.display === "block") {
-        const setWidth = (setImg.naturalWidth / setImg.naturalHeight) * catHeight;
-        ctx.drawImage(setImg, -setWidth/2, -catHeight/2, setWidth, catHeight);
+      const setWidth = (setImg.naturalWidth / setImg.naturalHeight) * catHeight;
+      ctx.drawImage(setImg, -setWidth/2, -catHeight/2, setWidth, catHeight);
     } else {
-        // วาดตัวแมว
-        ctx.drawImage(avatarImg, -catWidth/2, -catHeight/2, catWidth, catHeight);
+      ctx.drawImage(avatarImg, -catWidth/2, -catHeight/2, catWidth, catHeight);
 
-       // --- แก้ไขเฉพาะจุดวาดเสื้อและหมวกในฟังก์ชัน runGame ---
+      // วาดเสื้อ (ใช้ค่า % จาก Library)
+      if(document.getElementById("shirt-overlay").style.display === "block" && activeShirtConfig) {
+        const shirtScale = (activeShirtConfig.config.width / 100) * 1.1; // 1.1 คือตัวคูณจูนขนาด
+        const shirtW = (shirtImg.naturalWidth / shirtImg.naturalHeight) * catHeight * shirtScale;
+        const shirtH = catHeight * shirtScale;
+        const sT = (activeShirtConfig.config.top / 100) * catHeight - (catHeight/2);
+        const sX = ((activeShirtConfig.config.left - 50) / 100) * catHeight;
+        ctx.drawImage(shirtImg, sX - (shirtW/2), sT, shirtW, shirtH);
+      }
 
-// 3. วาดเสื้อ (ปรับให้ลดขนาดตาม Config % ของเสื้อตัวนั้นๆ)
-if (document.getElementById("shirt-overlay").style.display === "block" && activeShirtConfig) {
-    // คำนวณความกว้างเสื้อ: (ความกว้างภาพจริง / ความสูงภาพจริง) * ความสูงแมว * (เปอร์เซ็นต์ความกว้างใน config / 100)
-    // เพิ่มตัวคูณ 1.1 หรือ 1.2 เพื่อให้ชุดดูสมส่วนกับตัวละครในเกม
-    const shirtWidth = (shirtImg.naturalWidth / shirtImg.naturalHeight) * catHeight * (activeShirtConfig.config.width / 100) * 0.9;
-    const sT = (activeShirtConfig.config.top / 100) * catHeight - (catHeight / 2);
-    ctx.drawImage(shirtImg, -shirtWidth / 2, sT, shirtWidth, catHeight * (activeShirtConfig.config.width / 100) * 0.9);
-}
-
-// 4. วาดหมวก (ปรับให้ลดขนาดตาม Config % ของหมวกใบนั้นๆ)
-if (document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
-    // ใช้หลักการเดียวกันกับเสื้อ เพื่อให้หมวกลดขนาดตามที่ตั้งค่าไว้
-    const hatWidth = (hatImg.naturalWidth / hatImg.naturalHeight) * catHeight * (activeHatConfig.config.width / 100) * 1.1;
-    // ปรับค่า hT ให้สูงขึ้น (- 10 หรือมากกว่าตามต้องการ)
-    const hT = ((activeHatConfig.config.top / 100) * catHeight - (catHeight / 2)) - 10; 
-    ctx.drawImage(hatImg, -hatWidth / 2, hT, hatWidth, catHeight * (activeHatConfig.config.width / 100) * 1.1);
-        }
+      // วาดหมวก (ใช้ค่า % จาก Library)
+      if(document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
+        const hatScale = (activeHatConfig.config.width / 100) * 1.1; 
+        const hatW = (hatImg.naturalWidth / hatImg.naturalHeight) * catHeight * hatScale;
+        const hatH = catHeight * hatScale;
+        // ลบเพิ่ม 12 พิกเซลเพื่อให้หมวกลอยสูงขึ้น
+        const hT = ((activeHatConfig.config.top / 100) * catHeight - (catHeight/2)) - 12;
+        const hX = ((activeHatConfig.config.left - 50) / 100) * catHeight;
+        ctx.drawImage(hatImg, hX - (hatW/2), hT, hatW, hatH);
+      }
     }
     ctx.restore();
 
     if(frameCount % 80 === 0) obstacles.push({x:300, w:50, h:80 + Math.random()*120, passed: false});
     frameCount++;
-    
     obstacles.forEach((o, i) => {
       o.x -= 3.5;
       ctx.fillStyle = "#e74c3c"; ctx.fillRect(o.x, 400-o.h, o.w, o.h);
-      // ปรับ Hitbox ให้เข้ากับตัวแมวที่ใหญ่ขึ้น
-      if(o.x < 100 && o.x + o.w > 30 && birdY + 35 > 400-o.h) { 
-        isGameOver = true; alert("โอ๊ย! ชนกองงานแล้วเมี๊ยว คะแนน: " + gameScore); closeGame(); 
-      }
-      if(!o.passed && o.x < 30) { o.passed = true; gameScore++; document.getElementById("gameScoreText").textContent = gameScore; }
+      if(o.x < 110 && o.x + o.w > 40 && birdY + 25 > 400-o.h) { isGameOver = true; alert("ชนกองงานแล้วเมี๊ยว! คะแนน: " + gameScore); closeGame(); }
+      if(!o.passed && o.x < 40) { o.passed = true; gameScore++; document.getElementById("gameScoreText").textContent = gameScore; }
     });
-
     if(gameScore >= 10 && !isGameOver) {
       isGameOver = true; document.getElementById("avatarClicker").classList.add("god-aura");
-      setTimeout(() => { alert("⚔️ พิชิตสำเร็จ! คุณเก่งมากเมี๊ยว! รับออร่าทองไปเลย!"); closeGame(); }, 100);
+      setTimeout(() => { alert("⚔️ พิชิตสำเร็จเมี๊ยว! รับออร่าเทพเจ้า!"); closeGame(); }, 100);
       return;
     }
-    if(birdY > 450 || birdY < -100) { isGameOver = true; alert("หล่นโลกแล้วเมี๊ยว!"); closeGame(); }
+    if(birdY > 450 || birdY < -100) { isGameOver = true; alert("ตกโลกแล้วเมี๊ยว!"); closeGame(); }
     if(!isGameOver) gameFrame = requestAnimationFrame(runGame);
   }
-
   loadData();
 </script>
 </body>
