@@ -214,7 +214,7 @@
       if (index >= 0 && index <= 7) typeClass = "type-ho";
       else if (index >= 8 && index <= 15) typeClass = "type-pw";
 
-      return `<div class="mission-item ${typeClass}"><span class="status-badge ${isDone ? 'done-bg' : 'wait-bg'}">${isDone ? '⚔️พิชิตสำเร็จ' : '📜รอรับการทดสอบ'}</span><b>${m.name}</b>${isDone ? `<div style="font-size:11px; color:#27ae60; margin-top:5px;">ได้รับ +${m.score} คะแนน</div>` : ''}</div>`;
+      return `<div class="mission-item ${typeClass}"><span class="status-badge ${isDone ? 'done-bg' : 'wait-bg'}">${isDone ? '⚔️พิชิตสำเร็จ' : '⏳ยังไม่ได้ทำ'}</span><b>${m.name}</b>${isDone ? `<div style="font-size:11px; color:#27ae60; margin-top:5px;">ได้รับ +${m.score} คะแนน</div>` : ''}</div>`;
     }).join('');
     list.innerHTML = "<h4 style='text-align:center; margin-top:0; color:#634d3a;'>📜 บันทึกภารกิจ</h4>" + html;
   }
