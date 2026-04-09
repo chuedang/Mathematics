@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Cat RPG Adventure v3.6</title>
+  <title>Cat RPG Adventure v3.7</title>
   <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     * { touch-action: pan-y; -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
@@ -37,10 +37,13 @@
     .tab-btn.active { background: #3498db; color: white; }
     .tab-content { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .tab-content.active { display: grid; }
-    .item-slot { background: #fafafa; border: 2px solid #eee; border-radius: 15px; padding: 10px; text-align: center; position: relative; }
+    .item-slot { background: #fafafa; border: 2px solid #eee; border-radius: 15px; padding: 10px; text-align: center; position: relative; transition: 0.2s; }
     .item-slot img { width: 100%; height: 50px; object-fit: contain; }
     .lvl-badge { position: absolute; top: 2px; right: 2px; font-size: 8px; background: #e74c3c; color: white; padding: 2px 4px; border-radius: 5px; }
     .locked { opacity: 0.3; filter: grayscale(1); }
+    
+    /* 🔥 Highlight เมื่อเลือกไอเทม */
+    .selected-item { border: 3px solid #3498db !important; background: #ebf5fb !important; transform: scale(1.05); box-shadow: 0 4px 10px rgba(52,152,219,0.3); }
 
     /* Mission */
     .mission-item { padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 8px solid #ccc; font-size: 14px; }
@@ -181,11 +184,22 @@
 
   function renderInventory() {
     const lvl = currentStudent.เลเวล;
+    const curShirt = document.getElementById("shirt-overlay").src;
+    const curHat = document.getElementById("hat-overlay").src;
+    const curSet = document.getElementById("full-set-overlay").src;
+    const isSetVisible = document.getElementById("full-set-overlay").style.display === "block";
+
     const draw = (lib, type) => lib.map(item => {
       const lock = lvl < item.minLvl;
+      let isSelected = false;
+      if(type==='s' && !isSetVisible) isSelected = (curShirt === item.url && document.getElementById("shirt-overlay").style.display === "block");
+      if(type==='h' && !isSetVisible) isSelected = (curHat === item.url && document.getElementById("hat-overlay").style.display === "block");
+      if(type==='f') isSelected = (curSet === item.url && isSetVisible);
+
       const fn = type==='s' ? `applyShirt('${item.url}')` : type==='h' ? `applyHat('${item.url}')` : `applyFullSet('${item.url}')`;
-      return `<div class="item-slot ${lock?'locked':''}" onclick="${lock?'':fn}">${lock?`<span class="lvl-badge">Lv.${item.minLvl}</span>`:''}<img src="${item.url}"><br><span style="font-size:9px;">${item.name}</span></div>`;
+      return `<div id="item-${item.id}" class="item-slot ${lock?'locked':''} ${isSelected?'selected-item':''}" onclick="${lock?'':fn}">${lock?`<span class="lvl-badge">Lv.${item.minLvl}</span>`:''}<img src="${item.url}"><br><span style="font-size:9px;">${item.name}</span></div>`;
     }).join('');
+
     document.getElementById("tab-shirts").innerHTML = draw(shirtLibrary, 's');
     document.getElementById("tab-hats").innerHTML = draw(hatLibrary, 'h');
     document.getElementById("tab-sets").innerHTML = draw(fullSetLibrary, 'f');
@@ -193,9 +207,12 @@
 
   function renderMissions() {
     const html = (currentStudent.ภารกิจ || []).map((m, i) => {
-      const isDone = parseFloat(m.score) > 0;
+      const scoreNum = parseFloat(m.score) || 0;
+      const isDone = scoreNum > 0;
       let cls = i<=7 ? "background:#fff4e6; border-left-color:#f39c12;" : "background:#f3e5f5; border-left-color:#8e44ad;";
-      return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'⚔️ พิชิตสำเร็จ':'⏳ ยังไม่ทำ'}</span><b>${m.name}</b></div>`;
+      // 🔥 แสดงคะแนนที่ได้จาก m.score
+      const scoreText = isDone ? `<br><span style="color:#27ae60; font-weight:500;">✨ ได้รับ +${scoreNum} คะแนน</span>` : "";
+      return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'⚔️ พิชิตสำเร็จ':'⏳ ยังไม่ทำ'}</span><b>${m.name}</b>${scoreText}</div>`;
     }).join('');
     document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center;'>📜 บันทึกภารกิจ</h4>" + html;
   }
@@ -205,25 +222,36 @@
     s.src=url; s.style.display="block"; 
     s.style.top=activeShirtConfig.config.top+"%"; 
     s.style.width=activeShirtConfig.config.width+"%";
-    s.style.left=activeShirtConfig.config.left+"%"; // ใช้ค่า Left
-    document.getElementById("full-set-overlay").style.display="none"; document.getElementById("avatar-base").style.visibility="visible";
+    s.style.left=activeShirtConfig.config.left+"%"; 
+    document.getElementById("full-set-overlay").style.display="none"; 
+    document.getElementById("avatar-base").style.visibility="visible";
+    renderInventory(); // Re-render เพื่อ update ขอบ Highlight
   }
   function applyHat(url){
     const h = document.getElementById("hat-overlay"); activeHatConfig = hatLibrary.find(i=>i.url===url);
     h.src=url; h.style.display="block"; 
     h.style.top=activeHatConfig.config.top+"%"; 
     h.style.width=activeHatConfig.config.width+"%";
-    h.style.left=activeHatConfig.config.left+"%"; // ใช้ค่า Left
-    document.getElementById("full-set-overlay").style.display="none"; document.getElementById("avatar-base").style.visibility="visible";
+    h.style.left=activeHatConfig.config.left+"%"; 
+    document.getElementById("full-set-overlay").style.display="none"; 
+    document.getElementById("avatar-base").style.visibility="visible";
+    renderInventory();
   }
   function applyFullSet(url){
     const f = document.getElementById("full-set-overlay"); const d = fullSetLibrary.find(i=>i.url===url);
     f.src=url; f.style.display="block"; f.style.width=d.config.width+"%";
-    document.getElementById("avatar-base").style.visibility="hidden"; document.getElementById("shirt-overlay").style.display="none"; document.getElementById("hat-overlay").style.display="none";
+    document.getElementById("avatar-base").style.visibility="hidden"; 
+    document.getElementById("shirt-overlay").style.display="none"; 
+    document.getElementById("hat-overlay").style.display="none";
+    renderInventory();
   }
   function clearDressing(){
-    document.getElementById("shirt-overlay").style.display="none"; document.getElementById("hat-overlay").style.display="none"; document.getElementById("full-set-overlay").style.display="none"; document.getElementById("avatar-base").style.visibility="visible";
+    document.getElementById("shirt-overlay").style.display="none"; 
+    document.getElementById("hat-overlay").style.display="none"; 
+    document.getElementById("full-set-overlay").style.display="none"; 
+    document.getElementById("avatar-base").style.visibility="visible";
     activeShirtConfig = null; activeHatConfig = null;
+    renderInventory();
   }
   function openTab(id, btn){
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
@@ -276,7 +304,7 @@
     ctx.save();
     ctx.translate(70, birdY); 
     
-    const catHeight = 85; // ปรับขนาดที่พอดี (ลดลงจาก 100)
+    const catHeight = 85;
     const catWidth = (avatarImg.naturalWidth / avatarImg.naturalHeight) * catHeight;
     
     if(document.getElementById("full-set-overlay").style.display === "block") {
@@ -285,9 +313,8 @@
     } else {
       ctx.drawImage(avatarImg, -catWidth/2, -catHeight/2, catWidth, catHeight);
 
-      // วาดเสื้อ (ใช้ค่า % จาก Library)
       if(document.getElementById("shirt-overlay").style.display === "block" && activeShirtConfig) {
-        const shirtScale = (activeShirtConfig.config.width / 100) * 1.1; // 1.1 คือตัวคูณจูนขนาด
+        const shirtScale = (activeShirtConfig.config.width / 100) * 1.1; 
         const shirtW = (shirtImg.naturalWidth / shirtImg.naturalHeight) * catHeight * shirtScale;
         const shirtH = catHeight * shirtScale;
         const sT = (activeShirtConfig.config.top / 100) * catHeight - (catHeight/2);
@@ -295,12 +322,10 @@
         ctx.drawImage(shirtImg, sX - (shirtW/2), sT, shirtW, shirtH);
       }
 
-      // วาดหมวก (ใช้ค่า % จาก Library)
       if(document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
         const hatScale = (activeHatConfig.config.width / 100) * 1.1; 
         const hatW = (hatImg.naturalWidth / hatImg.naturalHeight) * catHeight * hatScale;
         const hatH = catHeight * hatScale;
-        // ลบเพิ่ม 12 พิกเซลเพื่อให้หมวกลอยสูงขึ้น
         const hT = ((activeHatConfig.config.top / 100) * catHeight - (catHeight/2)) - 12;
         const hX = ((activeHatConfig.config.left - 50) / 100) * catHeight;
         ctx.drawImage(hatImg, hX - (hatW/2), hT, hatW, hatH);
