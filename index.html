@@ -80,6 +80,7 @@
         <h3 id="displayName" style="margin: 0; color: #634d3a;">-</h3>
         <p style="margin: 5px 0;"><span style="background: #fff4e6; color: #d35400; padding: 4px 12px; border-radius: 20px; font-size: 14px;">⭐ เลเวล <span id="displayLevel">0</span></span></p>
         <p style="font-size: 14px; color: #7f8c8d;">🏆 คะแนนสะสม: <span id="displayScore">0</span></p>
+        <p style="font-size: 13px; color: #95a5a6;">🏫 ชั้นเรียน: <span id="displaySheet">-</span></p>
       </div>
       <button class="btn-save" id="saveBtn" onclick="saveDressing()">💾 บันทึกชุด</button>
       <button class="btn-clear" onclick="clearDressing()">❌ ถอดชุด</button>
@@ -179,17 +180,21 @@ function login(){
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("dashboard").style.display = "flex";
     
-    // --- จุดที่แก้ไข: เพิ่มการแสดงชื่อชั้น (ชื่อชีท) กลับเข้าไป ---
-    const sheetName = currentStudent.ชั้น || ""; 
-    document.getElementById("displayName").textContent = `${currentStudent.ชื่อ} (${sheetName})`;
-    // --------------------------------------------------
+    // แสดงชื่อนักเรียนแบบปกติ
+    document.getElementById("displayName").textContent = currentStudent.ชื่อ;
     
+    // แสดงข้อมูลอื่น ๆ
     document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
     document.getElementById("displayScore").textContent = score;
+
+    // --- จุดที่แก้ไข: แยกชื่อชั้นมาไว้บรรทัดล่าง ---
+    document.getElementById("displaySheet").textContent = currentStudent.ชั้น || "ไม่ระบุ";
+    // ------------------------------------------
     
     renderInventory(); 
     renderMissions();
     
+    // (ส่วนการแสดงชุดคงเดิม...)
     if(currentStudent.หมวก && fullSetLibrary.some(s => currentStudent.หมวก === s.url)) {
       applyFullSet(currentStudent.หมวก);
     } else { 
