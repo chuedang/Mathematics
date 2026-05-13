@@ -167,26 +167,29 @@
     }
   }
 
-  function login(){
+function login(){
     const u = document.getElementById("username").value.trim();
     const p = document.getElementById("password").value.trim();
     currentStudent = studentsData.find(s => String(s.รหัสเข้า) === u && String(s.รหัสผ่าน) === p);
     if(!currentStudent) return alert("รหัสผิดเมี๊ยว!");
     
-    // คำนวณเลเวลจากคะแนน
     const score = parseFloat(currentStudent.คะแนน) || 0;
     currentStudent.เลเวล = Math.floor(10 * Math.sqrt(score));
     
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("dashboard").style.display = "flex";
-    document.getElementById("displayName").textContent = currentStudent.ชื่อ;
+    
+    // --- จุดที่แก้ไข: เพิ่มการแสดงชื่อชั้น (ชื่อชีท) กลับเข้าไป ---
+    const sheetName = currentStudent.ชั้น || ""; 
+    document.getElementById("displayName").textContent = `${currentStudent.ชื่อ} (${sheetName})`;
+    // --------------------------------------------------
+    
     document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
     document.getElementById("displayScore").textContent = score;
     
     renderInventory(); 
     renderMissions();
     
-    // แสดงชุดที่เคยใส่อยู่เดิม
     if(currentStudent.หมวก && fullSetLibrary.some(s => currentStudent.หมวก === s.url)) {
       applyFullSet(currentStudent.หมวก);
     } else { 
