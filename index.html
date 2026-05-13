@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Cat RPG Adventure v3.7</title>
+  <title>Cat RPG Adventure v3.8</title>
   <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     * { touch-action: pan-y; -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
@@ -42,7 +42,6 @@
     .lvl-badge { position: absolute; top: 2px; right: 2px; font-size: 8px; background: #e74c3c; color: white; padding: 2px 4px; border-radius: 5px; }
     .locked { opacity: 0.3; filter: grayscale(1); }
     
-    /* 🔥 Highlight เมื่อเลือกไอเทม */
     .selected-item { border: 3px solid #3498db !important; background: #ebf5fb !important; transform: scale(1.05); box-shadow: 0 4px 10px rgba(52,152,219,0.3); }
 
     /* Mission */
@@ -56,7 +55,6 @@
     .btn-clear { width:100%; background:#95a5a6; color:white; border:none; padding:12px; border-radius:18px; margin-top:10px; font-family:'Mitr'; cursor:pointer; }
     .btn-logout { width:100%; background:none; color:#e74c3c; border:1px dashed #e74c3c; padding:10px; border-radius:18px; margin-top:10px; font-family:'Mitr'; cursor:pointer; }
 
-    /* Game Overlay */
     #gameOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
     #gameCanvas { background: #87CEEB; border: 4px solid #fff; border-radius: 20px; }
   </style>
@@ -112,7 +110,8 @@
   </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbw077hY-BeyfgJxDR8VPGN5xDfXJfBR3f7Cei_DwM1KeT02i3tx7CQ8uykvOaNONzEbtA/exec";
+  // อัปเดต URL เป็นตัวใหม่ที่คุณส่งมา
+  const API_URL = "https://script.google.com/macros/s/AKfycbzYzh1PpI3LBC_MzmIkYUd_ctt659_9uXVGPA0IlVhvg8cIvau0OuTbn7BtrsWaNwHmyA/exec";
   let studentsData = [], currentStudent = null;
   let clickCount = 0, clickTimer = null;
   let activeShirtConfig = null, activeHatConfig = null;
@@ -162,7 +161,10 @@
       studentsData = await res.json();
       document.getElementById("loginBtn").disabled = false;
       document.getElementById("loginBtn").textContent = "เข้าสู่อาณาจักร";
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+      console.error(e);
+      document.getElementById("loginBtn").textContent = "เกิดข้อผิดพลาดในการโหลด";
+    }
   }
 
   function login(){
@@ -170,16 +172,27 @@
     const p = document.getElementById("password").value.trim();
     currentStudent = studentsData.find(s => String(s.รหัสเข้า) === u && String(s.รหัสผ่าน) === p);
     if(!currentStudent) return alert("รหัสผิดเมี๊ยว!");
+    
+    // คำนวณเลเวลจากคะแนน
     const score = parseFloat(currentStudent.คะแนน) || 0;
     currentStudent.เลเวล = Math.floor(10 * Math.sqrt(score));
+    
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("dashboard").style.display = "flex";
     document.getElementById("displayName").textContent = currentStudent.ชื่อ;
     document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
     document.getElementById("displayScore").textContent = score;
-    renderInventory(); renderMissions();
-    if(currentStudent.หมวก && fullSetLibrary.some(s => currentStudent.หมวก.includes(s.url))) applyFullSet(currentStudent.หมวก);
-    else { if(currentStudent.หมวก) applyHat(currentStudent.หมวก); if(currentStudent.เสื้อ) applyShirt(currentStudent.เสื้อ); }
+    
+    renderInventory(); 
+    renderMissions();
+    
+    // แสดงชุดที่เคยใส่อยู่เดิม
+    if(currentStudent.หมวก && fullSetLibrary.some(s => currentStudent.หมวก === s.url)) {
+      applyFullSet(currentStudent.หมวก);
+    } else { 
+      if(currentStudent.หมวก) applyHat(currentStudent.หมวก); 
+      if(currentStudent.เสื้อ) applyShirt(currentStudent.เสื้อ); 
+    }
   }
 
   function renderInventory() {
@@ -192,9 +205,9 @@
     const draw = (lib, type) => lib.map(item => {
       const lock = lvl < item.minLvl;
       let isSelected = false;
-      if(type==='s' && !isSetVisible) isSelected = (curShirt === item.url && document.getElementById("shirt-overlay").style.display === "block");
-      if(type==='h' && !isSetVisible) isSelected = (curHat === item.url && document.getElementById("hat-overlay").style.display === "block");
-      if(type==='f') isSelected = (curSet === item.url && isSetVisible);
+      if(type==='s' && !isSetVisible) isSelected = (curShirt.includes(item.url) && document.getElementById("shirt-overlay").style.display === "block");
+      if(type==='h' && !isSetVisible) isSelected = (curHat.includes(item.url) && document.getElementById("hat-overlay").style.display === "block");
+      if(type==='f') isSelected = (curSet.includes(item.url) && isSetVisible);
 
       const fn = type==='s' ? `applyShirt('${item.url}')` : type==='h' ? `applyHat('${item.url}')` : `applyFullSet('${item.url}')`;
       return `<div id="item-${item.id}" class="item-slot ${lock?'locked':''} ${isSelected?'selected-item':''}" onclick="${lock?'':fn}">${lock?`<span class="lvl-badge">Lv.${item.minLvl}</span>`:''}<img src="${item.url}"><br><span style="font-size:9px;">${item.name}</span></div>`;
@@ -206,29 +219,35 @@
   }
 
   function renderMissions() {
-    const html = (currentStudent.ภารกิจ || []).map((m, i) => {
+    const missions = currentStudent.ภารกิจ || [];
+    const html = missions.map((m, i) => {
       const scoreNum = parseFloat(m.score) || 0;
       const isDone = scoreNum > 0;
-      let cls = i<=7 ? "background:#fff4e6; border-left-color:#f39c12;" : "background:#f3e5f5; border-left-color:#8e44ad;";
-      // 🔥 แสดงคะแนนที่ได้จาก m.score
+      // ปรับการคำนวณสีพื้นหลังให้รองรับภารกิจที่เพิ่มขึ้น
+      let cls = i < 9 ? "background:#fff4e6; border-left-color:#f39c12;" : "background:#f3e5f5; border-left-color:#8e44ad;";
       const scoreText = isDone ? `<br><span style="color:#27ae60; font-weight:500;">✨ ได้รับ +${scoreNum} คะแนน</span>` : "";
       return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'⚔️ พิชิตสำเร็จ':'⏳ ยังไม่ทำ'}</span><b>${m.name}</b>${scoreText}</div>`;
     }).join('');
-    document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center;'>📜 บันทึกภารกิจ</h4>" + html;
+    document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center;'>📜 บันทึกภารกิจ (" + missions.length + ")</h4>" + html;
   }
 
   function applyShirt(url){ 
-    const s = document.getElementById("shirt-overlay"); activeShirtConfig = shirtLibrary.find(i=>i.url===url);
+    const s = document.getElementById("shirt-overlay"); 
+    activeShirtConfig = shirtLibrary.find(i=>i.url===url);
+    if(!activeShirtConfig) return;
     s.src=url; s.style.display="block"; 
     s.style.top=activeShirtConfig.config.top+"%"; 
     s.style.width=activeShirtConfig.config.width+"%";
     s.style.left=activeShirtConfig.config.left+"%"; 
     document.getElementById("full-set-overlay").style.display="none"; 
     document.getElementById("avatar-base").style.visibility="visible";
-    renderInventory(); // Re-render เพื่อ update ขอบ Highlight
+    renderInventory();
   }
+  
   function applyHat(url){
-    const h = document.getElementById("hat-overlay"); activeHatConfig = hatLibrary.find(i=>i.url===url);
+    const h = document.getElementById("hat-overlay"); 
+    activeHatConfig = hatLibrary.find(i=>i.url===url);
+    if(!activeHatConfig) return;
     h.src=url; h.style.display="block"; 
     h.style.top=activeHatConfig.config.top+"%"; 
     h.style.width=activeHatConfig.config.width+"%";
@@ -237,14 +256,18 @@
     document.getElementById("avatar-base").style.visibility="visible";
     renderInventory();
   }
+
   function applyFullSet(url){
-    const f = document.getElementById("full-set-overlay"); const d = fullSetLibrary.find(i=>i.url===url);
+    const f = document.getElementById("full-set-overlay"); 
+    const d = fullSetLibrary.find(i=>i.url===url);
+    if(!d) return;
     f.src=url; f.style.display="block"; f.style.width=d.config.width+"%";
     document.getElementById("avatar-base").style.visibility="hidden"; 
     document.getElementById("shirt-overlay").style.display="none"; 
     document.getElementById("hat-overlay").style.display="none";
     renderInventory();
   }
+
   function clearDressing(){
     document.getElementById("shirt-overlay").style.display="none"; 
     document.getElementById("hat-overlay").style.display="none"; 
@@ -253,6 +276,7 @@
     activeShirtConfig = null; activeHatConfig = null;
     renderInventory();
   }
+
   function openTab(id, btn){
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -260,7 +284,8 @@
   }
 
   async function saveDressing() {
-    const btn = document.getElementById("saveBtn"); btn.disabled=true; btn.textContent="⏳ กำลังบันทึก...";
+    const btn = document.getElementById("saveBtn"); 
+    btn.disabled=true; btn.textContent="⏳ กำลังบันทึก...";
     let h="", s="", f="";
     if(document.getElementById("full-set-overlay").style.display==="block") f=document.getElementById("full-set-overlay").src;
     else {
@@ -268,13 +293,20 @@
       if(document.getElementById("shirt-overlay").style.display==="block") s=document.getElementById("shirt-overlay").src;
     }
     const url = `${API_URL}?action=saveDressing&id=${currentStudent.รหัสเข้า}&hat=${encodeURIComponent(h)}&shirt=${encodeURIComponent(s)}&fullset=${encodeURIComponent(f)}`;
-    try { await fetch(url,{mode:'no-cors'}); alert("บันทึกชุดลงในสมุดบันทึกสำเร็จแล้วเมี๊ยว! 🐾"); } catch(e) { alert("ล้มเหลวเมี๊ยว!"); }
+    try { 
+      await fetch(url,{mode:'no-cors'}); 
+      alert("บันทึกชุดลงในสมุดบันทึกสำเร็จแล้วเมี๊ยว! 🐾"); 
+    } catch(e) { 
+      alert("ล้มเหลวเมี๊ยว!"); 
+    }
     btn.disabled=false; btn.textContent="💾 บันทึกชุด";
   }
 
   // --- GAME ENGINE ---
   function handleAvatarClick() {
-    clickCount++; clearTimeout(clickTimer); clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
+    clickCount++; 
+    clearTimeout(clickTimer); 
+    clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
     if(clickCount >= 5) { clickCount = 0; openGame(); }
   }
 
@@ -338,17 +370,24 @@
     obstacles.forEach((o, i) => {
       o.x -= 3.5;
       ctx.fillStyle = "#e74c3c"; ctx.fillRect(o.x, 400-o.h, o.w, o.h);
-      if(o.x < 110 && o.x + o.w > 40 && birdY + 25 > 400-o.h) { isGameOver = true; alert("ชนกองงานแล้วเมี๊ยว! คะแนน: " + gameScore); closeGame(); }
+      if(o.x < 110 && o.x + o.w > 40 && birdY + 25 > 400-o.h) { 
+        isGameOver = true; 
+        alert("ชนกองงานแล้วเมี๊ยว! คะแนน: " + gameScore); 
+        closeGame(); 
+      }
       if(!o.passed && o.x < 40) { o.passed = true; gameScore++; document.getElementById("gameScoreText").textContent = gameScore; }
     });
+    
     if(gameScore >= 10 && !isGameOver) {
-      isGameOver = true; document.getElementById("avatarClicker").classList.add("god-aura");
+      isGameOver = true; 
+      document.getElementById("avatarClicker").classList.add("god-aura");
       setTimeout(() => { alert("⚔️ พิชิตสำเร็จเมี๊ยว! รับออร่าเทพเจ้า!"); closeGame(); }, 100);
       return;
     }
     if(birdY > 450 || birdY < -100) { isGameOver = true; alert("ตกโลกแล้วเมี๊ยว!"); closeGame(); }
     if(!isGameOver) gameFrame = requestAnimationFrame(runGame);
   }
+  
   loadData();
 </script>
 </body>
