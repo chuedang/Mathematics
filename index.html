@@ -112,7 +112,7 @@
 
 <script>
   // อัปเดต URL เป็นตัวใหม่ที่คุณส่งมา
-  const API_URL = "https://script.google.com/macros/s/AKfycbzYzh1PpI3LBC_MzmIkYUd_ctt659_9uXVGPA0IlVhvg8cIvau0OuTbn7BtrsWaNwHmyA/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbxwwlaGECYLWhE8SQFMgq9mRVjNMjfEMjBoRdfByMROACQqyykMhGQnl6bVx-mvQtFu_w/exec";
   let studentsData = [], currentStudent = null;
   let clickCount = 0, clickTimer = null;
   let activeShirtConfig = null, activeHatConfig = null;
@@ -171,37 +171,44 @@
 function login(){
     const u = document.getElementById("username").value.trim();
     const p = document.getElementById("password").value.trim();
-    currentStudent = studentsData.find(s => String(s.รหัสเข้า) === u && String(s.รหัสผ่าน) === p);
+    
+    // ค้นหานักเรียนโดยเช็กจากชื่อหัวคอลลัมน์ที่ส่งมาจากสเปรดชีต (แปลงเป็น String เพื่อป้องกัน Error จากรูปแบบข้อมูล)
+    currentStudent = studentsData.find(s => String(s["รหัสเข้า"] || s.รหัสเข้า || "") === u && String(s["รหัสผ่าน"] || s.รหัสผ่าน || "") === p);
+    
     if(!currentStudent) return alert("รหัสผิดเมี๊ยว!");
     
-    const score = parseFloat(currentStudent.คะแนน) || 0;
+    // ดึงค่าคะแนนสะสม (ยืดหยุ่นตามชื่อหัวคอลลัมน์ "คะแนน")
+    const score = parseFloat(currentStudent["คะแนน"] || currentStudent.คะแนน) || 0;
     currentStudent.เลเวล = Math.floor(10 * Math.sqrt(score));
     
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("dashboard").style.display = "flex";
     
-    // แสดงชื่อนักเรียนแบบปกติ
-    document.getElementById("displayName").textContent = currentStudent.ชื่อ;
+    // แสดงชื่อนักเรียน (ดึงจากหัวคอลลัมน์ "ชื่อ")
+    document.getElementById("displayName").textContent = currentStudent["ชื่อ"] || currentStudent.ชื่อ || "-";
     
-    // แสดงข้อมูลอื่น ๆ
+    // แสดงข้อมูลเลเวลและคะแนน
     document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
     document.getElementById("displayScore").textContent = score;
 
-    // --- จุดที่แก้ไข: แยกชื่อชั้นมาไว้บรรทัดล่าง ---
-    document.getElementById("displaySheet").textContent = currentStudent.ชั้น || "ไม่ระบุ";
-    // ------------------------------------------
+    // แสดงชั้นเรียน (ดึงจากหัวคอลลัมน์ "ชั้น")
+    document.getElementById("displaySheet").textContent = currentStudent["ชั้น"] || currentStudent.ชั้น || "ไม่ระบุ";
+    
+    // ดึงข้อมูลเสื้อผ้าและหมวกแบบ Dynamic ผ่าน Key String ของหัวคอลลัมน์
+    const studentShirt = currentStudent["เสื้อ"] || currentStudent.เสื้อ;
+    const studentHat = currentStudent["หมวก"] || currentStudent.หมวก;
     
     renderInventory(); 
     renderMissions();
     
-    // (ส่วนการแสดงชุดคงเดิม...)
-    if(currentStudent.หมวก && fullSetLibrary.some(s => currentStudent.หมวก === s.url)) {
-      applyFullSet(currentStudent.หมวก);
+    // ตรวจสอบการแต่งตัวจากข้อมูลคอลลัมน์ที่ดึงมา
+    if(studentHat && fullSetLibrary.some(s => studentHat === s.url)) {
+      applyFullSet(studentHat);
     } else { 
-      if(currentStudent.หมวก) applyHat(currentStudent.หมวก); 
-      if(currentStudent.เสื้อ) applyShirt(currentStudent.เสื้อ); 
+      if(studentHat) applyHat(studentHat); 
+      if(studentShirt) applyShirt(studentShirt); 
     }
-  }
+}
 
   function renderInventory() {
     const lvl = currentStudent.เลเวล;
