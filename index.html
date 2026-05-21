@@ -112,7 +112,7 @@
   </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbwSYJPVlzIWk5e0P4-QxSjUjogHSa7JaURIWGKY6koPzrvmqsQ6N3aqhfA9ggn2AtN4Ew/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycby-t0-T1HMlxN7vHCIHEtBTNT1t4POWGOy1IhWXuYZP3X9OGzZfI2lIYt7Ur5bflL2ohg/exec";
   let studentsData = [], currentStudent = null;
   let clickCount = 0, clickTimer = null;
   let activeShirtConfig = null, activeHatConfig = null;
@@ -225,33 +225,72 @@ function login(){
   }
 
 function renderMissions() {
-  // แก้ไขจุดนี้: เปลี่ยนจาก missionList เป็น mission-list ให้ตรงกับ id บน HTML
   const missionContainer = document.getElementById("mission-list");
+  if (!missionContainer) return;
+  
   missionContainer.innerHTML = "";
 
-  const missions = currentStudent["ภารกิจ"] || [];
+  let missions = currentStudent["ภารกิจ"] || currentStudent.ภารกิจ || [];
+  
+  if (typeof missions === 'string') {
+    try {
+      missions = JSON.parse(missions);
+    } catch(e) {
+      console.error("Parsing missions text failed:", e);
+      missions = [];
+    }
+  }
+
+  if (!Array.isArray(missions)) {
+    missions = [];
+  }
+
+  if (missions.length === 0) {
+    missionContainer.innerHTML = `
+      <div style="text-align: center; color: #888; padding: 20px; font-size: 14px;">
+        🐱 ตอนนี้ยังไม่มีประวัติภารกิจที่ทำสำเร็จเมี๊ยว!
+      </div>
+    `;
+    return;
+  }
 
   missions.forEach((mission) => {
-    let badgeColor = "#28a745"; // ก่อนกลางภาค
+    let badgeColor = "#28a745"; // 🟢 สีเขียว: ก่อนกลางภาค
     let badgeText = "ก่อนกลางภาค";
 
-    if (mission.type === "after") {
-      badgeColor = "#007bff"; // หลังกลางภาค
+    if (mission.type === "after" || mission.period === "หลังกลางภาค") {
+      badgeColor = "#007bff"; // 🔵 สีน้ำเงิน: หลังกลางภาค
       badgeText = "หลังกลางภาค";
     }
 
     const item = document.createElement("div");
     item.className = "mission-item";
+    
+    // แก้ไข: ปรับโครงสร้าง CSS ให้ถูกต้องและคลีนขึ้น ไม่ซ้อนทับกัน
+    item.style.borderLeft = `5px solid ${badgeColor}`;
+    item.style.display = "flex";
+    item.style.justifyContent = "space-between"; // เปลี่ยนจาก "between" เป็น "space-between"
+    item.style.alignItems = "center";
+    item.style.padding = "12px";
+    item.style.marginBottom = "8px";
+    item.style.backgroundColor = "#fafafa";
+    item.style.borderRadius = "4px";
+    item.style.width = "100%"; // มั่นใจว่าขยายเต็มพื้นที่กล่องแม่
+    item.style.boxSizing = "border-box"; // ป้องกัน Padding ล้นกล่อง
+    
+    // เอา div ตัวในที่ซ้ำซ้อนออก เหลือเฉพาะเนื้อหาภายในที่จัดเรียงซ้าย-ขวา
     item.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px; padding: 8px; border-bottom: 1px solid #eee;">
-        <div>
-          <span style="background-color: ${badgeColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-right: 8px; font-weight: bold;">
-            ${badgeText}
-          </span>
-          <strong>${mission.name}</strong>
-        </div>
-        <span style="color: ${badgeColor}; font-weight: bold;">+${mission.score} คะแนน</span>
+      <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
+        <span style="background-color: ${badgeColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+          ${badgeText}
+        </span>
+        <span style="font-size: 14px; color: #333; font-weight: 500; margin-top: 2px;">
+          ${mission.name || mission.title || "ภารกิจทั่วไป"}
+        </span>
       </div>
+      <span style="color: ${badgeColor}; font-weight: bold; font-size: 15px; white-space: nowrap;">
+        +${mission.score || mission.points || 0} แต้ม
+      </span>
     `;
     missionContainer.appendChild(item);
   });
