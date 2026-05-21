@@ -290,26 +290,28 @@
     document.getElementById("tab-sets").innerHTML = draw(fullSetLibrary, 'f');
   }
 
-  function renderMissions() {
-  // ดึงข้อมูลภารกิจ (รองรับทั้งชื่อคีย์ .ภารกิจ หรือ .missions)
+function renderMissions() {
+  // ดึงข้อมูลภารกิจ (ยืดหยุ่น: รองรับทั้งคีย์ .ภารกิจ และ .missions)
   const missions = currentStudent.ภารกิจ || currentStudent.missions || [];
   
   const html = missions.map((m, i) => {
-    // รองรับทั้งคีย์ .score และ .คะแนน
+    // ดึงคะแนน (ยืดหยุ่น: รองรับทั้งคีย์ .score และ .คะแนน)
     const scoreNum = parseFloat(m.score || m.คะแนน) || 0;
     const isDone = scoreNum > 0;
     
-    // คำนวณสีตามลำดับภารกิจแบบที่คุณครูตั้งไว้
+    // UI/UX และระบบสีเดิมเป๊ะๆ ตามที่คุณครูตั้งไว้
     let cls = i < 9 ? "background:#fff4e6; border-left-color:#f39c12;" : "background:#f3e5f5; border-left-color:#8e44ad;";
     const scoreText = isDone ? `<br><span style="color:#27ae60; font-weight:500;">✨ ได้รับ +${scoreNum} คะแนน</span>` : "";
     
-    // รองรับทั้งคีย์ .name และ .ชื่อภารกิจ หรือ .ชื่อ
+    // ดึงชื่อภารกิจ (ยืดหยุ่น: รองรับคีย์ .name, .ชื่อภารกิจ หรือ .ชื่อ)
     const missionName = m.name || m.ชื่อภารกิจ || m.ชื่อ || "ภารกิจไม่มีชื่อ";
     
+    // คืนค่ารูปแบบ HTML และ CSS Class เดิมทั้งหมด (ไม่มีการแทรก Badge หรือกล่องอื่นเพิ่มให้รกตา)
     return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'⚔️ พิชิตสำเร็จ':'⏳ ยังไม่ทำ'}</span><b>${missionName}</b>${scoreText}</div>`;
   }).join('');
   
-  document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center; color: #634d3a;'>📜 บันทึกภารกิจ (" + missions.length + ")</h4>" + html;
+  // แสดงผลหัวข้อบันทึกภารกิจตามรูปแบบเดิม
+  document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center;'>📜 บันทึกภารกิจ (" + missions.length + ")</h4>" + html;
 }
 
   function applyShirt(url){ 
