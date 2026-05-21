@@ -291,26 +291,37 @@
   }
 
 function renderMissions() {
-  // ดึงข้อมูลภารกิจ (ยืดหยุ่น: รองรับทั้งคีย์ .ภารกิจ และ .missions)
   const missions = currentStudent.ภารกิจ || currentStudent.missions || [];
   
+  // สวิตช์สำหรับเช็กว่าเจอภารกิจ "สอบกลางภาค" แล้วหรือยัง (เริ่มต้นเป็น false)
+  let passedMidterm = false;
+  
   const html = missions.map((m, i) => {
-    // ดึงคะแนน (ยืดหยุ่น: รองรับทั้งคีย์ .score และ .คะแนน)
     const scoreNum = parseFloat(m.score || m.คะแนน) || 0;
     const isDone = scoreNum > 0;
     
-    // UI/UX และระบบสีเดิมเป๊ะๆ ตามที่คุณครูตั้งไว้
-    let cls = i < 9 ? "background:#fff4e6; border-left-color:#f39c12;" : "background:#f3e5f5; border-left-color:#8e44ad;";
-    const scoreText = isDone ? `<br><span style="color:#27ae60; font-weight:500;">✨ ได้รับ +${scoreNum} คะแนน</span>` : "";
-    
-    // ดึงชื่อภารกิจ (ยืดหยุ่น: รองรับคีย์ .name, .ชื่อภารกิจ หรือ .ชื่อ)
+    // ดึงชื่อภารกิจมาเช็กคำ
     const missionName = m.name || m.ชื่อภารกิจ || m.ชื่อ || "ภารกิจไม่มีชื่อ";
     
-    // คืนค่ารูปแบบ HTML และ CSS Class เดิมทั้งหมด (ไม่มีการแทรก Badge หรือกล่องอื่นเพิ่มให้รกตา)
+    // กำหนดรูปแบบสีพื้นฐาน (ซีกซ้าย/ก่อนกลางภาค = โทนสีส้ม)
+    let cls = "background:#fff4e6; border-left-color:#f39c12;";
+    
+    // ถ้าสวิตช์ถูกเปิดแล้ว (เป็นงานหลังสอบกลางภาค) -> เปลี่ยนเป็นโทนสีม่วง
+    if (passedMidterm) {
+      cls = "background:#f3e5f5; border-left-color:#8e44ad;";
+    }
+    
+    // 💡 จุดสำคัญ: ถ้าเจอภารกิจที่มีคำว่า "สอบกลางภาค" ให้เปิดสวิตช์ passedMidterm เป็น true 
+    // เพื่อให้ภารกิจ "อันถัด ๆ ไป" ในรอบ Loop เปลี่ยนเป็นสีม่วง (ซีกขวา)
+    if (missionName.includes("สอบกลางภาค")) {
+      passedMidterm = true;
+    }
+    
+    const scoreText = isDone ? `<br><span style="color:#27ae60; font-weight:500;">✨ ได้รับ +${scoreNum} คะแนน</span>` : "";
+    
     return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'⚔️ พิชิตสำเร็จ':'⏳ ยังไม่ทำ'}</span><b>${missionName}</b>${scoreText}</div>`;
   }).join('');
   
-  // แสดงผลหัวข้อบันทึกภารกิจตามรูปแบบเดิม
   document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center;'>📜 บันทึกภารกิจ (" + missions.length + ")</h4>" + html;
 }
 
