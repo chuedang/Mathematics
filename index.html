@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Cat RPG Adventure v3.8</title>
-  <link href="https://fonts.googleapis.com/css2?family=Mitr:wght=300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     * { touch-action: pan-y; -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
     body { font-family: 'Mitr', sans-serif; background: #e2d1c3; margin: 0; padding: 0; overflow-x: hidden; width: 100vw; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -14,11 +14,10 @@
     .login-input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #ddd; font-family: 'Mitr'; font-size: 16px; outline: none; }
     #loginBtn { background: #2ecc71; color: white; border: none; padding: 15px; border-radius: 15px; width: 100%; font-family: 'Mitr'; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 #27ae60; }
     #loginBtn:disabled { background: #bdc3c7 !important; color: #7f8c8d !important; box-shadow: 0 4px 0 #95a5a6 !important; cursor: not-allowed; }
-    #loginError { color: #e74c3c; font-size: 14px; margin-top: 10px; display: none; }
 
-    /* Dashboard / MainPage */
-    #mainPage { display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px 0; gap: 20px; }
-    .student-card, .inventory-card, .mission-card { background: white; border-radius: 25px; padding: 20px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: 0 auto 20px; }
+    /* Dashboard */
+    #dashboard { display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px 0; gap: 20px; }
+    .student-card, .inventory-card, .mission-card { background: white; border-radius: 25px; padding: 20px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
 
     /* Avatar System */
     @keyframes breathe { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-4px) scale(1.02); } }
@@ -28,8 +27,9 @@
       border: 5px solid #fff; animation: breathe 3s ease-in-out infinite; cursor: pointer;
     }
     .god-aura { box-shadow: 0 0 20px #f1c40f, 0 0 40px #f39c12 !important; border-color: #f1c40f !important; background: radial-gradient(circle, #fff9e6 0%, #ffffff 100%) !important; }
-    #avatarImg { width: auto; height: 85%; z-index: 1; image-rendering: pixelated; }
-    #shirtImg, #hatImg { position: absolute; z-index: 2; display: none; transform: translateX(-50%); pointer-events: none; }
+    /* แก้ไขจุดผิดคำว่า image-ing เป็น image-rendering */
+    #avatar-base { width: auto; height: 85%; z-index: 1; image-rendering: pixelated; }
+    #shirt-overlay, #hat-overlay { position: absolute; z-index: 2; display: none; transform: translateX(-50%); pointer-events: none; }
     #full-set-overlay { position: absolute; z-index: 4; display: none; transform: translate(-50%, -50%); left: 50%; top: 50%; }
 
     /* UI Elements */
@@ -42,10 +42,14 @@
     .item-slot img { width: 100%; height: 50px; object-fit: contain; }
     .lvl-badge { position: absolute; top: 2px; right: 2px; font-size: 8px; background: #e74c3c; color: white; padding: 2px 4px; border-radius: 5px; }
     .locked { opacity: 0.3; filter: grayscale(1); }
+    
     .selected-item { border: 3px solid #3498db !important; background: #ebf5fb !important; transform: scale(1.05); box-shadow: 0 4px 10px rgba(52,152,219,0.3); }
 
     /* Mission */
     .mission-item { padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 8px solid #ccc; font-size: 14px; }
+    .status-badge { font-size: 11px; padding: 3px 10px; border-radius: 10px; float: right; color: white; }
+    .done-bg { background: #27ae60; }
+    .wait-bg { background: #95a5a6; }
 
     /* Buttons */
     .btn-save { background: #3498db; color: white; border: none; padding: 15px; border-radius: 18px; width: 100%; font-family: 'Mitr'; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 0 #2980b9; }
@@ -58,34 +62,30 @@
 </head>
 <body>
 
-  <!-- หน้าล็อกอิน (ปรับปรุง ID ให้ตรงกับ Google Sheet Script) -->
   <div id="loginPage">
     <h2 style="color: #634d3a;">🐾 Cat RPG</h2>
-    <input type="text" id="loginInput" class="login-input" placeholder="รหัสนักเรียน (ID)">
-    <div id="loginError"></div>
-    <button id="loginBtn" onclick="checkLogin()">เข้าสู่ระบบ</button>
+    <input type="text" id="username" class="login-input" placeholder="รหัสนักเรียน (ID)">
+    <input type="password" id="password" class="login-input" placeholder="รหัสผ่าน">
+    <button id="loginBtn" onclick="login()" disabled>กำลังโหลดอาณาจักร...</button>
   </div>
 
-  <!-- หน้าหลักแดชบอร์ด (เปลี่ยนจาก id="dashboard" เป็น id="mainPage" ตามสคริปต์ชีท) -->
-  <div id="mainPage">
+  <div id="dashboard">
     <div class="student-card">
       <div class="avatar-container" id="avatarClicker" onclick="handleAvatarClick()">
-        <!-- ปรับ ID รูปให้ตรงกับที่สคริปต์ชีทเรียกใช้ -->
-        <img id="avatarImg" src="https://img1.pic.in.th/images/Gemini_Generated_Image_v4dyj4v4dyj4v4dy-removebg-preview.md.png">
-        <img id="shirtImg">
-        <img id="hatImg">
+        <img id="avatar-base" src="https://img1.pic.in.th/images/Gemini_Generated_Image_v4dyj4v4dyj4v4dy-removebg-preview.md.png">
+        <img id="shirt-overlay">
+        <img id="hat-overlay">
         <img id="full-set-overlay">
       </div>
       <div style="text-align: center;">
-        <!-- ปรับ ID ข้อความแสดงผลให้ตรงกับสคริปต์ชีท -->
-        <h3 id="studentName" style="margin: 0; color: #634d3a;">-</h3>
+        <h3 id="displayName" style="margin: 0; color: #634d3a;">-</h3>
         <p style="margin: 5px 0;"><span style="background: #fff4e6; color: #d35400; padding: 4px 12px; border-radius: 20px; font-size: 14px;">⭐ เลเวล <span id="displayLevel">0</span></span></p>
-        <p style="font-size: 14px; color: #7f8c8d;">🏆 คะแนนสะสม: <span id="studentScore">0 แต้ม</span></p>
-        <p style="font-size: 13px; color: #95a5a6;"><span id="studentId">รหัส: -</span> | <span id="studentClass">ห้อง: -</span></p>
+        <p style="font-size: 14px; color: #7f8c8d;">🏆 คะแนนสะสม: <span id="displayScore">0</span></p>
+        <p style="font-size: 13px; color: #95a5a6;">🏫 ชั้นเรียน: <span id="displaySheet">-</span></p>
       </div>
       <button class="btn-save" id="saveBtn" onclick="saveDressing()">💾 บันทึกชุด</button>
       <button class="btn-clear" onclick="clearDressing()">❌ ถอดชุด</button>
-      <button class="btn-logout" onclick="logout()">🚪 ออกจากเมือง (Logout)</button>
+      <button class="btn-logout" onclick="location.reload()">🚪 ออกจากเมือง (Logout)</button>
     </div>
 
     <div class="inventory-card">
@@ -99,11 +99,9 @@
       <div id="tab-sets" class="tab-content"></div>
     </div>
 
-    <!-- ส่วนแสดงประวัติภารกิจ -->
     <div class="mission-card" id="mission-list"></div>
   </div>
 
-  <!-- มินิเกมซ่อนอยู่ -->
   <div id="gameOverlay">
     <div style="color:white; text-align:center; margin-bottom:10px;">
       <h2 style="margin:0;">Cat Jump! 🚀</h2>
@@ -114,17 +112,11 @@
   </div>
 
 <script>
-  // ==========================================
-  // 1. ตัวแปรและการตั้งค่าระบบเริ่มต้น
-  // ==========================================
-  // ดึงค่า URL มาใช้งานร่วมกันในโค้ดทั้งหมด
-  const scriptUrl = "https://script.google.com/macros/s/AKfycbyiXp1K-4t0qC3AAs_tTox7b4i7zT_gO3p7rS80B1Z98w8w8w/exec"; 
-  let currentStudent = null;
-  
+  const API_URL = "https://script.google.com/macros/s/AKfycby-t0-T1HMlxN7vHCIHEtBTNT1t4POWGOy1IhWXuYZP3X9OGzZfI2lIYt7Ur5bflL2ohg/exec";
+  let studentsData = [], currentStudent = null;
   let clickCount = 0, clickTimer = null;
   let activeShirtConfig = null, activeHatConfig = null;
 
-  // คลังไอเทมแต่งตัว
   const shirtLibrary = [
     { id: "s1", name: "เขียวเมี๊ยว", minLvl: 0, url: "https://img2.pic.in.th/Gemini_Generated_Image_4tdjo64tdjo64tdj-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
     { id: "s2", name: "ชมพูเมี๊ยว", minLvl: 5, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_bwizh0bwizh0bwiz-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
@@ -164,115 +156,74 @@
     { id: "Overlord-cat", name: "ราชาเหมียว", minLvl: 80, url: "https://img2.pic.in.th/Overlord-cat.md.png", config: { width: 150 } }
   ];
 
-  // ==========================================
-  // 2. ฟังก์ชันตรวจสอบการเข้าสู่ระบบ (ผสานโค้ดจาก Google ชีท)
-  // ==========================================
-  function checkLogin() {
-    const loginInput = document.getElementById("loginInput").value.trim();
-    const loginBtn = document.getElementById("loginBtn");
-    const loginError = document.getElementById("loginError");
-
-    if (!loginInput) {
-      showError("กรุณากรอกรหัสนักเรียนเมี๊ยว!");
-      return;
-    }
-
-    loginBtn.disabled = true;
-    loginBtn.innerText = "กำลังค้นหาข้อมูล...";
-    loginError.style.display = "none";
-
-    fetch(`${scriptUrl}?action=getStudent&id=${encodeURIComponent(loginInput)}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("เครือข่ายมีปัญหา กรุณาลองใหม่อีกครั้ง");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data.status === "success" && data.student) {
-          currentStudent = data.student;
-          
-          // คำนวณเลเวลเพิ่มจากคะแนนดิบที่ดึงมา
-          const score = parseFloat(currentStudent["คะแนน"] || currentStudent.คะแนน) || 0;
-          currentStudent.เลเวล = Math.floor(10 * Math.sqrt(score));
-          document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
-
-          // สลับหน้าจอเมื่อเข้าสู่ระบบสำเร็จ
-          document.getElementById("loginPage").style.display = "none";
-          document.getElementById("mainPage").style.display = "block";
-          
-          // แสดงผลข้อมูลต่างๆ
-          renderStudentProfile();
-          renderMissions();
-          
-          // ตรวจสอบและดึงชุดเก่าที่แต่งค้างไว้มาสวมใส่ให้อัตโนมัติ
-          const studentShirt = currentStudent["เสื้อ"];
-          const studentHat = currentStudent["หมวก"];
-          const studentFullSet = currentStudent["พิเศษ"] || currentStudent.fullset;
-          
-          if(studentFullSet) {
-            applyFullSet(studentFullSet);
-          } else {
-            if(studentHat) applyHat(studentHat);
-            if(studentShirt) applyShirt(studentShirt);
-          }
-          renderInventory();
-        } else {
-          showError(data.message || "ไม่พบรหัสนักเรียนนี้ในระบบเมี๊ยว!");
-        }
-      })
-      .catch((error) => {
-        console.error("Login Error:", error);
-        showError("เกิดข้อผิดพลาดในการเชื่อมต่อระบบฐานข้อมูล");
-      })
-      .finally(() => {
-        loginBtn.disabled = false;
-        loginBtn.innerText = "เข้าสู่ระบบ";
-      });
-  }
-
-  function showError(message) {
-    const loginError = document.getElementById("loginError");
-    loginError.innerText = message;
-    loginError.style.display = "block";
-  }
-
-  // ==========================================
-  // 3. ฟังก์ชันจัดรูปแบบและแสดงโปรไฟล์นักเรียน
-  // ==========================================
-  function renderStudentProfile() {
-    if (!currentStudent) return;
-
-    document.getElementById("studentName").innerText = currentStudent["ชื่อ"] || "ไม่ระบุชื่อ";
-    document.getElementById("studentId").innerText = `รหัส: ${currentStudent["รหัสเข้า"] || "-"}`;
-    document.getElementById("studentClass").innerText = `ห้อง: ${currentStudent["ชั้น"] || "-"}`;
-    document.getElementById("studentScore").innerText = `${currentStudent["คะแนน"] || 0} แต้ม`;
-
-    const avatarImg = document.getElementById("avatarImg");
-    const shirtImg = document.getElementById("shirtImg");
-    const hatImg = document.getElementById("hatImg");
-
-    // โหลดภาพโปรไฟล์หลัก ถ้าไม่มีให้ดึงแมวเริ่มต้น
-    avatarImg.src = currentStudent["รูปโปรไฟล์"] || "https://img1.pic.in.th/images/Gemini_Generated_Image_v4dyj4v4dyj4v4dy-removebg-preview.md.png";
-
-    // จัดวางตำแหน่งชุดเสื้อ
-    if (currentStudent["เสื้อ"]) {
-      applyShirt(currentStudent["เสื้อ"]);
-    } else {
-      shirtImg.style.display = "none";
-    }
-
-    // จัดวางตำแหน่งหมวก
-    if (currentStudent["หมวก"]) {
-      applyHat(currentStudent["หมวก"]);
-    } else {
-      hatImg.style.display = "none";
+  async function loadData(){
+    try {
+      const res = await fetch(API_URL + "?t=" + new Date().getTime());
+      studentsData = await res.json();
+      document.getElementById("loginBtn").disabled = false;
+      document.getElementById("loginBtn").textContent = "เข้าสู่อาณาจักร";
+    } catch(e) { 
+      console.error(e);
+      document.getElementById("loginBtn").textContent = "เกิดข้อผิดพลาดในการโหลด";
     }
   }
 
-  // ==========================================
-  // 4. ฟังก์ชันจัดการและแสดงประวัติภารกิจ
-  // ==========================================
+  function login(){
+    const u = document.getElementById("username").value.trim();
+    const p = document.getElementById("password").value.trim();
+    
+    currentStudent = studentsData.find(s => String(s["รหัสเข้า"] || s.รหัสเข้า || "") === u && String(s["รหัสผ่าน"] || s.รหัสผ่าน || "") === p);
+    
+    if(!currentStudent) return alert("รหัสผิดเมี๊ยว!");
+    
+    const score = parseFloat(currentStudent["คะแนน"] || currentStudent.คะแนน) || 0;
+    currentStudent.เลเวล = Math.floor(10 * Math.sqrt(score));
+    
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("dashboard").style.display = "flex";
+    
+    document.getElementById("displayName").textContent = currentStudent["ชื่อ"] || currentStudent.ชื่อ || "-";
+    document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
+    document.getElementById("displayScore").textContent = score;
+    document.getElementById("displaySheet").textContent = currentStudent["ชั้น"] || currentStudent.ชั้น || "ไม่ระบุ";
+    
+    const studentShirt = currentStudent["เสื้อ"] || currentStudent.เสื้อ;
+    const studentHat = currentStudent["หมวก"] || currentStudent.หมวก;
+    
+    renderInventory(); 
+    renderMissions(); 
+    
+    if(studentHat && fullSetLibrary.some(s => studentHat === s.url)) {
+      applyFullSet(studentHat);
+    } else { 
+      if(studentHat) applyHat(studentHat); 
+      if(studentShirt) applyShirt(studentShirt); 
+    }
+  }
+
+  function renderInventory() {
+    const lvl = currentStudent.เลเวล;
+    const curShirt = document.getElementById("shirt-overlay").src;
+    const curHat = document.getElementById("hat-overlay").src;
+    const curSet = document.getElementById("full-set-overlay").src;
+    const isSetVisible = document.getElementById("full-set-overlay").style.display === "block";
+
+    const draw = (lib, type) => lib.map(item => {
+      const lock = lvl < item.minLvl;
+      let isSelected = false;
+      if(type==='s' && !isSetVisible) isSelected = (curShirt.includes(item.url) && document.getElementById("shirt-overlay").style.display === "block");
+      if(type==='h' && !isSetVisible) isSelected = (curHat.includes(item.url) && document.getElementById("hat-overlay").style.display === "block");
+      if(type==='f') isSelected = (curSet.includes(item.url) && isSetVisible);
+
+      const fn = type==='s' ? `applyShirt('${item.url}')` : type==='h' ? `applyHat('${item.url}')` : `applyFullSet('${item.url}')`;
+      return `<div id="item-${item.id}" class="item-slot ${lock?'locked':''} ${isSelected?'selected-item':''}" onclick="${lock?'':fn}">${lock?`<span class="lvl-badge">Lv.${item.minLvl}</span>`:''}<img src="${item.url}"><br><span style="font-size:9px;">${item.name}</span></div>`;
+    }).join('');
+
+    document.getElementById("tab-shirts").innerHTML = draw(shirtLibrary, 's');
+    document.getElementById("tab-hats").innerHTML = draw(hatLibrary, 'h');
+    document.getElementById("tab-sets").innerHTML = draw(fullSetLibrary, 'f');
+  }
+
   function renderMissions() {
     const missionContainer = document.getElementById("mission-list");
     if (!missionContainer) return;
@@ -342,45 +293,8 @@
     });
   }
 
-  // ==========================================
-  // 5. ฟังก์ชันออกจากระบบ
-  // ==========================================
-  function logout() {
-    currentStudent = null;
-    document.getElementById("loginInput").value = "";
-    document.getElementById("mainPage").style.display = "none";
-    document.getElementById("loginPage").style.display = "block";
-    clearDressing();
-  }
-
-  // ==========================================
-  // 6. ฟังก์ชันจัดการตู้เสื้อผ้าและอินเวนทอรี
-  // ==========================================
-  function renderInventory() {
-    const lvl = currentStudent.เลเวล;
-    const curShirt = document.getElementById("shirtImg").src;
-    const curHat = document.getElementById("hatImg").src;
-    const curSet = document.getElementById("full-set-overlay").src;
-    const isSetVisible = document.getElementById("full-set-overlay").style.display === "block";
-
-    const draw = (lib, type) => lib.map(item => {
-      const lock = lvl < item.minLvl;
-      let isSelected = false;
-      if(type==='s' && !isSetVisible) isSelected = (curShirt.includes(item.url) && document.getElementById("shirtImg").style.display === "block");
-      if(type==='h' && !isSetVisible) isSelected = (curHat.includes(item.url) && document.getElementById("hatImg").style.display === "block");
-      if(type==='f') isSelected = (curSet.includes(item.url) && isSetVisible);
-
-      const fn = type==='s' ? `applyShirt('${item.url}')` : type==='h' ? `applyHat('${item.url}')` : `applyFullSet('${item.url}')`;
-      return `<div id="item-${item.id}" class="item-slot ${lock?'locked':''} ${isSelected?'selected-item':''}" onclick="${lock?'':fn}">${lock?`<span class="lvl-badge">Lv.${item.minLvl}</span>`:''}<img src="${item.url}"><br><span style="font-size:9px;">${item.name}</span></div>`;
-    }).join('');
-
-    document.getElementById("tab-shirts").innerHTML = draw(shirtLibrary, 's');
-    document.getElementById("tab-hats").innerHTML = draw(hatLibrary, 'h');
-    document.getElementById("tab-sets").innerHTML = draw(fullSetLibrary, 'f');
-  }
-
   function applyShirt(url){ 
-    const s = document.getElementById("shirtImg"); 
+    const s = document.getElementById("shirt-overlay"); 
     activeShirtConfig = shirtLibrary.find(i=>i.url===url);
     if(!activeShirtConfig) return;
     s.src=url; s.style.display="block"; 
@@ -388,12 +302,12 @@
     s.style.width=activeShirtConfig.config.width+"%";
     s.style.left=activeShirtConfig.config.left+"%"; 
     document.getElementById("full-set-overlay").style.display="none"; 
-    document.getElementById("avatarImg").style.visibility="visible";
+    document.getElementById("avatar-base").style.visibility="visible";
     renderInventory();
   }
   
   function applyHat(url){
-    const h = document.getElementById("hatImg"); 
+    const h = document.getElementById("hat-overlay"); 
     activeHatConfig = hatLibrary.find(i=>i.url===url);
     if(!activeHatConfig) return;
     h.src=url; h.style.display="block"; 
@@ -401,7 +315,7 @@
     h.style.width=activeHatConfig.config.width+"%";
     h.style.left=activeHatConfig.config.left+"%"; 
     document.getElementById("full-set-overlay").style.display="none"; 
-    document.getElementById("avatarImg").style.visibility="visible";
+    document.getElementById("avatar-base").style.visibility="visible";
     renderInventory();
   }
 
@@ -410,17 +324,17 @@
     const d = fullSetLibrary.find(i=>i.url===url);
     if(!d) return;
     f.src=url; f.style.display="block"; f.style.width=d.config.width+"%";
-    document.getElementById("avatarImg").style.visibility="hidden"; 
-    document.getElementById("shirtImg").style.display="none"; 
-    document.getElementById("hatImg").style.display="none";
+    document.getElementById("avatar-base").style.visibility="hidden"; 
+    document.getElementById("shirt-overlay").style.display="none"; 
+    document.getElementById("hat-overlay").style.display="none";
     renderInventory();
   }
 
   function clearDressing(){
-    document.getElementById("shirtImg").style.display="none"; 
-    document.getElementById("hatImg").style.display="none"; 
+    document.getElementById("shirt-overlay").style.display="none"; 
+    document.getElementById("hat-overlay").style.display="none"; 
     document.getElementById("full-set-overlay").style.display="none"; 
-    document.getElementById("avatarImg").style.visibility="visible";
+    document.getElementById("avatar-base").style.visibility="visible";
     activeShirtConfig = null; activeHatConfig = null;
     renderInventory();
   }
@@ -437,10 +351,10 @@
     let h="", s="", f="";
     if(document.getElementById("full-set-overlay").style.display==="block") f=document.getElementById("full-set-overlay").src;
     else {
-      if(document.getElementById("hatImg").style.display==="block") h=document.getElementById("hatImg").src;
-      if(document.getElementById("shirtImg").style.display==="block") s=document.getElementById("shirtImg").src;
+      if(document.getElementById("hat-overlay").style.display==="block") h=document.getElementById("hat-overlay").src;
+      if(document.getElementById("shirt-overlay").style.display==="block") s=document.getElementById("shirt-overlay").src;
     }
-    const url = `${scriptUrl}?action=saveDressing&id=${currentStudent["รหัสเข้า"]}&hat=${encodeURIComponent(h)}&shirt=${encodeURIComponent(s)}&fullset=${encodeURIComponent(f)}`;
+    const url = `${API_URL}?action=saveDressing&id=${currentStudent.รหัสเข้า}&hat=${encodeURIComponent(h)}&shirt=${encodeURIComponent(s)}&fullset=${encodeURIComponent(f)}`;
     try { 
       await fetch(url,{mode:'no-cors'}); 
       alert("บันทึกชุดลงในสมุดบันทึกสำเร็จแล้วเมี๊ยว! 🐾"); 
@@ -459,15 +373,15 @@
   }
 
   let canvas, ctx, gameFrame, birdY, birdV, obstacles, gameScore, isGameOver, frameCount;
-  const avatarImgEl = new Image(); const shirtImgEl = new Image(); const hatImgEl = new Image(); const setImgEl = new Image();
+  const avatarImg = new Image(); const shirtImg = new Image(); const hatImg = new Image(); const setImg = new Image();
 
   function openGame() {
     document.getElementById("gameOverlay").style.display = "flex";
     canvas = document.getElementById("gameCanvas"); ctx = canvas.getContext("2d");
-    avatarImgEl.src = document.getElementById("avatarImg").src;
-    shirtImgEl.src = document.getElementById("shirtImg").src;
-    hatImgEl.src = document.getElementById("hatImg").src;
-    setImgEl.src = document.getElementById("full-set-overlay").src;
+    avatarImg.src = document.getElementById("avatar-base").src;
+    shirtImg.src = document.getElementById("shirt-overlay").src;
+    hatImg.src = document.getElementById("hat-overlay").src;
+    setImg.src = document.getElementById("full-set-overlay").src;
     birdY = 200; birdV = 0; obstacles = []; gameScore = 0; isGameOver = false; frameCount = 0;
     runGame();
   }
@@ -485,30 +399,30 @@
     ctx.translate(70, birdY); 
     
     const catHeight = 85;
-    const catWidth = (avatarImgEl.naturalWidth / avatarImgEl.naturalHeight) * catHeight;
+    const catWidth = (avatarImg.naturalWidth / avatarImg.naturalHeight) * catHeight;
     
     if(document.getElementById("full-set-overlay").style.display === "block") {
-      const setWidth = (setImgEl.naturalWidth / setImgEl.naturalHeight) * catHeight;
-      ctx.drawImage(setImgEl, -setWidth/2, -catHeight/2, setWidth, catHeight);
+      const setWidth = (setImg.naturalWidth / setImg.naturalHeight) * catHeight;
+      ctx.drawImage(setImg, -setWidth/2, -catHeight/2, setWidth, catHeight);
     } else {
-      ctx.drawImage(avatarImgEl, -catWidth/2, -catHeight/2, catWidth, catHeight);
+      ctx.drawImage(avatarImg, -catWidth/2, -catHeight/2, catWidth, catHeight);
 
-      if(document.getElementById("shirtImg").style.display === "block" && activeShirtConfig) {
+      if(document.getElementById("shirt-overlay").style.display === "block" && activeShirtConfig) {
         const shirtScale = (activeShirtConfig.config.width / 100) * 1.1; 
-        const shirtW = (shirtImgEl.naturalWidth / shirtImgEl.naturalHeight) * catHeight * shirtScale;
+        const shirtW = (shirtImg.naturalWidth / shirtImg.naturalHeight) * catHeight * shirtScale;
         const shirtH = catHeight * shirtScale;
         const sT = (activeShirtConfig.config.top / 100) * catHeight - (catHeight/2);
         const sX = ((activeShirtConfig.config.left - 50) / 100) * catHeight;
-        ctx.drawImage(shirtImgEl, sX - (shirtW/2), sT, shirtW, shirtH);
+        ctx.drawImage(shirtImg, sX - (shirtW/2), sT, shirtW, shirtH);
       }
 
-      if(document.getElementById("hatImg").style.display === "block" && activeHatConfig) {
+      if(document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
         const hatScale = (activeHatConfig.config.width / 100) * 1.1; 
-        const hatW = (hatImgEl.naturalWidth / hatImgEl.naturalHeight) * catHeight * hatScale;
+        const hatW = (hatImg.naturalWidth / hatImg.naturalHeight) * catHeight * hatScale;
         const hatH = catHeight * hatScale;
         const hT = ((activeHatConfig.config.top / 100) * catHeight - (catHeight/2)) - 12;
         const hX = ((activeHatConfig.config.left - 50) / 100) * catHeight;
-        ctx.drawImage(hatImgEl, hX - (hatW/2), hT, hatW, hatH);
+        ctx.drawImage(hatImg, hX - (hatW/2), hT, hatW, hatH);
       }
     }
     ctx.restore();
@@ -535,6 +449,11 @@
     if(birdY > 450 || birdY < -100) { isGameOver = true; alert("ตกโลกแล้วเมี๊ยว!"); closeGame(); }
     if(!isGameOver) gameFrame = requestAnimationFrame(runGame);
   }
+  
+  // ⭐ ใช้ window.onload ครอบเพื่อให้เว็บทำโครงสร้างเสร็จก่อน แล้วค่อยดึงข้อมูลจากหลังบ้านครับ
+  window.onload = function() {
+    loadData();
+  };
 </script>
 </body>
 </html>
