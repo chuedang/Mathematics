@@ -172,34 +172,34 @@ function login(){
     const u = document.getElementById("username").value.trim();
     const p = document.getElementById("password").value.trim();
     
-    // ค้นหานักเรียนโดยเช็กจากชื่อหัวคอลลัมน์ที่ส่งมาจากสเปรดชีต (แปลงเป็น String เพื่อป้องกัน Error จากรูปแบบข้อมูล)
+    // ค้นหานักเรียนโดยเช็กจากชื่อหัวคอลลัมน์ที่ส่งมาจากสเปรดชีต
     currentStudent = studentsData.find(s => String(s["รหัสเข้า"] || s.รหัสเข้า || "") === u && String(s["รหัสผ่าน"] || s.รหัสผ่าน || "") === p);
     
     if(!currentStudent) return alert("รหัสผิดเมี๊ยว!");
     
-    // ดึงค่าคะแนนสะสม (ยืดหยุ่นตามชื่อหัวคอลลัมน์ "คะแนน")
+    // ดึงค่าคะแนนสะสม
     const score = parseFloat(currentStudent["คะแนน"] || currentStudent.คะแนน) || 0;
     currentStudent.เลเวล = Math.floor(10 * Math.sqrt(score));
     
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("dashboard").style.display = "flex";
     
-    // แสดงชื่อนักเรียน (ดึงจากหัวคอลลัมน์ "ชื่อ")
+    // แสดงชื่อนักเรียน
     document.getElementById("displayName").textContent = currentStudent["ชื่อ"] || currentStudent.ชื่อ || "-";
     
     // แสดงข้อมูลเลเวลและคะแนน
     document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
     document.getElementById("displayScore").textContent = score;
 
-    // แสดงชั้นเรียน (ดึงจากหัวคอลลัมน์ "ชั้น")
+    // แสดงชั้นเรียน
     document.getElementById("displaySheet").textContent = currentStudent["ชั้น"] || currentStudent.ชั้น || "ไม่ระบุ";
     
-    // ดึงข้อมูลเสื้อผ้าและหมวกแบบ Dynamic ผ่าน Key String ของหัวคอลลัมน์
+    // ดึงข้อมูลเสื้อผ้าและหมวก
     const studentShirt = currentStudent["เสื้อ"] || currentStudent.เสื้อ;
     const studentHat = currentStudent["หมวก"] || currentStudent.หมวก;
     
     renderInventory(); 
-    renderMissions();
+    renderMissions(); // สั่งรันฟังก์ชันแสดงภารกิจตัวใหม่ที่คุณครูแก้ไข
     
     // ตรวจสอบการแต่งตัวจากข้อมูลคอลลัมน์ที่ดึงมา
     if(studentHat && fullSetLibrary.some(s => studentHat === s.url)) {
@@ -233,16 +233,14 @@ function login(){
     document.getElementById("tab-sets").innerHTML = draw(fullSetLibrary, 'f');
   }
 function renderMissions() {
-  // เปลี่ยนเป็น "missionList" เพื่อให้ตรงตาม ID ดั้งเดิมของหน้ากากเดิมคุณครู
-  const missionContainer = document.getElementById("missionList");
+  // สั่งให้ข้อมูลไปแสดงที่กล่อง id="mission-list" ใน HTML ของคุณครู
+  const missionContainer = document.getElementById("mission-list");
   if (!missionContainer) return;
   
   missionContainer.innerHTML = "";
 
-  // จัดการดึงอาร์เรย์ภารกิจ และรองรับการดักจับข้อผิดพลาดข้อมูลรูปแบบต่างๆ 
   let missions = currentStudent["ภารกิจ"] || currentStudent.ภารกิจ || [];
   
-  // ในกรณีที่ส่งมาเป็น String รูปแบบ JSON ให้ทำการแปลงกลับเป็น Array ก่อน
   if (typeof missions === 'string') {
     try {
       missions = JSON.parse(missions);
@@ -252,12 +250,10 @@ function renderMissions() {
     }
   }
 
-  // ป้องกันกรณีที่ข้อมูลไม่สมบูรณ์และไม่ได้แปลงค่าเป็น Array
   if (!Array.isArray(missions)) {
     missions = [];
   }
 
-  // หากไม่มีประวัติภารกิจเลย ให้แสดงข้อความสถานะว่าง
   if (missions.length === 0) {
     missionContainer.innerHTML = `
       <div style="text-align: center; color: #888; padding: 20px; font-size: 14px;">
@@ -267,20 +263,18 @@ function renderMissions() {
     return;
   }
 
-  // ทำการวน Loop เพื่อสร้างการ์ดรายการภารกิจแต่ละชิ้น
   missions.forEach((mission) => {
-    let badgeColor = "#28a745"; // 🟢 สีเขียว: ภารกิจก่อนสอบกลางภาค
+    let badgeColor = "#28a745"; 
     let badgeText = "ก่อนกลางภาค";
 
     if (mission.type === "after" || mission.period === "หลังกลางภาค") {
-      badgeColor = "#007bff"; // 🔵 สีน้ำเงิน: ภารกิจหลังกลางภาค
+      badgeColor = "#007bff"; 
       badgeText = "หลังกลางภาค";
     }
 
     const item = document.createElement("div");
     item.className = "mission-item";
     
-    // ตั้งค่ากรอบขอบซ้ายเป็นสีตามประเภทของ Badge เพื่อความเป็นระเบียบสวยงาม
     item.style.borderLeft = `5px solid ${badgeColor}`;
     item.style.display = "flex";
     item.style.justifyContent = "space-between";
