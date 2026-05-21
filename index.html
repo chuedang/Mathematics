@@ -112,19 +112,15 @@
   </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxg0xhtPcOjhhc-0udhctTCIxJeSuWAwpAuQVqA6MMwy7k2ZYb7XSawanf9XshEwzkeWA/exec";
+  // ===================================================
+  // 1. ตั้งค่า URL และตัวแปรระบบหลัก
+  // ===================================================
+  const API_URL = "https://script.google.com/macros/s/AKfycbxg0xhtPcOjhhc-0udhctTCIxJeSuWAwpAuQVqA6MMwy7k2ZYb7XSawanf9XshEwzkeWA/exec";
+  
+  let allStudentsData = []; // กองข้อมูลนักเรียนทุกคนที่ดึงมาจาก Google Sheets
   let currentStudent = null;
   let clickCount = 0, clickTimer = null;
   let activeShirtConfig = null, activeHatConfig = null;
-
-  // ปลดล็อกปุ่มเมื่อหน้าเว็บโหลดเสร็จ เพื่อให้เด็กกดใช้งานได้ทันที
-  window.onload = function() {
-    const loginBtn = document.getElementById("loginBtn");
-    if(loginBtn) {
-      loginBtn.disabled = false;
-      loginBtn.textContent = "เข้าสู่อาณาจักร";
-    }
-  };
 
   const shirtLibrary = [
     { id: "s1", name: "เขียวเมี๊ยว", minLvl: 0, url: "https://img2.pic.in.th/Gemini_Generated_Image_4tdjo64tdjo64tdj-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
@@ -165,94 +161,112 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxg0xhtPcOjhhc-0udhctTC
     { id: "Overlord-cat", name: "ราชาเหมียว", minLvl: 80, url: "https://img2.pic.in.th/Overlord-cat.md.png", config: { width: 150 } }
   ];
 
-function login() {
-  const u = document.getElementById("username").value.trim(); // รหัสนักเรียนที่เด็กกรอก
-  const p = document.getElementById("password").value.trim(); // รหัสผ่านที่เด็กกรอก
-  const loginBtn = document.getElementById("loginBtn");
+  // ===================================================
+  // 2. ฟังก์ชันดึงข้อมูลทั้งหมดมากองไว้ตอนเปิดหน้าเว็บ
+  // ===================================================
+  window.onload = function() {
+    const loginBtn = document.getElementById("loginBtn");
+    if(loginBtn) {
+      loginBtn.disabled = true;
+      loginBtn.textContent = "🔮 กำลังดาวน์โหลดข้อมูลจากเมือง...";
+    }
 
-  if (!u || !p) {
-    return alert("กรุณากรอกทั้งรหัสนักเรียนและรหัสผ่านเมี๊ยว!");
+    // ยิงไปดึงข้อมูลก้อนใหญ่จาก Apps Script
+    fetch(`${API_URL}?t=${new Date().getTime()}`)
+      .then(response => {
+        if (!response.ok) throw new Error("การเชื่อมต่อล้มเหลว");
+        return response.json();
+      })
+      .then(data => {
+        allStudentsData = data; // พากองข้อมูลไปเก็บไว้ที่ตัวแปรหลัก
+        if(loginBtn) {
+          loginBtn.disabled = false;
+          loginBtn.textContent = "เข้าสู่อาณาจักร";
+        }
+      })
+      .catch(error => {
+        console.error("Initial load failed:", error);
+        if(loginBtn) {
+          loginBtn.textContent = "⚠️ ไม่สามารถโหลดฐานข้อมูลได้ กรุณารีเฟรชหน้าเว็บ";
+        }
+      });
+  };
+
+  // ===================================================
+  // 3. ฟังก์ชันล็อกอิน ค้นหาข้อมูลจากกองประวัติในเครื่อง
+  // ===================================================
+  function login() {
+    const u = document.getElementById("username").value.trim();
+    const p = document.getElementById("password").value.trim();
+    const loginBtn = document.getElementById("loginBtn");
+
+    if (!u || !p) {
+      return alert("กรุณากรอกทั้งรหัสนักเรียนและรหัสผ่านเมี๊ยว!");
+    }
+
+    if (!allStudentsData || allStudentsData.length === 0) {
+      return alert("ระบบยังโหลดข้อมูลไม่เสร็จ กรุณารอสักครู่แล้วลองใหม่เมี๊ยว!");
+    }
+
+    // ค้นหานักเรียนในกองข้อมูลที่โหลดมา โดยเทียบกับคีย์ "รหัสเข้า" (ตามสไตล์ Apps Script ของคุณครู)
+    const student = allStudentsData.find(s => String(s["รหัสเข้า"] || "").trim() === u);
+
+    if (!student) {
+      return alert("ไม่พบรหัสนักเรียนนี้ในระบบเมี๊ยว!");
+    }
+
+    // ตรวจสอบรหัสผ่าน โดยเทียบกับคีย์ "รหัสผ่าน"
+    const dbPassword = String(student["รหัสผ่าน"] || "").trim();
+    if (dbPassword !== p) {
+      return alert("รหัสผ่านไม่ถูกต้องเมี๊ยว!");
+    }
+
+    // ถ้ารหัสและรหัสผ่านถูกต้อง แปลงโครงสร้างข้อมูลเข้าสู่ระบบตัวแปรหน้าเว็บเดิม
+    currentStudent = {
+      "รหัสนักเรียน": student["รหัสเข้า"],
+      "ชื่อ": student["ชื่อ"] || "-",
+      "คะแนน": parseFloat(student["คะแนน"]) || 0,
+      "เลเวล": parseInt(student["เลเวล"]) || 0, // ดึงเลเวลจากชีตที่คุณครูคำนวณไว้ได้โดยตรงเลยครับ
+      "หมวก": student["หมวก"] || "",
+      "เสื้อ": student["เสื้อ"] || "",
+      "ชั้น": student["ชั้น"] || "-",
+      "ภารกิจ": student["ภารกิจ"] || []
+    };
+
+    // สลับหน้าจอ
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("dashboard").style.display = "flex";
+
+    // แสดงผลข้อมูลรายบุคคลบน UI
+    document.getElementById("displayName").textContent = currentStudent["ชื่อ"];
+    document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
+    document.getElementById("displayScore").textContent = currentStudent["คะแนน"];
+    
+    const classText = document.getElementById("displaySheet");
+    if (classText) {
+      classText.textContent = currentStudent["ชั้น"];
+    }
+
+    // จัดการแสดงผลเสื้อผ้าที่เด็กเคยแต่งค้างไว้
+    if (currentStudent["หมวก"] || currentStudent["เสื้อ"]) {
+      // ตรวจสอบก่อนว่าเป็นไอเทมชุดพิเศษ (Full Set) ไหม
+      const isFullSet = fullSetLibrary.some(f => currentStudent["หมวก"] === f.url);
+      if (isFullSet) {
+        applyFullSet(currentStudent["หมวก"]);
+      } else {
+        if (currentStudent["เสื้อ"]) applyShirt(currentStudent["เสื้อ"]);
+        if (currentStudent["หมวก"]) applyHat(currentStudent["หมวก"]);
+      }
+    }
+
+    // เรนเดอร์กระเป๋าและรายการภารกิจ
+    renderInventory();
+    renderMissions();
   }
 
-  // แสดงสถานะกำลังโหลด
-  loginBtn.disabled = true;
-  loginBtn.textContent = "กำลังเชื่อมต่ออาณาจักร...";
-
-  // 1. ยิงดึงข้อมูลทั้งหมดมากองไว้ตามที่คุณครูตั้งใจ (ไม่ส่ง Action อะไรไป เพื่อให้ Apps Script คืนค่า Array ทั้งหมดมา)
-  fetch(API_URL)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("เครือข่ายมีปัญหา กรุณาลองใหม่อีกครั้ง");
-      }
-      return response.json();
-    })
-    .then((allStudents) => {
-      // 2. ค้นหาข้อมูลนักเรียนจากกองข้อมูล โดยจับคู่กับ "รหัสเข้า" (ที่ Apps Script ของคุณครูส่งมา)
-      const student = allStudents.find(s => String(s["รหัสเข้า"]).trim() === u);
-
-      if (!student) {
-        alert("ไม่พบรหัสนักเรียนนี้ในระบบเมี๊ยว!");
-        loginBtn.disabled = false;
-        loginBtn.textContent = "เข้าสู่อาณาจักร";
-        return;
-      }
-
-      // 3. ตรวจสอบรหัสผ่าน โดยจับคู่กับ "รหัสผ่าน" (ที่ Apps Script ของคุณครูส่งมา)
-      const dbPassword = String(student["รหัสผ่าน"] || "").trim();
-      if (dbPassword !== p) {
-        alert("รหัสผ่านไม่ถูกต้องเมี๊ยว!");
-        loginBtn.disabled = false;
-        loginBtn.textContent = "เข้าสู่อาณาจักร";
-        return;
-      }
-
-      // 4. ถ้ารหัสผ่านถูกต้อง แปลงโครงสร้างให้เข้ากับระบบหน้าเว็บเดิมของคุณครู
-      currentStudent = {
-        "รหัสนักเรียน": student["รหัสเข้า"],
-        "ชื่อ": student["ชื่อ"],
-        "คะแนน": parseFloat(student["คะแนน"]) || 0,
-        "เลเวล": Math.floor(10 * Math.sqrt(parseFloat(student["คะแนน"]) || 0)), // คำนวณเลเวลจากสูตรเดิมของคุณครู
-        "หมวก": student["หมวก"],
-        "เสื้อ": student["เสื้อ"],
-        "ชั้น": student["ชั้น"],
-        "ภารกิจ": student["ภารกิจ"] || []
-      };
-
-      // 5. สลับหน้าจอไปที่ Dashboard และแสดงผลข้อมูล
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("dashboard").style.display = "flex";
-
-      document.getElementById("displayName").textContent = currentStudent["ชื่อ"] || "-";
-      document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
-      document.getElementById("displayScore").textContent = currentStudent["คะแนน"];
-      
-      const classText = document.getElementById("displaySheet");
-      if (classText) {
-        classText.textContent = currentStudent["ชั้น"] || "นักเรียน";
-      }
-
-      // เรียกแสดงรายการไอเทมและภารกิจรายบุคคล
-      renderInventory();
-      renderMissions();
-
-      // สวมใส่เสื้อผ้าให้น้องแมวทันที
-      if (currentStudent["เสื้อ"]) {
-        const foundShirt = shirtLibrary.find(s => s.url === currentStudent["เสื้อ"]);
-        if (foundShirt) selectShirt(foundShirt);
-      }
-      if (currentStudent["หมวก"]) {
-        const foundHat = hatLibrary.find(h => h.url === currentStudent["หมวก"]);
-        if (foundHat) selectHat(foundHat);
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-      alert("เกิดข้อผิดพลาดในการโหลดข้อมูล: " + error.message);
-      loginBtn.disabled = false;
-      loginBtn.textContent = "เข้าสู่อาณาจักร";
-    });
-}
-
+  // ===================================================
+  // 4. ฟังก์ชันระบบเกม ตู้เสื้อผ้า และภารกิจเดิม (คงไว้ตามปกติ)
+  // ===================================================
   function renderInventory() {
     const lvl = currentStudent.เลเวล;
     const curShirt = document.getElementById("shirt-overlay").src;
@@ -281,42 +295,23 @@ function login() {
     if (!missionContainer) return;
     
     missionContainer.innerHTML = "";
-    let missions = currentStudent["ภารกิจ"] || currentStudent.ภารกิจ || [];
+    let missions = currentStudent["ภารกิจ"] || [];
     
     if (typeof missions === 'string') {
-      try {
-        missions = JSON.parse(missions);
-      } catch(e) {
-        console.error("Parsing missions text failed:", e);
-        missions = [];
-      }
+      try { missions = JSON.parse(missions); } catch(e) { missions = []; }
     }
-
-    if (!Array.isArray(missions)) {
-      missions = [];
-    }
+    if (!Array.isArray(missions)) missions = [];
 
     if (missions.length === 0) {
-      missionContainer.innerHTML = `
-        <div style="text-align: center; color: #888; padding: 20px; font-size: 14px;">
-          🐱 ตอนนี้ยังไม่มีประวัติภารกิจที่ทำสำเร็จเมี๊ยว!
-        </div>
-      `;
+      missionContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 20px; font-size: 14px;">🐱 ตอนนี้ยังไม่มีประวัติภารกิจที่ทำสำเร็จเมี๊ยว!</div>`;
       return;
     }
 
     missions.forEach((mission) => {
       let badgeColor = "#28a745"; 
-      let badgeText = "ก่อนกลางภาค";
-
-      if (mission.type === "after" || mission.period === "หลังกลางภาค") {
-        badgeColor = "#007bff"; 
-        badgeText = "หลังกลางภาค";
-      }
-
+      let badgeText = "คะแนนดิบ";
       const item = document.createElement("div");
       item.className = "mission-item";
-      
       item.style.borderLeft = `5px solid ${badgeColor}`;
       item.style.display = "flex";
       item.style.justifyContent = "space-between";
@@ -333,11 +328,11 @@ function login() {
               ${badgeText}
             </span>
             <span style="font-size: 14px; color: #333; font-weight: 500; margin-top: 2px;">
-              ${mission.name || mission.title || "ภารกิจทั่วไป"}
+              ${mission.name || "ภารกิจหลัก"}
             </span>
           </div>
           <span style="color: ${badgeColor}; font-weight: bold; font-size: 15px; white-space: nowrap;">
-            +${mission.score || mission.points || 0} แต้ม
+            +${mission.score || 0} แต้ม
           </span>
         </div>
       `;
@@ -406,7 +401,7 @@ function login() {
       if(document.getElementById("hat-overlay").style.display==="block") h=document.getElementById("hat-overlay").src;
       if(document.getElementById("shirt-overlay").style.display==="block") s=document.getElementById("shirt-overlay").src;
     }
-    const url = `${API_URL}?action=saveDressing&id=${currentStudent.รหัสเข้า}&hat=${encodeURIComponent(h)}&shirt=${encodeURIComponent(s)}&fullset=${encodeURIComponent(f)}`;
+    const url = `${API_URL}?action=saveDressing&id=${currentStudent["รหัสนักเรียน"]}&hat=${encodeURIComponent(h)}&shirt=${encodeURIComponent(s)}&fullset=${encodeURIComponent(f)}`;
     try { 
       await fetch(url,{mode:'no-cors'}); 
       alert("บันทึกชุดลงในสมุดบันทึกสำเร็จแล้วเมี๊ยว! 🐾"); 
@@ -501,15 +496,6 @@ function login() {
     if(birdY > 450 || birdY < -100) { isGameOver = true; alert("ตกโลกแล้วเมี๊ยว!"); closeGame(); }
     if(!isGameOver) gameFrame = requestAnimationFrame(runGame);
   }
-  
-// เปลี่ยนตรงนี้แทนของเดิมด้านล่างสุด
-  window.onload = function() {
-    const loginBtn = document.getElementById("loginBtn");
-    if(loginBtn) {
-      loginBtn.disabled = false;
-      loginBtn.textContent = "เข้าสู่อาณาจักร";
-    }
-  };
 </script>
 </body>
 </html>
