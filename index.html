@@ -165,18 +165,6 @@ const API_URL = "https://script.google.com/macros/s/AKfycby-t0-T1HMlxN7vHCIHEtBT
     { id: "Overlord-cat", name: "ราชาเหมียว", minLvl: 80, url: "https://img2.pic.in.th/Overlord-cat.md.png", config: { width: 150 } }
   ];
 
-  async function loadData(){
-    try {
-      const res = await fetch(API_URL + "?t=" + new Date().getTime());
-      studentsData = await res.json();
-      document.getElementById("loginBtn").disabled = false;
-      document.getElementById("loginBtn").textContent = "เข้าสู่อาณาจักร";
-    } catch(e) { 
-      console.error(e);
-      document.getElementById("loginBtn").textContent = "เกิดข้อผิดพลาดในการโหลด";
-    }
-  }
-
 function login() {
     const u = document.getElementById("username").value.trim(); // รหัสนักเรียนที่เด็กกรอก
     const p = document.getElementById("password").value.trim(); // รหัสผ่านที่เด็กกรอก
@@ -511,9 +499,13 @@ function login() {
     if(!isGameOver) gameFrame = requestAnimationFrame(runGame);
   }
   
-  // ⭐ ใช้ window.onload ครอบเพื่อให้เว็บทำโครงสร้างเสร็จก่อน แล้วค่อยดึงข้อมูลจากหลังบ้านครับ
+// เปลี่ยนตรงนี้แทนของเดิมด้านล่างสุด
   window.onload = function() {
-    loadData();
+    const loginBtn = document.getElementById("loginBtn");
+    if(loginBtn) {
+      loginBtn.disabled = false;
+      loginBtn.textContent = "เข้าสู่อาณาจักร";
+    }
   };
 </script>
 </body>
