@@ -291,54 +291,26 @@
   }
 
   function renderMissions() {
-    const missionContainer = document.getElementById("mission-list");
-    if (!missionContainer) return;
+  // ดึงข้อมูลภารกิจ (รองรับทั้งชื่อคีย์ .ภารกิจ หรือ .missions)
+  const missions = currentStudent.ภารกิจ || currentStudent.missions || [];
+  
+  const html = missions.map((m, i) => {
+    // รองรับทั้งคีย์ .score และ .คะแนน
+    const scoreNum = parseFloat(m.score || m.คะแนน) || 0;
+    const isDone = scoreNum > 0;
     
-    missionContainer.innerHTML = "";
-    let missions = currentStudent["ภารกิจ"] || [];
+    // คำนวณสีตามลำดับภารกิจแบบที่คุณครูตั้งไว้
+    let cls = i < 9 ? "background:#fff4e6; border-left-color:#f39c12;" : "background:#f3e5f5; border-left-color:#8e44ad;";
+    const scoreText = isDone ? `<br><span style="color:#27ae60; font-weight:500;">✨ ได้รับ +${scoreNum} คะแนน</span>` : "";
     
-    if (typeof missions === 'string') {
-      try { missions = JSON.parse(missions); } catch(e) { missions = []; }
-    }
-    if (!Array.isArray(missions)) missions = [];
-
-    if (missions.length === 0) {
-      missionContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 20px; font-size: 14px;">🐱 ตอนนี้ยังไม่มีประวัติภารกิจที่ทำสำเร็จเมี๊ยว!</div>`;
-      return;
-    }
-
-    missions.forEach((mission) => {
-      let badgeColor = "#28a745"; 
-      let badgeText = "คะแนนดิบ";
-      const item = document.createElement("div");
-      item.className = "mission-item";
-      item.style.borderLeft = `5px solid ${badgeColor}`;
-      item.style.display = "flex";
-      item.style.justifyContent = "space-between";
-      item.style.alignItems = "center";
-      item.style.padding = "12px";
-      item.style.marginBottom = "8px";
-      item.style.backgroundColor = "#fafafa";
-      item.style.borderRadius = "4px";
-      
-      item.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-          <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
-            <span style="background-color: ${badgeColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold;">
-              ${badgeText}
-            </span>
-            <span style="font-size: 14px; color: #333; font-weight: 500; margin-top: 2px;">
-              ${mission.name || "ภารกิจหลัก"}
-            </span>
-          </div>
-          <span style="color: ${badgeColor}; font-weight: bold; font-size: 15px; white-space: nowrap;">
-            +${mission.score || 0} แต้ม
-          </span>
-        </div>
-      `;
-      missionContainer.appendChild(item);
-    });
-  }
+    // รองรับทั้งคีย์ .name และ .ชื่อภารกิจ หรือ .ชื่อ
+    const missionName = m.name || m.ชื่อภารกิจ || m.ชื่อ || "ภารกิจไม่มีชื่อ";
+    
+    return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'⚔️ พิชิตสำเร็จ':'⏳ ยังไม่ทำ'}</span><b>${missionName}</b>${scoreText}</div>`;
+  }).join('');
+  
+  document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center; color: #634d3a;'>📜 บันทึกภารกิจ (" + missions.length + ")</h4>" + html;
+}
 
   function applyShirt(url){ 
     const s = document.getElementById("shirt-overlay"); 
