@@ -27,7 +27,8 @@
       border: 5px solid #fff; animation: breathe 3s ease-in-out infinite; cursor: pointer;
     }
     .god-aura { box-shadow: 0 0 20px #f1c40f, 0 0 40px #f39c12 !important; border-color: #f1c40f !important; background: radial-gradient(circle, #fff9e6 0%, #ffffff 100%) !important; }
-    #avatar-base { width: auto; height: 85%; z-index: 1; image-ing: pixelated; }
+    /* แก้ไขจุดผิดคำว่า image-ing เป็น image-rendering */
+    #avatar-base { width: auto; height: 85%; z-index: 1; image-rendering: pixelated; }
     #shirt-overlay, #hat-overlay { position: absolute; z-index: 2; display: none; transform: translateX(-50%); pointer-events: none; }
     #full-set-overlay { position: absolute; z-index: 4; display: none; transform: translate(-50%, -50%); left: 50%; top: 50%; }
 
@@ -111,7 +112,6 @@
   </div>
 
 <script>
-  // อัปเดต URL เป็นตัวใหม่ที่คุณส่งมา
   const API_URL = "https://script.google.com/macros/s/AKfycby-t0-T1HMlxN7vHCIHEtBTNT1t4POWGOy1IhWXuYZP3X9OGzZfI2lIYt7Ur5bflL2ohg/exec";
   let studentsData = [], currentStudent = null;
   let clickCount = 0, clickTimer = null;
@@ -168,47 +168,38 @@
     }
   }
 
-function login(){
+  function login(){
     const u = document.getElementById("username").value.trim();
     const p = document.getElementById("password").value.trim();
     
-    // ค้นหานักเรียนโดยเช็กจากชื่อหัวคอลลัมน์ที่ส่งมาจากสเปรดชีต
     currentStudent = studentsData.find(s => String(s["รหัสเข้า"] || s.รหัสเข้า || "") === u && String(s["รหัสผ่าน"] || s.รหัสผ่าน || "") === p);
     
     if(!currentStudent) return alert("รหัสผิดเมี๊ยว!");
     
-    // ดึงค่าคะแนนสะสม
     const score = parseFloat(currentStudent["คะแนน"] || currentStudent.คะแนน) || 0;
     currentStudent.เลเวล = Math.floor(10 * Math.sqrt(score));
     
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("dashboard").style.display = "flex";
     
-    // แสดงชื่อนักเรียน
     document.getElementById("displayName").textContent = currentStudent["ชื่อ"] || currentStudent.ชื่อ || "-";
-    
-    // แสดงข้อมูลเลเวลและคะแนน
     document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
     document.getElementById("displayScore").textContent = score;
-
-    // แสดงชั้นเรียน
     document.getElementById("displaySheet").textContent = currentStudent["ชั้น"] || currentStudent.ชั้น || "ไม่ระบุ";
     
-    // ดึงข้อมูลเสื้อผ้าและหมวก
     const studentShirt = currentStudent["เสื้อ"] || currentStudent.เสื้อ;
     const studentHat = currentStudent["หมวก"] || currentStudent.หมวก;
     
     renderInventory(); 
-    renderMissions(); // สั่งรันฟังก์ชันแสดงภารกิจตัวใหม่ที่คุณครูแก้ไข
+    renderMissions(); 
     
-    // ตรวจสอบการแต่งตัวจากข้อมูลคอลลัมน์ที่ดึงมา
     if(studentHat && fullSetLibrary.some(s => studentHat === s.url)) {
       applyFullSet(studentHat);
     } else { 
       if(studentHat) applyHat(studentHat); 
       if(studentShirt) applyShirt(studentShirt); 
     }
-}
+  }
 
   function renderInventory() {
     const lvl = currentStudent.เลเวล;
@@ -232,76 +223,75 @@ function login(){
     document.getElementById("tab-hats").innerHTML = draw(hatLibrary, 'h');
     document.getElementById("tab-sets").innerHTML = draw(fullSetLibrary, 'f');
   }
-function renderMissions() {
-  // สั่งให้ข้อมูลไปแสดงที่กล่อง id="mission-list" ใน HTML ของคุณครู
-  const missionContainer = document.getElementById("mission-list");
-  if (!missionContainer) return;
-  
-  missionContainer.innerHTML = "";
 
-  let missions = currentStudent["ภารกิจ"] || currentStudent.ภารกิจ || [];
-  
-  if (typeof missions === 'string') {
-    try {
-      missions = JSON.parse(missions);
-    } catch(e) {
-      console.error("Parsing missions text failed:", e);
+  function renderMissions() {
+    const missionContainer = document.getElementById("mission-list");
+    if (!missionContainer) return;
+    
+    missionContainer.innerHTML = "";
+    let missions = currentStudent["ภารกิจ"] || currentStudent.ภารกิจ || [];
+    
+    if (typeof missions === 'string') {
+      try {
+        missions = JSON.parse(missions);
+      } catch(e) {
+        console.error("Parsing missions text failed:", e);
+        missions = [];
+      }
+    }
+
+    if (!Array.isArray(missions)) {
       missions = [];
     }
-  }
 
-  if (!Array.isArray(missions)) {
-    missions = [];
-  }
-
-  if (missions.length === 0) {
-    missionContainer.innerHTML = `
-      <div style="text-align: center; color: #888; padding: 20px; font-size: 14px;">
-        🐱 ตอนนี้ยังไม่มีประวัติภารกิจที่ทำสำเร็จเมี๊ยว!
-      </div>
-    `;
-    return;
-  }
-
-  missions.forEach((mission) => {
-    let badgeColor = "#28a745"; 
-    let badgeText = "ก่อนกลางภาค";
-
-    if (mission.type === "after" || mission.period === "หลังกลางภาค") {
-      badgeColor = "#007bff"; 
-      badgeText = "หลังกลางภาค";
+    if (missions.length === 0) {
+      missionContainer.innerHTML = `
+        <div style="text-align: center; color: #888; padding: 20px; font-size: 14px;">
+          🐱 ตอนนี้ยังไม่มีประวัติภารกิจที่ทำสำเร็จเมี๊ยว!
+        </div>
+      `;
+      return;
     }
 
-    const item = document.createElement("div");
-    item.className = "mission-item";
-    
-    item.style.borderLeft = `5px solid ${badgeColor}`;
-    item.style.display = "flex";
-    item.style.justifyContent = "space-between";
-    item.style.alignItems = "center";
-    item.style.padding = "12px";
-    item.style.marginBottom = "8px";
-    item.style.backgroundColor = "#fafafa";
-    item.style.borderRadius = "4px";
-    
-    item.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
-          <span style="background-color: ${badgeColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold;">
-            ${badgeText}
-          </span>
-          <span style="font-size: 14px; color: #333; font-weight: 500; margin-top: 2px;">
-            ${mission.name || mission.title || "ภารกิจทั่วไป"}
+    missions.forEach((mission) => {
+      let badgeColor = "#28a745"; 
+      let badgeText = "ก่อนกลางภาค";
+
+      if (mission.type === "after" || mission.period === "หลังกลางภาค") {
+        badgeColor = "#007bff"; 
+        badgeText = "หลังกลางภาค";
+      }
+
+      const item = document.createElement("div");
+      item.className = "mission-item";
+      
+      item.style.borderLeft = `5px solid ${badgeColor}`;
+      item.style.display = "flex";
+      item.style.justifyContent = "space-between";
+      item.style.alignItems = "center";
+      item.style.padding = "12px";
+      item.style.marginBottom = "8px";
+      item.style.backgroundColor = "#fafafa";
+      item.style.borderRadius = "4px";
+      
+      item.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
+            <span style="background-color: ${badgeColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+              ${badgeText}
+            </span>
+            <span style="font-size: 14px; color: #333; font-weight: 500; margin-top: 2px;">
+              ${mission.name || mission.title || "ภารกิจทั่วไป"}
+            </span>
+          </div>
+          <span style="color: ${badgeColor}; font-weight: bold; font-size: 15px; white-space: nowrap;">
+            +${mission.score || mission.points || 0} แต้ม
           </span>
         </div>
-        <span style="color: ${badgeColor}; font-weight: bold; font-size: 15px; white-space: nowrap;">
-          +${mission.score || mission.points || 0} แต้ม
-        </span>
-      </div>
-    `;
-    missionContainer.appendChild(item);
-  });
-}
+      `;
+      missionContainer.appendChild(item);
+    });
+  }
 
   function applyShirt(url){ 
     const s = document.getElementById("shirt-overlay"); 
@@ -460,7 +450,10 @@ function renderMissions() {
     if(!isGameOver) gameFrame = requestAnimationFrame(runGame);
   }
   
-  loadData();
+  // ⭐ ใช้ window.onload ครอบเพื่อให้เว็บทำโครงสร้างเสร็จก่อน แล้วค่อยดึงข้อมูลจากหลังบ้านครับ
+  window.onload = function() {
+    loadData();
+  };
 </script>
 </body>
 </html>
