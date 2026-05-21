@@ -35,7 +35,6 @@
     .tab-menu { display: flex; gap: 5px; margin-bottom: 15px; }
     .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 12px; background: #f0f0f0; font-family: 'Mitr'; font-size: 13px; cursor: pointer; }
     .tab-btn.active { background: #3498db; color: white; }
-    .tab-menu + .tab-content, .tab-menu + .tab-content + .tab-content { margin-top: 10px; }
     .tab-content { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .tab-content.active { display: grid; }
     .item-slot { background: #fafafa; border: 2px solid #eee; border-radius: 15px; padding: 10px; text-align: center; position: relative; transition: 0.2s; }
@@ -112,7 +111,8 @@
   </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbwSYJPVlzIWk5e0P4-QxSjUjogHSa7JaURIWGKY6koPzrvmqsQ6N3aqhfA9ggn2AtN4Ew/exec";
+  // อัปเดต URL เป็นตัวใหม่ที่คุณส่งมา
+  const API_URL = "https://script.google.com/macros/s/AKfycbxwwlaGECYLWhE8SQFMgq9mRVjNMjfEMjBoRdfByMROACQqyykMhGQnl6bVx-mvQtFu_w/exec";
   let studentsData = [], currentStudent = null;
   let clickCount = 0, clickTimer = null;
   let activeShirtConfig = null, activeHatConfig = null;
@@ -168,38 +168,47 @@
     }
   }
 
-  function login(){
+function login(){
     const u = document.getElementById("username").value.trim();
     const p = document.getElementById("password").value.trim();
     
+    // ค้นหานักเรียนโดยเช็กจากชื่อหัวคอลลัมน์ที่ส่งมาจากสเปรดชีต (แปลงเป็น String เพื่อป้องกัน Error จากรูปแบบข้อมูล)
     currentStudent = studentsData.find(s => String(s["รหัสเข้า"] || s.รหัสเข้า || "") === u && String(s["รหัสผ่าน"] || s.รหัสผ่าน || "") === p);
     
     if(!currentStudent) return alert("รหัสผิดเมี๊ยว!");
     
+    // ดึงค่าคะแนนสะสม (ยืดหยุ่นตามชื่อหัวคอลลัมน์ "คะแนน")
     const score = parseFloat(currentStudent["คะแนน"] || currentStudent.คะแนน) || 0;
     currentStudent.เลเวล = Math.floor(10 * Math.sqrt(score));
     
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("dashboard").style.display = "flex";
     
+    // แสดงชื่อนักเรียน (ดึงจากหัวคอลลัมน์ "ชื่อ")
     document.getElementById("displayName").textContent = currentStudent["ชื่อ"] || currentStudent.ชื่อ || "-";
+    
+    // แสดงข้อมูลเลเวลและคะแนน
     document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
     document.getElementById("displayScore").textContent = score;
+
+    // แสดงชั้นเรียน (ดึงจากหัวคอลลัมน์ "ชั้น")
     document.getElementById("displaySheet").textContent = currentStudent["ชั้น"] || currentStudent.ชั้น || "ไม่ระบุ";
     
+    // ดึงข้อมูลเสื้อผ้าและหมวกแบบ Dynamic ผ่าน Key String ของหัวคอลลัมน์
     const studentShirt = currentStudent["เสื้อ"] || currentStudent.เสื้อ;
     const studentHat = currentStudent["หมวก"] || currentStudent.หมวก;
     
     renderInventory(); 
     renderMissions();
     
+    // ตรวจสอบการแต่งตัวจากข้อมูลคอลลัมน์ที่ดึงมา
     if(studentHat && fullSetLibrary.some(s => studentHat === s.url)) {
       applyFullSet(studentHat);
     } else { 
       if(studentHat) applyHat(studentHat); 
       if(studentShirt) applyShirt(studentShirt); 
     }
-  }
+}
 
   function renderInventory() {
     const lvl = currentStudent.เลเวล;
@@ -225,35 +234,16 @@
   }
 
   function renderMissions() {
-    const missionContainer = document.getElementById("mission-list");
-    missionContainer.innerHTML = "";
-
-    const missions = currentStudent["ภารกิจ"] || [];
-
-    missions.forEach((mission) => {
-      let badgeColor = "#28a745"; // 🟢 สีพื้นเขียว
-      let badgeText = "งานหลัก"; // ข้อความเริ่มต้นแทนของเดิม
-
-      if (mission.type === "after") {
-        badgeColor = "#007bff"; // 🔵 สีพื้นน้ำเงิน
-        badgeText = "งานเสริม"; // ข้อความเริ่มต้นแทนของเดิม
-      }
-
-      const item = document.createElement("div");
-      item.className = "mission-item";
-      item.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px; padding: 8px; border-bottom: 1px solid #eee;">
-          <div>
-            <span style="background-color: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 8px; font-weight: bold;">
-              ${badgeText}
-            </span>
-            <strong>${mission.name}</strong>
-          </div>
-          <span style="color: ${badgeColor}; font-weight: bold;">+${mission.score} คะแนน</span>
-        </div>
-      `;
-      missionContainer.appendChild(item);
-    });
+    const missions = currentStudent.ภารกิจ || [];
+    const html = missions.map((m, i) => {
+      const scoreNum = parseFloat(m.score) || 0;
+      const isDone = scoreNum > 0;
+      // ปรับการคำนวณสีพื้นหลังให้รองรับภารกิจที่เพิ่มขึ้น
+      let cls = i < 9 ? "background:#fff4e6; border-left-color:#f39c12;" : "background:#f3e5f5; border-left-color:#8e44ad;";
+      const scoreText = isDone ? `<br><span style="color:#27ae60; font-weight:500;">✨ ได้รับ +${scoreNum} คะแนน</span>` : "";
+      return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'⚔️ พิชิตสำเร็จ':'⏳ ยังไม่ทำ'}</span><b>${m.name}</b>${scoreText}</div>`;
+    }).join('');
+    document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center;'>📜 บันทึกภารกิจ (" + missions.length + ")</h4>" + html;
   }
 
   function applyShirt(url){ 
@@ -327,7 +317,7 @@
     btn.disabled=false; btn.textContent="💾 บันทึกชุด";
   }
 
-  /* --- GAME ENGINE --- */
+  // --- GAME ENGINE ---
   function handleAvatarClick() {
     clickCount++; 
     clearTimeout(clickTimer); 
