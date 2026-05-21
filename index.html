@@ -112,10 +112,19 @@
   </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycby-t0-T1HMlxN7vHCIHEtBTNT1t4POWGOy1IhWXuYZP3X9OGzZfI2lIYt7Ur5bflL2ohg/exec";
-  let studentsData = [], currentStudent = null;
+const API_URL = "https://script.google.com/macros/s/AKfycby-t0-T1HMlxN7vHCIHEtBTNT1t4POWGOy1IhWXuYZP3X9OGzZfI2lIYt7Ur5bflL2ohg/exec";
+  let currentStudent = null;
   let clickCount = 0, clickTimer = null;
   let activeShirtConfig = null, activeHatConfig = null;
+
+  // ปลดล็อกปุ่มเมื่อหน้าเว็บโหลดเสร็จ เพื่อให้เด็กกดใช้งานได้ทันที
+  window.onload = function() {
+    const loginBtn = document.getElementById("loginBtn");
+    if(loginBtn) {
+      loginBtn.disabled = false;
+      loginBtn.textContent = "เข้าสู่อาณาจักร";
+    }
+  };
 
   const shirtLibrary = [
     { id: "s1", name: "เขียวเมี๊ยว", minLvl: 0, url: "https://img2.pic.in.th/Gemini_Generated_Image_4tdjo64tdjo64tdj-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
@@ -168,37 +177,89 @@
     }
   }
 
-  function login(){
-    const u = document.getElementById("username").value.trim();
-    const p = document.getElementById("password").value.trim();
-    
-    currentStudent = studentsData.find(s => String(s["รหัสเข้า"] || s.รหัสเข้า || "") === u && String(s["รหัสผ่าน"] || s.รหัสผ่าน || "") === p);
-    
-    if(!currentStudent) return alert("รหัสผิดเมี๊ยว!");
-    
-    const score = parseFloat(currentStudent["คะแนน"] || currentStudent.คะแนน) || 0;
-    currentStudent.เลเวล = Math.floor(10 * Math.sqrt(score));
-    
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("dashboard").style.display = "flex";
-    
-    document.getElementById("displayName").textContent = currentStudent["ชื่อ"] || currentStudent.ชื่อ || "-";
-    document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
-    document.getElementById("displayScore").textContent = score;
-    document.getElementById("displaySheet").textContent = currentStudent["ชั้น"] || currentStudent.ชั้น || "ไม่ระบุ";
-    
-    const studentShirt = currentStudent["เสื้อ"] || currentStudent.เสื้อ;
-    const studentHat = currentStudent["หมวก"] || currentStudent.หมวก;
-    
-    renderInventory(); 
-    renderMissions(); 
-    
-    if(studentHat && fullSetLibrary.some(s => studentHat === s.url)) {
-      applyFullSet(studentHat);
-    } else { 
-      if(studentHat) applyHat(studentHat); 
-      if(studentShirt) applyShirt(studentShirt); 
+function login() {
+    const u = document.getElementById("username").value.trim(); // รหัสนักเรียนที่เด็กกรอก
+    const p = document.getElementById("password").value.trim(); // รหัสผ่านที่เด็กกรอก
+    const loginBtn = document.getElementById("loginBtn");
+
+    if (!u || !p) {
+      return alert("กรุณากรอกทั้งรหัสนักเรียนและรหัสผ่านเมี๊ยว!");
     }
+
+    // แสดงสถานะกำลังโหลดบนปุ่ม
+    loginBtn.disabled = true;
+    loginBtn.textContent = "กำลังค้นหาข้อมูลในอาณาจักร...";
+
+    // ยิง API ไปค้นหาข้อมูลจาก "รหัสนักเรียน"
+    fetch(`${API_URL}?action=getStudent&id=${encodeURIComponent(u)}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("เครือข่ายมีปัญหา กรุณาลองใหม่อีกครั้ง");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.status === "success" && data.student) {
+          const student = data.student;
+          
+          // ตรวจสอบรหัสผ่าน (แมตช์กับหัวตารางคอลัมน์ "รหัส")
+          const dbPassword = String(student["รหัส"] || student.รหัส || "");
+          if (dbPassword !== p) {
+            alert("รหัสผ่านไม่ถูกต้องเมี๊ยว!");
+            loginBtn.disabled = false;
+            loginBtn.textContent = "เข้าสู่อาณาจักร";
+            return;
+          }
+
+          // ถ้ารหัสผ่านถูกต้อง บันทึกข้อมูลเข้าตัวแปรหลัก
+          currentStudent = student;
+
+          // ดึงค่าคะแนน (แมตช์กับหัวตารางคอลัมน์ "คะแนน")
+          const score = parseFloat(currentStudent["คะแนน"] || currentStudent.คะแนน) || 0;
+          
+          // คำนวณเลเวลอัตโนมัติจากคะแนน (หรือถ้าจะใช้จากชีตโดยตรงให้เปลี่ยนเป็นระบุค่าปัจจุบันได้ครับ)
+          currentStudent.เลเวล = Math.floor(10 * Math.sqrt(score));
+
+          // สลับหน้าจอจากหน้า Login ไปหน้า Dashboard
+          document.getElementById("loginPage").style.display = "none";
+          document.getElementById("dashboard").style.display = "flex";
+
+          // แสดงข้อมูลของนักเรียนบนหน้าจอ (แมตช์กับคอลัมน์ "ชื่อ")
+          document.getElementById("displayName").textContent = currentStudent["ชื่อ"] || currentStudent.ชื่อ || "-";
+          document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
+          document.getElementById("displayScore").textContent = score;
+          
+          // เนื่องจากในรายชื่อที่ตั้งมาไม่มีคอลัมน์ "ชั้น" จึงปรับให้แสดงคำว่า "นักเรียน" แทนเพื่อป้องกัน Error บนหน้าเว็บ
+          const classText = document.getElementById("displaySheet");
+          if(classText) classText.textContent = "นักเรียน";
+
+          // ระบบไอเทมแต่งตัว (แมตช์กับคอลัมน์ "เสื้อ" และ "หมวก")
+          const studentShirt = currentStudent["เสื้อ"] || currentStudent.เสื้อ;
+          const studentHat = currentStudent["หมวก"] || currentStudent.หมวก;
+
+          renderInventory();
+          renderMissions();
+
+          // แสดงผลไอเทมบนตัวน้องแมว
+          if (studentHat && fullSetLibrary.some(s => studentHat === s.url)) {
+            applyFullSet(studentHat);
+          } else {
+            if (studentHat) applyHat(studentHat);
+            if (studentShirt) applyShirt(studentShirt);
+          }
+
+        } else {
+          alert(data.message || "ไม่พบรหัสนักเรียนนี้ในระบบเมี๊ยว!");
+          loginBtn.disabled = false;
+          loginBtn.textContent = "เข้าสู่อาณาจักร";
+        }
+      })
+      .catch((error) => {
+        console.error("Login Error:", error);
+        alert("เกิดข้อผิดพลาดในการเชื่อมต่อระบบ หรือสิทธิ์ Web App ไม่ถูกต้อง");
+        loginBtn.disabled = false;
+        loginBtn.textContent = "เข้าสู่อาณาจักร";
+      });
   }
 
   function renderInventory() {
