@@ -3,34 +3,67 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Cat RPG Adventure v3.8</title>
-  <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
+  <title>Pet House Sanctuary</title>
+  <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     * { touch-action: pan-y; -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
-    body { font-family: 'Mitr', sans-serif; background: #e2d1c3; margin: 0; padding: 0; overflow-x: hidden; width: 100vw; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    body { font-family: 'Mitr', sans-serif; background: #2c3e50; margin: 0; padding: 0; overflow-x: hidden; width: 100vw; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 
     /* Login Section */
-    #loginPage { background: white; padding: 40px 30px; border-radius: 30px; width: 90%; max-width: 340px; margin-top: 60px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+    #loginPage { background: white; padding: 40px 30px; border-radius: 30px; width: 90%; max-width: 340px; margin-top: 60px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
     .login-input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #ddd; font-family: 'Mitr'; font-size: 16px; outline: none; }
-    #loginBtn { background: #2ecc71; color: white; border: none; padding: 15px; border-radius: 15px; width: 100%; font-family: 'Mitr'; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 #27ae60; }
+    #loginBtn { background: #2ecc71; color: white; border: none; padding: 15px; border-radius: 15px; width: 100%; font-family: 'Mitr'; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 #27ae60; font-weight: 500; }
     #loginBtn:disabled { background: #bdc3c7 !important; color: #7f8c8d !important; box-shadow: 0 4px 0 #95a5a6 !important; cursor: not-allowed; }
 
-    /* Dashboard */
-    #dashboard { display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px 0; gap: 20px; }
-    .student-card, .inventory-card, .mission-card { background: white; border-radius: 25px; padding: 20px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    /* Dashboard Main Container */
+    #dashboard { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 10px 0 30px 0; gap: 15px; }
 
-    /* Avatar System */
+    /* Top Bar Header */
+    .top-bar {
+      width: 90%; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 12px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15); border: 2px solid #f39c12;
+    }
+    .user-info { display: flex; flex-direction: column; }
+    .user-name { font-weight: 600; font-size: 16px; color: #2c3e50; }
+    .user-class { font-size: 11px; color: #7f8c8d; }
+    .stats-group { display: flex; gap: 10px; align-items: center; }
+    .stat-badge { background: #fef9e7; border: 1px solid #f1c40f; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 500; color: #d35400; display: flex; align-items: center; gap: 4px; }
+
+    /* Pet House Scene */
+    .pet-house-card {
+      width: 90%; height: 320px; border-radius: 25px; position: relative; overflow: hidden;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.25); border: 4px solid #fff;
+      /* Background ฉากหลังคอกสัตว์/บ้านสัตว์เลี้ยง */
+      background: linear-gradient(to bottom, #74b9ff 0%, #74b9ff 50%, #55efc4 50%, #00b894 100%);
+    }
+    
+    /* ตกแต่งวอลเปเปอร์บ้าน/คอก */
+    .house-wall { position: absolute; top: 0; width: 100%; height: 50%; background: #ffeaa7; opacity: 0.3; }
+    .house-fence { position: absolute; top: 40%; width: 100%; height: 25px; background: repeating-linear-gradient(90deg, #d63031, #d63031 15px, transparent 15px, transparent 25px); opacity: 0.4; }
+
+    /* Avatar Box & Animations */
     @keyframes breathe { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-4px) scale(1.02); } }
     .avatar-container { 
-      width: 180px; height: 180px; margin: 0 auto 15px; background: #f9f9f9; border-radius: 50%; 
-      position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; 
-      border: 5px solid #fff; animation: breathe 3s ease-in-out infinite; cursor: pointer;
+      width: 140px; height: 140px; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+      display: flex; justify-content: center; align-items: center; 
+      animation: breathe 3s ease-in-out infinite; cursor: pointer; z-index: 5;
     }
-    .god-aura { box-shadow: 0 0 20px #f1c40f, 0 0 40px #f39c12 !important; border-color: #f1c40f !important; background: radial-gradient(circle, #fff9e6 0%, #ffffff 100%) !important; }
-    /* แก้ไขจุดผิดคำว่า image-ing เป็น image-rendering */
+    .god-aura { filter: drop-shadow(0 0 15px #f1c40f); }
     #avatar-base { width: auto; height: 85%; z-index: 1; image-rendering: pixelated; }
     #shirt-overlay, #hat-overlay { position: absolute; z-index: 2; display: none; transform: translateX(-50%); pointer-events: none; }
     #full-set-overlay { position: absolute; z-index: 4; display: none; transform: translate(-50%, -50%); left: 50%; top: 50%; }
+
+    /* Props: ชามข้าว ชามน้ำ */
+    .pet-props { position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: space-around; padding: 0 20px; z-index: 3; }
+    .bowl { width: 45px; height: 25px; border-radius: 0 0 15px 15px; position: relative; border: 2px solid #636e72; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    .food-bowl { background: #e17055; }
+    .food-bowl::before { content: '🍖'; position: absolute; top: -12px; left: 10px; font-size: 16px; }
+    .water-bowl { background: #0984e3; }
+    .water-bowl::before { content: '💧'; position: absolute; top: -12px; left: 10px; font-size: 16px; }
+
+    /* Panels & Cards */
+    .inventory-card, .mission-card { background: white; border-radius: 25px; padding: 20px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
 
     /* UI Elements */
     .tab-menu { display: flex; gap: 5px; margin-bottom: 15px; }
@@ -42,52 +75,71 @@
     .item-slot img { width: 100%; height: 50px; object-fit: contain; }
     .lvl-badge { position: absolute; top: 2px; right: 2px; font-size: 8px; background: #e74c3c; color: white; padding: 2px 4px; border-radius: 5px; }
     .locked { opacity: 0.3; filter: grayscale(1); }
-    
     .selected-item { border: 3px solid #3498db !important; background: #ebf5fb !important; transform: scale(1.05); box-shadow: 0 4px 10px rgba(52,152,219,0.3); }
 
-    /* Mission */
+    /* Mission List */
     .mission-item { padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 8px solid #ccc; font-size: 14px; }
     .status-badge { font-size: 11px; padding: 3px 10px; border-radius: 10px; float: right; color: white; }
     .done-bg { background: #27ae60; }
     .wait-bg { background: #95a5a6; }
 
-    /* Buttons */
-    .btn-save { background: #3498db; color: white; border: none; padding: 15px; border-radius: 18px; width: 100%; font-family: 'Mitr'; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 0 #2980b9; }
-    .btn-clear { width:100%; background:#95a5a6; color:white; border:none; padding:12px; border-radius:18px; margin-top:10px; font-family:'Mitr'; cursor:pointer; }
-    .btn-logout { width:100%; background:none; color:#e74c3c; border:1px dashed #e74c3c; padding:10px; border-radius:18px; margin-top:10px; font-family:'Mitr'; cursor:pointer; }
+    /* Action Buttons */
+    .action-group { display: flex; gap: 8px; width: 100%; }
+    .btn-save { flex: 2; background: #3498db; color: white; border: none; padding: 12px; border-radius: 15px; font-family: 'Mitr'; cursor: pointer; box-shadow: 0 4px 0 #2980b9; }
+    .btn-clear { flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 15px; font-family: 'Mitr'; cursor: pointer; box-shadow: 0 4px 0 #7f8c8d; }
+    .btn-logout { width: 100%; background: #fab1a0; color: #d63031; border: none; padding: 10px; border-radius: 15px; font-family: 'Mitr'; cursor: pointer; font-weight: 500; }
 
+    /* Mini Game Canvas Overlay */
     #gameOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
     #gameCanvas { background: #87CEEB; border: 4px solid #fff; border-radius: 20px; }
   </style>
 </head>
 <body>
 
+  <!-- 1. Login Section -->
   <div id="loginPage">
-    <h2 style="color: #634d3a;">🐾 Cat RPG</h2>
+    <h2 style="color: #634d3a; margin-top: 0;">🏡 Pet Sanctuary</h2>
     <input type="text" id="username" class="login-input" placeholder="รหัสนักเรียน (ID)">
     <input type="password" id="password" class="login-input" placeholder="รหัสผ่าน">
-    <button id="loginBtn" onclick="login()" disabled>กำลังโหลดอาณาจักร...</button>
+    <button id="loginBtn" onclick="login()" disabled>กำลังโหลดบ้านสัตว์เลี้ยง...</button>
   </div>
 
+  <!-- 2. Main Game Dashboard -->
   <div id="dashboard">
-    <div class="student-card">
+    
+    <!-- Top Bar Header (ชื่อ, เลเวล, เงิน) -->
+    <div class="top-bar">
+      <div class="user-info">
+        <span class="user-name" id="displayName">-</span>
+        <span class="user-class">🏫 ชั้นเรียน: <span id="displaySheet">-</span></span>
+      </div>
+      <div class="stats-group">
+        <div class="stat-badge">⭐ Lv.<span id="displayLevel">0</span></div>
+        <div class="stat-badge">💰 <span id="displayScore">0</span></div>
+      </div>
+    </div>
+
+    <!-- Pet House Scene (ฉากคอกสัตว์/ตัวละคร/ชามข้าว-น้ำ) -->
+    <div class="pet-house-card">
+      <div class="house-wall"></div>
+      <div class="house-fence"></div>
+      
+      <!-- Avatar Clicker -->
       <div class="avatar-container" id="avatarClicker" onclick="handleAvatarClick()">
         <img id="avatar-base" src="https://img1.pic.in.th/images/Gemini_Generated_Image_v4dyj4v4dyj4v4dy-removebg-preview.md.png">
         <img id="shirt-overlay">
         <img id="hat-overlay">
         <img id="full-set-overlay">
       </div>
-      <div style="text-align: center;">
-        <h3 id="displayName" style="margin: 0; color: #634d3a;">-</h3>
-        <p style="margin: 5px 0;"><span style="background: #fff4e6; color: #d35400; padding: 4px 12px; border-radius: 20px; font-size: 14px;">⭐ เลเวล <span id="displayLevel">0</span></span></p>
-        <p style="font-size: 14px; color: #7f8c8d;">🏆 คะแนนสะสม: <span id="displayScore">0</span></p>
-        <p style="font-size: 13px; color: #95a5a6;">🏫 ชั้นเรียน: <span id="displaySheet">-</span></p>
+
+      <!-- Food & Water Bowls -->
+      <div class="pet-props">
+        <div class="bowl food-bowl" title="ชามอาหาร"></div>
+        <div class="bowl water-bowl" title="ชามน้ำ"></div>
       </div>
-      <button class="btn-save" id="saveBtn" onclick="saveDressing()">💾 บันทึกชุด</button>
-      <button class="btn-clear" onclick="clearDressing()">❌ ถอดชุด</button>
-      <button class="btn-logout" onclick="location.reload()">🚪 ออกจากเมือง (Logout)</button>
     </div>
 
+    <!-- Wardrobe / Inventory Card -->
     <div class="inventory-card">
       <div class="tab-menu">
         <button class="tab-btn active" onclick="openTab('tab-shirts', this)">เสื้อ</button>
@@ -97,27 +149,36 @@
       <div id="tab-shirts" class="tab-content active"></div>
       <div id="tab-hats" class="tab-content"></div>
       <div id="tab-sets" class="tab-content"></div>
+      
+      <div class="action-group" style="margin-top: 15px;">
+        <button class="btn-save" id="saveBtn" onclick="saveDressing()">💾 บันทึกชุด</button>
+        <button class="btn-clear" onclick="clearDressing()">❌ ถอดชุด</button>
+      </div>
     </div>
 
+    <!-- Mission Card -->
     <div class="mission-card" id="mission-list"></div>
+
+    <button class="btn-logout" onclick="location.reload()">🚪 ออกจากเกม (Logout)</button>
   </div>
 
+  <!-- Mini Game Overlay -->
   <div id="gameOverlay">
     <div style="color:white; text-align:center; margin-bottom:10px;">
-      <h2 style="margin:0;">Cat Jump! 🚀</h2>
+      <h2 style="margin:0;">Pet Jump! 🚀</h2>
       <h1 id="gameScoreText" style="color:#f1c40f; font-size:40px; margin:0;">0</h1>
     </div>
     <canvas id="gameCanvas" width="300" height="400" onclick="gameJump()"></canvas>
-    <button onclick="closeGame()" style="margin-top:20px; padding:10px 30px; border-radius:15px; background:#e74c3c; color:white; border:none; font-family:'Mitr';">กลับสู่เมือง</button>
+    <button onclick="closeGame()" style="margin-top:20px; padding:10px 30px; border-radius:15px; background:#e74c3c; color:white; border:none; font-family:'Mitr'; cursor:pointer;">กลับสู่บ้านเลี้ยงสัตว์</button>
   </div>
 
 <script>
   // ===================================================
-  // 1. ตั้งค่า URL และตัวแปรระบบหลัก
+  // 1. ตั้งค่า API URL และตัวแปรหลัก
   // ===================================================
   const API_URL = "https://script.google.com/macros/s/AKfycbxg0xhtPcOjhhc-0udhctTCIxJeSuWAwpAuQVqA6MMwy7k2ZYb7XSawanf9XshEwzkeWA/exec";
   
-  let allStudentsData = []; // กองข้อมูลนักเรียนทุกคนที่ดึงมาจาก Google Sheets
+  let allStudentsData = [];
   let currentStudent = null;
   let clickCount = 0, clickTimer = null;
   let activeShirtConfig = null, activeHatConfig = null;
@@ -162,94 +223,74 @@
   ];
 
   // ===================================================
-  // 2. ฟังก์ชันดึงข้อมูลทั้งหมดมากองไว้ตอนเปิดหน้าเว็บ
+  // 2. โหลดข้อมูลเมื่อเปิดเว็บ
   // ===================================================
   window.onload = function() {
     const loginBtn = document.getElementById("loginBtn");
     if(loginBtn) {
       loginBtn.disabled = true;
-      loginBtn.textContent = "🔮 กำลังดาวน์โหลดข้อมูลจากเมือง...";
+      loginBtn.textContent = "🔮 กำลังดาวน์โหลดข้อมูลบ้านสัตว์เลี้ยง...";
     }
 
-    // ยิงไปดึงข้อมูลก้อนใหญ่จาก Apps Script
     fetch(`${API_URL}?t=${new Date().getTime()}`)
       .then(response => {
-        if (!response.ok) throw new Error("การเชื่อมต่อล้มเหลว");
+        if (!response.ok) throw new Error("เชื่อมต่อล้มเหลว");
         return response.json();
       })
       .then(data => {
-        allStudentsData = data; // พากองข้อมูลไปเก็บไว้ที่ตัวแปรหลัก
+        allStudentsData = data;
         if(loginBtn) {
           loginBtn.disabled = false;
-          loginBtn.textContent = "เข้าสู่อาณาจักร";
+          loginBtn.textContent = "เข้าบ้านสัตว์เลี้ยง";
         }
       })
       .catch(error => {
-        console.error("Initial load failed:", error);
+        console.error("Load Error:", error);
         if(loginBtn) {
-          loginBtn.textContent = "⚠️ ไม่สามารถโหลดฐานข้อมูลได้ กรุณารีเฟรชหน้าเว็บ";
+          loginBtn.textContent = "⚠️ ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
         }
       });
   };
 
   // ===================================================
-  // 3. ฟังก์ชันล็อกอิน ค้นหาข้อมูลจากกองประวัติในเครื่อง
+  // 3. ระบบ Login
   // ===================================================
   function login() {
     const u = document.getElementById("username").value.trim();
     const p = document.getElementById("password").value.trim();
-    const loginBtn = document.getElementById("loginBtn");
 
-    if (!u || !p) {
-      return alert("กรุณากรอกทั้งรหัสนักเรียนและรหัสผ่านเมี๊ยว!");
-    }
+    if (!u || !p) return alert("กรุณากรอกรหัสนักเรียนและรหัสผ่าน!");
+    if (!allStudentsData || allStudentsData.length === 0) return alert("ระบบกำลังโหลดข้อมูล กรุณารอสักครู่!");
 
-    if (!allStudentsData || allStudentsData.length === 0) {
-      return alert("ระบบยังโหลดข้อมูลไม่เสร็จ กรุณารอสักครู่แล้วลองใหม่เมี๊ยว!");
-    }
-
-    // ค้นหานักเรียนในกองข้อมูลที่โหลดมา โดยเทียบกับคีย์ "รหัสเข้า" (ตามสไตล์ Apps Script ของคุณครู)
     const student = allStudentsData.find(s => String(s["รหัสเข้า"] || "").trim() === u);
+    if (!student) return alert("ไม่พบรหัสนักเรียนนี้!");
 
-    if (!student) {
-      return alert("ไม่พบรหัสนักเรียนนี้ในระบบเมี๊ยว!");
-    }
-
-    // ตรวจสอบรหัสผ่าน โดยเทียบกับคีย์ "รหัสผ่าน"
     const dbPassword = String(student["รหัสผ่าน"] || "").trim();
-    if (dbPassword !== p) {
-      return alert("รหัสผ่านไม่ถูกต้องเมี๊ยว!");
-    }
+    if (dbPassword !== p) return alert("รหัสผ่านไม่ถูกต้อง!");
 
-    // ถ้ารหัสและรหัสผ่านถูกต้อง แปลงโครงสร้างข้อมูลเข้าสู่ระบบตัวแปรหน้าเว็บเดิม
     currentStudent = {
       "รหัสนักเรียน": student["รหัสเข้า"],
       "ชื่อ": student["ชื่อ"] || "-",
       "คะแนน": parseFloat(student["คะแนน"]) || 0,
-      "เลเวล": parseInt(student["เลเวล"]) || 0, // ดึงเลเวลจากชีตที่คุณครูคำนวณไว้ได้โดยตรงเลยครับ
+      "เลเวล": parseInt(student["เลเวล"]) || 0,
       "หมวก": student["หมวก"] || "",
       "เสื้อ": student["เสื้อ"] || "",
       "ชั้น": student["ชั้น"] || "-",
       "ภารกิจ": student["ภารกิจ"] || []
     };
 
-    // สลับหน้าจอ
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("dashboard").style.display = "flex";
 
-    // แสดงผลข้อมูลรายบุคคลบน UI
+    // อัปเดตข้อมูล UI บน Header Top Bar
     document.getElementById("displayName").textContent = currentStudent["ชื่อ"];
     document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
     document.getElementById("displayScore").textContent = currentStudent["คะแนน"];
     
     const classText = document.getElementById("displaySheet");
-    if (classText) {
-      classText.textContent = currentStudent["ชั้น"];
-    }
+    if (classText) classText.textContent = currentStudent["ชั้น"];
 
-    // จัดการแสดงผลเสื้อผ้าที่เด็กเคยแต่งค้างไว้
     if (currentStudent["หมวก"] || currentStudent["เสื้อ"]) {
-      // ตรวจสอบก่อนว่าเป็นไอเทมชุดพิเศษ (Full Set) ไหม
       const isFullSet = fullSetLibrary.some(f => currentStudent["หมวก"] === f.url);
       if (isFullSet) {
         applyFullSet(currentStudent["หมวก"]);
@@ -259,13 +300,12 @@
       }
     }
 
-    // เรนเดอร์กระเป๋าและรายการภารกิจ
     renderInventory();
     renderMissions();
   }
 
   // ===================================================
-  // 4. ฟังก์ชันระบบเกม ตู้เสื้อผ้า และภารกิจเดิม (คงไว้ตามปกติ)
+  // 4. ระบบการแต่งตัว & แสดงผล
   // ===================================================
   function renderInventory() {
     const lvl = currentStudent.เลเวล;
@@ -290,40 +330,25 @@
     document.getElementById("tab-sets").innerHTML = draw(fullSetLibrary, 'f');
   }
 
-function renderMissions() {
-  const missions = currentStudent.ภารกิจ || currentStudent.missions || [];
-  
-  // สวิตช์สำหรับเช็กว่าเจอภารกิจ "สอบกลางภาค" แล้วหรือยัง (เริ่มต้นเป็น false)
-  let passedMidterm = false;
-  
-  const html = missions.map((m, i) => {
-    const scoreNum = parseFloat(m.score || m.คะแนน) || 0;
-    const isDone = scoreNum > 0;
+  function renderMissions() {
+    const missions = currentStudent.ภารกิจ || currentStudent.missions || [];
+    let passedMidterm = false;
     
-    // ดึงชื่อภารกิจมาเช็กคำ
-    const missionName = m.name || m.ชื่อภารกิจ || m.ชื่อ || "ภารกิจไม่มีชื่อ";
+    const html = missions.map((m) => {
+      const scoreNum = parseFloat(m.score || m.คะแนน) || 0;
+      const isDone = scoreNum > 0;
+      const missionName = m.name || m.ชื่อภารกิจ || m.ชื่อ || "ภารกิจไม่มีชื่อ";
+      
+      let cls = "background:#fff4e6; border-left-color:#f39c12;";
+      if (passedMidterm) cls = "background:#f3e5f5; border-left-color:#8e44ad;";
+      if (missionName.includes("สอบกลางภาค")) passedMidterm = true;
+      
+      const scoreText = isDone ? `<br><span style="color:#27ae60; font-weight:500;">✨ ได้รับ +${scoreNum} คะแนน</span>` : "";
+      return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'⚔️ สำเร็จ':'⏳ รอ'}</span><b>${missionName}</b>${scoreText}</div>`;
+    }).join('');
     
-    // กำหนดรูปแบบสีพื้นฐาน (ซีกซ้าย/ก่อนกลางภาค = โทนสีส้ม)
-    let cls = "background:#fff4e6; border-left-color:#f39c12;";
-    
-    // ถ้าสวิตช์ถูกเปิดแล้ว (เป็นงานหลังสอบกลางภาค) -> เปลี่ยนเป็นโทนสีม่วง
-    if (passedMidterm) {
-      cls = "background:#f3e5f5; border-left-color:#8e44ad;";
-    }
-    
-    // 💡 จุดสำคัญ: ถ้าเจอภารกิจที่มีคำว่า "สอบกลางภาค" ให้เปิดสวิตช์ passedMidterm เป็น true 
-    // เพื่อให้ภารกิจ "อันถัด ๆ ไป" ในรอบ Loop เปลี่ยนเป็นสีม่วง (ซีกขวา)
-    if (missionName.includes("สอบกลางภาค")) {
-      passedMidterm = true;
-    }
-    
-    const scoreText = isDone ? `<br><span style="color:#27ae60; font-weight:500;">✨ ได้รับ +${scoreNum} คะแนน</span>` : "";
-    
-    return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'⚔️ พิชิตสำเร็จ':'⏳ ยังไม่ทำ'}</span><b>${missionName}</b>${scoreText}</div>`;
-  }).join('');
-  
-  document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center;'>📜 บันทึกภารกิจ (" + missions.length + ")</h4>" + html;
-}
+    document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center; margin-top:0;'>📜 บันทึกภารกิจ (" + missions.length + ")</h4>" + html;
+  }
 
   function applyShirt(url){ 
     const s = document.getElementById("shirt-overlay"); 
@@ -389,14 +414,16 @@ function renderMissions() {
     const url = `${API_URL}?action=saveDressing&id=${currentStudent["รหัสนักเรียน"]}&hat=${encodeURIComponent(h)}&shirt=${encodeURIComponent(s)}&fullset=${encodeURIComponent(f)}`;
     try { 
       await fetch(url,{mode:'no-cors'}); 
-      alert("บันทึกชุดลงในสมุดบันทึกสำเร็จแล้วเมี๊ยว! 🐾"); 
+      alert("บันทึกชุดสำเร็จแล้ว!"); 
     } catch(e) { 
-      alert("ล้มเหลวเมี๊ยว!"); 
+      alert("บันทึกล้มเหลว!"); 
     }
     btn.disabled=false; btn.textContent="💾 บันทึกชุด";
   }
 
-  // --- GAME ENGINE ---
+  // ===================================================
+  // 5. Mini Game Engine
+  // ===================================================
   function handleAvatarClick() {
     clickCount++; 
     clearTimeout(clickTimer); 
@@ -461,12 +488,12 @@ function renderMissions() {
 
     if(frameCount % 80 === 0) obstacles.push({x:300, w:50, h:80 + Math.random()*120, passed: false});
     frameCount++;
-    obstacles.forEach((o, i) => {
+    obstacles.forEach((o) => {
       o.x -= 3.5;
       ctx.fillStyle = "#e74c3c"; ctx.fillRect(o.x, 400-o.h, o.w, o.h);
       if(o.x < 110 && o.x + o.w > 40 && birdY + 25 > 400-o.h) { 
         isGameOver = true; 
-        alert("ชนกองงานแล้วเมี๊ยว! คะแนน: " + gameScore); 
+        alert("ชนสิ่งกีดขวางแล้ว! คะแนน: " + gameScore); 
         closeGame(); 
       }
       if(!o.passed && o.x < 40) { o.passed = true; gameScore++; document.getElementById("gameScoreText").textContent = gameScore; }
@@ -475,10 +502,10 @@ function renderMissions() {
     if(gameScore >= 10 && !isGameOver) {
       isGameOver = true; 
       document.getElementById("avatarClicker").classList.add("god-aura");
-      setTimeout(() => { alert("⚔️ พิชิตสำเร็จเมี๊ยว! รับออร่าเทพเจ้า!"); closeGame(); }, 100);
+      setTimeout(() => { alert("⚔️ พิชิตสำเร็จ! ได้รับออร่าเทพเจ้า!"); closeGame(); }, 100);
       return;
     }
-    if(birdY > 450 || birdY < -100) { isGameOver = true; alert("ตกโลกแล้วเมี๊ยว!"); closeGame(); }
+    if(birdY > 450 || birdY < -100) { isGameOver = true; alert("ตกโลกแล้ว!"); closeGame(); }
     if(!isGameOver) gameFrame = requestAnimationFrame(runGame);
   }
 </script>
