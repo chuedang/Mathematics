@@ -16,82 +16,74 @@
     #loginBtn:disabled { background: #bdc3c7 !important; color: #7f8c8d !important; box-shadow: 0 4px 0 #95a5a6 !important; cursor: not-allowed; }
 
     /* Dashboard Main Container */
-    #dashboard { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 10px 0 30px 0; gap: 15px; }
+    #dashboard { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 15px 0 30px 0; gap: 15px; }
 
     /* Top Bar Header */
     .top-bar {
-      width: 90%; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 12px 20px;
+      width: 90%; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 12px 15px;
       display: flex; justify-content: space-between; align-items: center;
       box-shadow: 0 8px 20px rgba(0,0,0,0.15); border: 2px solid #f39c12;
     }
     .user-info { display: flex; flex-direction: column; }
-    .user-name { font-weight: 600; font-size: 16px; color: #2c3e50; }
+    .user-name { font-weight: 600; font-size: 15px; color: #2c3e50; }
     .user-class { font-size: 11px; color: #7f8c8d; }
-    .stats-group { display: flex; gap: 10px; align-items: center; }
-    .stat-badge { background: #fef9e7; border: 1px solid #f1c40f; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 500; color: #d35400; display: flex; align-items: center; gap: 4px; }
+    .top-right-group { display: flex; gap: 8px; align-items: center; }
+    .stats-group { display: flex; flex-direction: column; gap: 3px; }
+    .stat-badge { background: #fef9e7; border: 1px solid #f1c40f; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 500; color: #d35400; display: flex; align-items: center; gap: 4px; }
+    
+    /* ปุ่มภารกิจขวาบน */
+    .btn-mission-toggle {
+      background: #3498db; color: white; border: none; padding: 8px 12px;
+      border-radius: 12px; font-family: 'Mitr'; font-size: 13px; font-weight: 500;
+      cursor: pointer; box-shadow: 0 3px 0 #2980b9; display: flex; align-items: center; gap: 4px;
+    }
+    .btn-mission-toggle:active { transform: translateY(2px); box-shadow: 0 1px 0 #2980b9; }
 
     /* Pet House Scene */
     .pet-house-card {
-      width: 90%; height: 320px; border-radius: 25px; position: relative; overflow: hidden;
+      width: 90%; height: 360px; border-radius: 25px; position: relative; overflow: hidden;
       box-shadow: 0 12px 25px rgba(0,0,0,0.25); border: 4px solid #fff;
-      /* Background ฉากหลังคอกสัตว์/บ้านสัตว์เลี้ยง */
       background: linear-gradient(to bottom, #74b9ff 0%, #74b9ff 50%, #55efc4 50%, #00b894 100%);
     }
     
-    /* ตกแต่งวอลเปเปอร์บ้าน/คอก */
     .house-wall { position: absolute; top: 0; width: 100%; height: 50%; background: #ffeaa7; opacity: 0.3; }
     .house-fence { position: absolute; top: 40%; width: 100%; height: 25px; background: repeating-linear-gradient(90deg, #d63031, #d63031 15px, transparent 15px, transparent 25px); opacity: 0.4; }
 
-    /* Avatar Box & Animations */
-    @keyframes breathe { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-4px) scale(1.02); } }
+    /* Pet Container & Animation */
+    @keyframes breathe { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -54%) scale(1.02); } }
     .avatar-container { 
-      width: 140px; height: 140px; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+      width: 170px; height: 170px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       display: flex; justify-content: center; align-items: center; 
-      animation: breathe 3s ease-in-out infinite; cursor: pointer; z-index: 5;
+      animation: breathe 3s ease-in-out infinite; z-index: 5;
     }
-    .god-aura { filter: drop-shadow(0 0 15px #f1c40f); }
-    #avatar-base { width: auto; height: 85%; z-index: 1; image-rendering: pixelated; }
-    #shirt-overlay, #hat-overlay { position: absolute; z-index: 2; display: none; transform: translateX(-50%); pointer-events: none; }
-    #full-set-overlay { position: absolute; z-index: 4; display: none; transform: translate(-50%, -50%); left: 50%; top: 50%; }
+    #avatar-base { width: auto; height: 90%; image-rendering: pixelated; }
 
     /* Props: ชามข้าว ชามน้ำ */
-    .pet-props { position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: space-around; padding: 0 20px; z-index: 3; }
-    .bowl { width: 45px; height: 25px; border-radius: 0 0 15px 15px; position: relative; border: 2px solid #636e72; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    .pet-props { position: absolute; bottom: 25px; width: 100%; display: flex; justify-content: space-around; padding: 0 30px; z-index: 3; }
+    .bowl { width: 55px; height: 30px; border-radius: 0 0 15px 15px; position: relative; border: 2px solid #636e72; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
     .food-bowl { background: #e17055; }
-    .food-bowl::before { content: '🍖'; position: absolute; top: -12px; left: 10px; font-size: 16px; }
+    .food-bowl::before { content: '🍖'; position: absolute; top: -14px; left: 14px; font-size: 20px; }
     .water-bowl { background: #0984e3; }
-    .water-bowl::before { content: '💧'; position: absolute; top: -12px; left: 10px; font-size: 16px; }
+    .water-bowl::before { content: '💧'; position: absolute; top: -14px; left: 14px; font-size: 20px; }
 
-    /* Panels & Cards */
-    .inventory-card, .mission-card { background: white; border-radius: 25px; padding: 20px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
-
-    /* UI Elements */
-    .tab-menu { display: flex; gap: 5px; margin-bottom: 15px; }
-    .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 12px; background: #f0f0f0; font-family: 'Mitr'; font-size: 13px; cursor: pointer; }
-    .tab-btn.active { background: #3498db; color: white; }
-    .tab-content { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .tab-content.active { display: grid; }
-    .item-slot { background: #fafafa; border: 2px solid #eee; border-radius: 15px; padding: 10px; text-align: center; position: relative; transition: 0.2s; }
-    .item-slot img { width: 100%; height: 50px; object-fit: contain; }
-    .lvl-badge { position: absolute; top: 2px; right: 2px; font-size: 8px; background: #e74c3c; color: white; padding: 2px 4px; border-radius: 5px; }
-    .locked { opacity: 0.3; filter: grayscale(1); }
-    .selected-item { border: 3px solid #3498db !important; background: #ebf5fb !important; transform: scale(1.05); box-shadow: 0 4px 10px rgba(52,152,219,0.3); }
-
-    /* Mission List */
+    /* Modal หน้าต่างภารกิจ */
+    .modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6); z-index: 100; justify-content: center; align-items: center;
+    }
+    .mission-card {
+      background: white; border-radius: 25px; padding: 20px; width: 90%; max-width: 360px;
+      max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative;
+    }
+    .mission-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    .mission-title { margin: 0; font-size: 18px; color: #2c3e50; }
+    .close-btn { background: #e74c3c; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .mission-item { padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 8px solid #ccc; font-size: 14px; }
     .status-badge { font-size: 11px; padding: 3px 10px; border-radius: 10px; float: right; color: white; }
     .done-bg { background: #27ae60; }
     .wait-bg { background: #95a5a6; }
 
-    /* Action Buttons */
-    .action-group { display: flex; gap: 8px; width: 100%; }
-    .btn-save { flex: 2; background: #3498db; color: white; border: none; padding: 12px; border-radius: 15px; font-family: 'Mitr'; cursor: pointer; box-shadow: 0 4px 0 #2980b9; }
-    .btn-clear { flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 15px; font-family: 'Mitr'; cursor: pointer; box-shadow: 0 4px 0 #7f8c8d; }
-    .btn-logout { width: 100%; background: #fab1a0; color: #d63031; border: none; padding: 10px; border-radius: 15px; font-family: 'Mitr'; cursor: pointer; font-weight: 500; }
-
-    /* Mini Game Canvas Overlay */
-    #gameOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
-    #gameCanvas { background: #87CEEB; border: 4px solid #fff; border-radius: 20px; }
+    .btn-logout { width: 90%; background: #fab1a0; color: #d63031; border: none; padding: 12px; border-radius: 15px; font-family: 'Mitr'; cursor: pointer; font-weight: 500; font-size: 15px; }
   </style>
 </head>
 <body>
@@ -107,29 +99,30 @@
   <!-- 2. Main Game Dashboard -->
   <div id="dashboard">
     
-    <!-- Top Bar Header (ชื่อ, เลเวล, เงิน) -->
+    <!-- Top Bar Header (ชื่อ, เลเวล, เงิน, ปุ่มเปิดภารกิจ) -->
     <div class="top-bar">
       <div class="user-info">
         <span class="user-name" id="displayName">-</span>
         <span class="user-class">🏫 ชั้นเรียน: <span id="displaySheet">-</span></span>
       </div>
-      <div class="stats-group">
-        <div class="stat-badge">⭐ Lv.<span id="displayLevel">0</span></div>
-        <div class="stat-badge">💰 <span id="displayScore">0</span></div>
+      <div class="top-right-group">
+        <div class="stats-group">
+          <div class="stat-badge">⭐ Lv.<span id="displayLevel">0</span></div>
+          <div class="stat-badge">💰 <span id="displayScore">0</span></div>
+        </div>
+        <!-- ปุ่มกดดูภารกิจขวาบน -->
+        <button class="btn-mission-toggle" onclick="openMissionModal()">📜 ภารกิจ</button>
       </div>
     </div>
 
-    <!-- Pet House Scene (ฉากคอกสัตว์/ตัวละคร/ชามข้าว-น้ำ) -->
+    <!-- Pet House Scene -->
     <div class="pet-house-card">
       <div class="house-wall"></div>
       <div class="house-fence"></div>
       
-      <!-- Avatar Clicker -->
-      <div class="avatar-container" id="avatarClicker" onclick="handleAvatarClick()">
+      <!-- Pet Avatar -->
+      <div class="avatar-container">
         <img id="avatar-base" src="https://img1.pic.in.th/images/Gemini_Generated_Image_v4dyj4v4dyj4v4dy-removebg-preview.md.png">
-        <img id="shirt-overlay">
-        <img id="hat-overlay">
-        <img id="full-set-overlay">
       </div>
 
       <!-- Food & Water Bowls -->
@@ -139,37 +132,18 @@
       </div>
     </div>
 
-    <!-- Wardrobe / Inventory Card -->
-    <div class="inventory-card">
-      <div class="tab-menu">
-        <button class="tab-btn active" onclick="openTab('tab-shirts', this)">เสื้อ</button>
-        <button class="tab-btn" onclick="openTab('tab-hats', this)">หมวก</button>
-        <button class="tab-btn" onclick="openTab('tab-sets', this)">พิเศษ</button>
-      </div>
-      <div id="tab-shirts" class="tab-content active"></div>
-      <div id="tab-hats" class="tab-content"></div>
-      <div id="tab-sets" class="tab-content"></div>
-      
-      <div class="action-group" style="margin-top: 15px;">
-        <button class="btn-save" id="saveBtn" onclick="saveDressing()">💾 บันทึกชุด</button>
-        <button class="btn-clear" onclick="clearDressing()">❌ ถอดชุด</button>
-      </div>
-    </div>
-
-    <!-- Mission Card -->
-    <div class="mission-card" id="mission-list"></div>
-
     <button class="btn-logout" onclick="location.reload()">🚪 ออกจากเกม (Logout)</button>
   </div>
 
-  <!-- Mini Game Overlay -->
-  <div id="gameOverlay">
-    <div style="color:white; text-align:center; margin-bottom:10px;">
-      <h2 style="margin:0;">Pet Jump! 🚀</h2>
-      <h1 id="gameScoreText" style="color:#f1c40f; font-size:40px; margin:0;">0</h1>
+  <!-- Modal หน้าต่างภารกิจ/เช็กงาน -->
+  <div class="modal-overlay" id="missionModal">
+    <div class="mission-card">
+      <div class="mission-header">
+        <h3 class="mission-title">📜 รายการภารกิจ</h3>
+        <button class="close-btn" onclick="closeMissionModal()">✕</button>
+      </div>
+      <div id="mission-list"></div>
     </div>
-    <canvas id="gameCanvas" width="300" height="400" onclick="gameJump()"></canvas>
-    <button onclick="closeGame()" style="margin-top:20px; padding:10px 30px; border-radius:15px; background:#e74c3c; color:white; border:none; font-family:'Mitr'; cursor:pointer;">กลับสู่บ้านเลี้ยงสัตว์</button>
   </div>
 
 <script>
@@ -180,47 +154,6 @@
   
   let allStudentsData = [];
   let currentStudent = null;
-  let clickCount = 0, clickTimer = null;
-  let activeShirtConfig = null, activeHatConfig = null;
-
-  const shirtLibrary = [
-    { id: "s1", name: "เขียวเมี๊ยว", minLvl: 0, url: "https://img2.pic.in.th/Gemini_Generated_Image_4tdjo64tdjo64tdj-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s2", name: "ชมพูเมี๊ยว", minLvl: 5, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_bwizh0bwizh0bwiz-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s3", name: "เหลืองร่าเริง", minLvl: 15, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_3q5fny3q5fny3q5f-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s4", name: "ฟ้าใสเเมี๊ยว", minLvl: 25, url: "https://img2.pic.in.th/Gemini_Generated_Image_r5h5awr5h5awr5h5-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s5", name: "ขาวเเมี๊ยว", minLvl: 35, url: "https://img2.pic.in.th/Gemini_Generated_Image_5t9ee35t9ee35t9e-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s6", name: "ม่วงราตรี", minLvl: 45, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_3rhvou3rhvou3rhv-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s7", name: "เสื้อนินจา", minLvl: 50, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_xwz3ddxwz3ddxwz3-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s8", name: "ผู้ดีอังกฤษ", minLvl: 55, url: "https://img2.pic.in.th/Gemini_Generated_Image_or6ug8or6ug8or6u-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s9", name: "ชุดหรูหรา", minLvl: 60, url: "https://img2.pic.in.th/Gemini_Generated_Image_auy35yauy35yauy3-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s10", name: "จักรพรรดิ", minLvl: 65, url: "https://img2.pic.in.th/Gemini_Generated_Image_yezjphyezjphyezj-removebg-preview.png", config: { top: 44, left: 49, width: 48 } },
-    { id: "s11", name: "คิตตี้", minLvl: 70, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_m8y2yvm8y2yvm8y2-removebg-preview.png", config: { top: 47, left: 49, width: 48 } },
-    { id: "s12", name: "คุโรมิ", minLvl: 75, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_2rz3th2rz3th2rz3-removebg-preview.png", config: { top: 47, left: 49, width: 48 } }
-  ];
-
-  const hatLibrary = [
-    { id: "h1", name: "มาดแมน", minLvl: 0, url: "https://img2.pic.in.th/Gemini_Generated_Image_wt258awt258awt25__1_-removebg-preview.png", config: { top: 5, left: 47, width: 52 } },
-    { id: "h2", name: "ชมพูฤดูหนาว", minLvl: 10, url: "https://img2.pic.in.th/Gemini_Generated_Image_wt258awt258awt25-removebg-preview.png", config: { top: 1, left: 50, width: 50 } },
-    { id: "h3", name: "ฟางน่ารัก", minLvl: 20, url: "https://img2.pic.in.th/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy_-_Copy_-_Copy-removebg-preview.png", config: { top: 11, left: 50, width: 62 } },
-    { id: "h4", name: "หมวกนักคิด", minLvl: 30, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy_-_Copy-removebg-preview.png", config: { top: 5, left: 45, width: 60 } },
-    { id: "h5", name: "หมวกผู้ดี", minLvl: 40, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g_-_Copy-removebg-preview.png", config: { top: 2, left: 48, width: 65 } },
-    { id: "h6", name: "หมวกท่องเที่ยว", minLvl: 45, url: "https://img1.pic.in.th/images/Gemini_Generated_Image_kr7ggtkr7ggtkr7g-removebg-preview.png", config: { top: 10, left: 48, width: 60 } },
-    { id: "h7", name: "Kitty Red", minLvl: 55, url: "https://img1.pic.in.th/images/Kitty2.png", config: { top: 10, left: 48, width: 46 } },
-    { id: "h8", name: "Kitty Pink", minLvl: 65, url: "https://img1.pic.in.th/images/Kitty1.png", config: { top: 18, left: 46, width: 46 } },
-    { id: "h9", name: "Kitty Gab", minLvl: 70, url: "https://img2.pic.in.th/KittyGab.png", config: { top: 10, left: 48, width: 60 } },
-    { id: "h10", name: "Kuromi 01", minLvl: 75, url: "https://img2.pic.in.th/Kuromi01.png", config: { top: 18, left: 46, width: 46 } },
-    { id: "h11", name: "Kuromi 02", minLvl: 77, url: "https://img1.pic.in.th/images/Kuromi02.png", config: { top: 9, left: 47, width: 55 } },
-    { id: "h12", name: "Kuromi 03", minLvl: 80, url: "https://img2.pic.in.th/Kuromi03.png", config: { top: 9, left: 47, width: 53 } }
-  ];
-
-  const fullSetLibrary = [
-    { id: "Farmer-cat", name: "แมวชาวสวน", minLvl: 0, url: "https://img2.pic.in.th/Farmer-cat.png", config: { width: 70 } },
-    { id: "Chef-cat", name: "แมวพ่อครัว", minLvl: 40, url: "https://img1.pic.in.th/images/Chef-cat.png", config: { width: 70 } },
-    { id: "Research-cat", name: "แมวนักวิจัย", minLvl: 50, url: "https://img2.pic.in.th/Research-cat.png", config: { width: 70 } },
-    { id: "Magic-cat", name: "แมววิซาร์ด", minLvl: 60, url: "https://img1.pic.in.th/images/Magic-cat.png", config: { width: 70 } },
-    { id: "Galaxy-cat", name: "แมวกาแล็กซี่", minLvl: 70, url: "https://img2.pic.in.th/Galaxy-cat.png", config: { width: 80 } },
-    { id: "Overlord-cat", name: "ราชาเหมียว", minLvl: 80, url: "https://img2.pic.in.th/Overlord-cat.md.png", config: { width: 150 } }
-  ];
 
   // ===================================================
   // 2. โหลดข้อมูลเมื่อเปิดเว็บ
@@ -273,8 +206,6 @@
       "ชื่อ": student["ชื่อ"] || "-",
       "คะแนน": parseFloat(student["คะแนน"]) || 0,
       "เลเวล": parseInt(student["เลเวล"]) || 0,
-      "หมวก": student["หมวก"] || "",
-      "เสื้อ": student["เสื้อ"] || "",
       "ชั้น": student["ชั้น"] || "-",
       "ภารกิจ": student["ภารกิจ"] || []
     };
@@ -290,50 +221,29 @@
     const classText = document.getElementById("displaySheet");
     if (classText) classText.textContent = currentStudent["ชั้น"];
 
-    if (currentStudent["หมวก"] || currentStudent["เสื้อ"]) {
-      const isFullSet = fullSetLibrary.some(f => currentStudent["หมวก"] === f.url);
-      if (isFullSet) {
-        applyFullSet(currentStudent["หมวก"]);
-      } else {
-        if (currentStudent["เสื้อ"]) applyShirt(currentStudent["เสื้อ"]);
-        if (currentStudent["หมวก"]) applyHat(currentStudent["หมวก"]);
-      }
-    }
-
-    renderInventory();
     renderMissions();
   }
 
   // ===================================================
-  // 4. ระบบการแต่งตัว & แสดงผล
+  // 4. ระบบจัดการหน้าต่าง Modal ภารกิจ
   // ===================================================
-  function renderInventory() {
-    const lvl = currentStudent.เลเวล;
-    const curShirt = document.getElementById("shirt-overlay").src;
-    const curHat = document.getElementById("hat-overlay").src;
-    const curSet = document.getElementById("full-set-overlay").src;
-    const isSetVisible = document.getElementById("full-set-overlay").style.display === "block";
+  function openMissionModal() {
+    document.getElementById("missionModal").style.display = "flex";
+  }
 
-    const draw = (lib, type) => lib.map(item => {
-      const lock = lvl < item.minLvl;
-      let isSelected = false;
-      if(type==='s' && !isSetVisible) isSelected = (curShirt.includes(item.url) && document.getElementById("shirt-overlay").style.display === "block");
-      if(type==='h' && !isSetVisible) isSelected = (curHat.includes(item.url) && document.getElementById("hat-overlay").style.display === "block");
-      if(type==='f') isSelected = (curSet.includes(item.url) && isSetVisible);
-
-      const fn = type==='s' ? `applyShirt('${item.url}')` : type==='h' ? `applyHat('${item.url}')` : `applyFullSet('${item.url}')`;
-      return `<div id="item-${item.id}" class="item-slot ${lock?'locked':''} ${isSelected?'selected-item':''}" onclick="${lock?'':fn}">${lock?`<span class="lvl-badge">Lv.${item.minLvl}</span>`:''}<img src="${item.url}"><br><span style="font-size:9px;">${item.name}</span></div>`;
-    }).join('');
-
-    document.getElementById("tab-shirts").innerHTML = draw(shirtLibrary, 's');
-    document.getElementById("tab-hats").innerHTML = draw(hatLibrary, 'h');
-    document.getElementById("tab-sets").innerHTML = draw(fullSetLibrary, 'f');
+  function closeMissionModal() {
+    document.getElementById("missionModal").style.display = "none";
   }
 
   function renderMissions() {
     const missions = currentStudent.ภารกิจ || currentStudent.missions || [];
     let passedMidterm = false;
     
+    if (missions.length === 0) {
+      document.getElementById("mission-list").innerHTML = "<p style='text-align:center; color:#7f8c8d;'>ไม่มีรายการภารกิจ</p>";
+      return;
+    }
+
     const html = missions.map((m) => {
       const scoreNum = parseFloat(m.score || m.คะแนน) || 0;
       const isDone = scoreNum > 0;
@@ -347,166 +257,7 @@
       return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'⚔️ สำเร็จ':'⏳ รอ'}</span><b>${missionName}</b>${scoreText}</div>`;
     }).join('');
     
-    document.getElementById("mission-list").innerHTML = "<h4 style='text-align:center; margin-top:0;'>📜 บันทึกภารกิจ (" + missions.length + ")</h4>" + html;
-  }
-
-  function applyShirt(url){ 
-    const s = document.getElementById("shirt-overlay"); 
-    activeShirtConfig = shirtLibrary.find(i=>i.url===url);
-    if(!activeShirtConfig) return;
-    s.src=url; s.style.display="block"; 
-    s.style.top=activeShirtConfig.config.top+"%"; 
-    s.style.width=activeShirtConfig.config.width+"%";
-    s.style.left=activeShirtConfig.config.left+"%"; 
-    document.getElementById("full-set-overlay").style.display="none"; 
-    document.getElementById("avatar-base").style.visibility="visible";
-    renderInventory();
-  }
-  
-  function applyHat(url){
-    const h = document.getElementById("hat-overlay"); 
-    activeHatConfig = hatLibrary.find(i=>i.url===url);
-    if(!activeHatConfig) return;
-    h.src=url; h.style.display="block"; 
-    h.style.top=activeHatConfig.config.top+"%"; 
-    h.style.width=activeHatConfig.config.width+"%";
-    h.style.left=activeHatConfig.config.left+"%"; 
-    document.getElementById("full-set-overlay").style.display="none"; 
-    document.getElementById("avatar-base").style.visibility="visible";
-    renderInventory();
-  }
-
-  function applyFullSet(url){
-    const f = document.getElementById("full-set-overlay"); 
-    const d = fullSetLibrary.find(i=>i.url===url);
-    if(!d) return;
-    f.src=url; f.style.display="block"; f.style.width=d.config.width+"%";
-    document.getElementById("avatar-base").style.visibility="hidden"; 
-    document.getElementById("shirt-overlay").style.display="none"; 
-    document.getElementById("hat-overlay").style.display="none";
-    renderInventory();
-  }
-
-  function clearDressing(){
-    document.getElementById("shirt-overlay").style.display="none"; 
-    document.getElementById("hat-overlay").style.display="none"; 
-    document.getElementById("full-set-overlay").style.display="none"; 
-    document.getElementById("avatar-base").style.visibility="visible";
-    activeShirtConfig = null; activeHatConfig = null;
-    renderInventory();
-  }
-
-  function openTab(id, btn){
-    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.getElementById(id).classList.add('active'); btn.classList.add('active');
-  }
-
-  async function saveDressing() {
-    const btn = document.getElementById("saveBtn"); 
-    btn.disabled=true; btn.textContent="⏳ กำลังบันทึก...";
-    let h="", s="", f="";
-    if(document.getElementById("full-set-overlay").style.display==="block") f=document.getElementById("full-set-overlay").src;
-    else {
-      if(document.getElementById("hat-overlay").style.display==="block") h=document.getElementById("hat-overlay").src;
-      if(document.getElementById("shirt-overlay").style.display==="block") s=document.getElementById("shirt-overlay").src;
-    }
-    const url = `${API_URL}?action=saveDressing&id=${currentStudent["รหัสนักเรียน"]}&hat=${encodeURIComponent(h)}&shirt=${encodeURIComponent(s)}&fullset=${encodeURIComponent(f)}`;
-    try { 
-      await fetch(url,{mode:'no-cors'}); 
-      alert("บันทึกชุดสำเร็จแล้ว!"); 
-    } catch(e) { 
-      alert("บันทึกล้มเหลว!"); 
-    }
-    btn.disabled=false; btn.textContent="💾 บันทึกชุด";
-  }
-
-  // ===================================================
-  // 5. Mini Game Engine
-  // ===================================================
-  function handleAvatarClick() {
-    clickCount++; 
-    clearTimeout(clickTimer); 
-    clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
-    if(clickCount >= 5) { clickCount = 0; openGame(); }
-  }
-
-  let canvas, ctx, gameFrame, birdY, birdV, obstacles, gameScore, isGameOver, frameCount;
-  const avatarImg = new Image(); const shirtImg = new Image(); const hatImg = new Image(); const setImg = new Image();
-
-  function openGame() {
-    document.getElementById("gameOverlay").style.display = "flex";
-    canvas = document.getElementById("gameCanvas"); ctx = canvas.getContext("2d");
-    avatarImg.src = document.getElementById("avatar-base").src;
-    shirtImg.src = document.getElementById("shirt-overlay").src;
-    hatImg.src = document.getElementById("hat-overlay").src;
-    setImg.src = document.getElementById("full-set-overlay").src;
-    birdY = 200; birdV = 0; obstacles = []; gameScore = 0; isGameOver = false; frameCount = 0;
-    runGame();
-  }
-
-  function gameJump() { if(!isGameOver) birdV = -6.5; }
-  function closeGame() { isGameOver = true; cancelAnimationFrame(gameFrame); document.getElementById("gameOverlay").style.display = "none"; }
-
-  function runGame() {
-    if(isGameOver) return;
-    ctx.clearRect(0,0,300,400);
-    ctx.fillStyle = "#87CEEB"; ctx.fillRect(0,0,300,400);
-    birdV += 0.32; birdY += birdV;
-    
-    ctx.save();
-    ctx.translate(70, birdY); 
-    
-    const catHeight = 85;
-    const catWidth = (avatarImg.naturalWidth / avatarImg.naturalHeight) * catHeight;
-    
-    if(document.getElementById("full-set-overlay").style.display === "block") {
-      const setWidth = (setImg.naturalWidth / setImg.naturalHeight) * catHeight;
-      ctx.drawImage(setImg, -setWidth/2, -catHeight/2, setWidth, catHeight);
-    } else {
-      ctx.drawImage(avatarImg, -catWidth/2, -catHeight/2, catWidth, catHeight);
-
-      if(document.getElementById("shirt-overlay").style.display === "block" && activeShirtConfig) {
-        const shirtScale = (activeShirtConfig.config.width / 100) * 1.1; 
-        const shirtW = (shirtImg.naturalWidth / shirtImg.naturalHeight) * catHeight * shirtScale;
-        const shirtH = catHeight * shirtScale;
-        const sT = (activeShirtConfig.config.top / 100) * catHeight - (catHeight/2);
-        const sX = ((activeShirtConfig.config.left - 50) / 100) * catHeight;
-        ctx.drawImage(shirtImg, sX - (shirtW/2), sT, shirtW, shirtH);
-      }
-
-      if(document.getElementById("hat-overlay").style.display === "block" && activeHatConfig) {
-        const hatScale = (activeHatConfig.config.width / 100) * 1.1; 
-        const hatW = (hatImg.naturalWidth / hatImg.naturalHeight) * catHeight * hatScale;
-        const hatH = catHeight * hatScale;
-        const hT = ((activeHatConfig.config.top / 100) * catHeight - (catHeight/2)) - 12;
-        const hX = ((activeHatConfig.config.left - 50) / 100) * catHeight;
-        ctx.drawImage(hatImg, hX - (hatW/2), hT, hatW, hatH);
-      }
-    }
-    ctx.restore();
-
-    if(frameCount % 80 === 0) obstacles.push({x:300, w:50, h:80 + Math.random()*120, passed: false});
-    frameCount++;
-    obstacles.forEach((o) => {
-      o.x -= 3.5;
-      ctx.fillStyle = "#e74c3c"; ctx.fillRect(o.x, 400-o.h, o.w, o.h);
-      if(o.x < 110 && o.x + o.w > 40 && birdY + 25 > 400-o.h) { 
-        isGameOver = true; 
-        alert("ชนสิ่งกีดขวางแล้ว! คะแนน: " + gameScore); 
-        closeGame(); 
-      }
-      if(!o.passed && o.x < 40) { o.passed = true; gameScore++; document.getElementById("gameScoreText").textContent = gameScore; }
-    });
-    
-    if(gameScore >= 10 && !isGameOver) {
-      isGameOver = true; 
-      document.getElementById("avatarClicker").classList.add("god-aura");
-      setTimeout(() => { alert("⚔️ พิชิตสำเร็จ! ได้รับออร่าเทพเจ้า!"); closeGame(); }, 100);
-      return;
-    }
-    if(birdY > 450 || birdY < -100) { isGameOver = true; alert("ตกโลกแล้ว!"); closeGame(); }
-    if(!isGameOver) gameFrame = requestAnimationFrame(runGame);
+    document.getElementById("mission-list").innerHTML = html;
   }
 </script>
 </body>
