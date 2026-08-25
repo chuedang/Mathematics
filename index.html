@@ -34,7 +34,7 @@ html,body{
 #loginPage p.sub{ color:var(--ink-soft); font-size:13px; margin:0 0 20px; }
 .login-input{ width:100%; padding:14px; margin:8px 0; border-radius:14px; border:2px solid #e6ddc8; font-family:'Mitr'; font-size:15px; outline:none; background:#fff; }
 .login-input:focus{ border-color:var(--sun-dark); }
-#loginBtn{ background:var(--leaf); color:#fff; border:none; padding:15px; border-radius:14px; width:100%; font-family:'Mitr'; font-size:15px; cursor:pointer; box-shadow:0 4px 0 #2c7048; font-weight:500; margin-top:10px; }
+#loginBtn{ background:var(--leaf); color:#fff; border:none; padding:15px; border-radius:14px; width:100%; font-family:'Mitr'; font-size:15px; cursor:pointer; box-shadow:0 4px 0 #2c7048; font-weight:500; margin-top:10px; transition: background 0.2s; }
 #loginBtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #2c7048; }
 #loginBtn:disabled{ background:#c7c4b8 !important; color:#8a887c !important; box-shadow:0 4px 0 #a9a698 !important; cursor:not-allowed; }
 
@@ -51,7 +51,6 @@ html,body{
   background:linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 18%, rgba(0,0,0,0) 78%, rgba(0,0,0,0.2) 100%);
 }
 
-/* สัตว์เลี้ยงรองรับหลายตัว */
 .avatar-container{ 
   position:absolute; width:100px; height:90px; z-index:5; cursor:pointer; 
   transition: left 2.5s ease-in-out, top 2.5s ease-in-out, transform 0.3s;
@@ -71,7 +70,6 @@ html,body{
 .leg-back{ z-index:1; filter:brightness(0.75); }
 .leg-back-left{ left:14px; top:65px; }
 .leg-back-right{ left:42px; top:65px; }
-
 .leg-front{ z-index:3; }
 .leg-front-left{ left:10px; top:65px; }
 .leg-front-right{ left:38px; top:65px; }
@@ -90,9 +88,9 @@ html,body{
 @keyframes walk-bob{ 0%,100%{ transform:translateY(0) rotate(0deg);} 50%{ transform:translateY(-3px) rotate(-1deg);} }
 
 .pet-icon-status {
-  position:absolute; top:-30px; left:50%; transform:translateX(-50%); 
-  width:30px; height:30px; object-fit:contain;
-  filter:drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
+  position:absolute; top:-32px; left:50%; transform:translateX(-50%); 
+  width:32px; height:32px; object-fit:contain;
+  filter:drop-shadow(0px 3px 5px rgba(0,0,0,0.35));
   z-index:10;
   animation:float-icon 1.8s ease-in-out infinite;
 }
@@ -106,17 +104,10 @@ html,body{
   left:50%; transform:translateX(-50%); 
   display:flex; gap:20px; z-index:15; 
 }
-.bowl-btn{ 
-  background:none; border:none; padding:0; cursor:pointer; 
-  outline:none; transition:transform 0.1s ease;
-}
-.bowl-btn img{ 
-  width:90px; height:90px; object-fit:contain; 
-  filter:drop-shadow(0px 4px 6px rgba(0,0,0,0.3)); 
-}
+.bowl-btn{ background:none; border:none; padding:0; cursor:pointer; outline:none; transition:transform 0.1s ease; }
+.bowl-btn img{ width:90px; height:90px; object-fit:contain; filter:drop-shadow(0px 4px 6px rgba(0,0,0,0.3)); }
 .bowl-btn:active{ transform:scale(0.88); }
 
-/* --- Top Overlay & Menu แนวตั้งขวาบน --- */
 .top-overlay{ 
   position:absolute; top:0; left:0; right:0; 
   padding:calc(env(safe-area-inset-top) + 10px) 12px 0; 
@@ -125,36 +116,91 @@ html,body{
 }
 .top-overlay > * { pointer-events:auto; }
 
-.left-user-info{ display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
-.name-block{ background:rgba(255,249,238,0.95); border-radius:14px; padding:6px 12px; box-shadow:0 4px 10px rgba(0,0,0,0.18); border:2px solid var(--sun); }
-.user-name{ font-weight:600; font-size:13px; color:var(--ink); white-space:nowrap; }
+.left-user-info{ display:flex; flex-direction:column; align-items:flex-start; gap:5px; width: 145px; }
+.name-block{ background:rgba(255,249,238,0.95); border-radius:14px; padding:6px 10px; box-shadow:0 4px 10px rgba(0,0,0,0.18); border:2px solid var(--sun); width: 100%; }
+.user-name{ font-weight:600; font-size:12px; color:var(--ink); white-space:nowrap; overflow: hidden; text-overflow: ellipsis; }
 .user-class{ font-size:9px; color:var(--ink-soft); }
+
+.xp-bar-container{ width:100%; margin-top:4px; }
+.xp-info-row{ display:flex; justify-content:space-between; font-size:9px; font-weight:600; color:var(--berry-dark); margin-bottom:2px; }
+.xp-track{ width:100%; height:7px; background:#f2e6cf; border-radius:4px; overflow:hidden; border:1px solid rgba(225,79,102,0.3); }
+.xp-fill{ height:100%; background:linear-gradient(90deg, var(--berry), var(--berry-dark)); width:0%; border-radius:4px; transition:width 0.4s ease; }
 
 .sub-stats-row{ display:flex; gap:5px; align-items:center; }
 .streak-chip{ background:rgba(255,255,255,0.92); border-radius:12px; padding:3px 8px; font-size:10px; font-weight:600; color:var(--berry-dark); display:flex; align-items:center; gap:3px; box-shadow:0 3px 8px rgba(0,0,0,0.18); white-space:nowrap; }
 
-.center-stats{ display:flex; gap:5px; justify-content:center; }
-.stat-badge{ background:rgba(254,244,220,0.95); border:1px solid var(--sun-dark); padding:3px 8px; border-radius:10px; font-size:11px; font-weight:600; color:#a05a12; display:flex; align-items:center; gap:3px; white-space:nowrap; box-shadow:0 3px 8px rgba(0,0,0,0.15); }
-.stat-badge.coin{ background:rgba(232,247,238,0.95); border-color:var(--leaf); color:#1f6b44; }
-.stat-badge.exp{ background:rgba(255,235,240,0.95); border-color:var(--berry); color:var(--berry-dark); }
+.holding-status-badge {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 243, 205, 0.95);
+  border: 1.5px solid var(--sun-dark);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--ink);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  animation: pulse-hold 1.5s infinite;
+}
+.holding-status-badge img { width: 16px; height: 16px; object-fit: contain; }
+.cancel-hold-btn {
+  background: #e74f66;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 2px;
+  padding: 0;
+  line-height: 1;
+}
+@keyframes pulse-hold {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
 
-/* เปลี่ยนขวาบนเป็นแนวดิ่ง */
+.center-stats{ display:flex; justify-content:center; }
+
+/* ป้ายแสดงเหรียญตรงกลางด้านบนแบบพรีเมียม */
+.coin-badge-premium {
+  background: linear-gradient(135deg, #fffcf0 0%, #fff2c6 100%);
+  border: 2px solid #f4c430;
+  padding: 5px 16px;
+  border-radius: 22px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #8a5200;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 6px 16px rgba(244, 196, 48, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  animation: coin-glow 3s infinite alternate;
+}
+.coin-badge-premium span {
+  letter-spacing: 0.5px;
+}
+@keyframes coin-glow {
+  0% { box-shadow: 0 4px 12px rgba(244, 196, 48, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.8); }
+  100% { box-shadow: 0 6px 18px rgba(244, 196, 48, 0.6), inset 0 2px 6px rgba(255, 255, 255, 0.95); }
+}
+
+.stat-badge{ background:rgba(254,244,220,0.95); border:1px solid var(--sun-dark); padding:3px 8px; border-radius:10px; font-size:11px; font-weight:600; color:#a05a12; display:flex; align-items:center; gap:3px; white-space:nowrap; box-shadow:0 3px 8px rgba(0,0,0,0.15); }
+
 .right-nav{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; margin-top:4px; }
 .icon-btn{ 
   width:38px; height:38px; border-radius:50%; 
-  background:rgba(255, 255, 255, 0.3); 
-  border:2px solid #ffffff; 
+  background:rgba(255, 255, 255, 0.3); border:2px solid #ffffff; 
   cursor:pointer; display:flex; align-items:center; justify-content:center; 
   box-shadow:0 0 10px rgba(255, 255, 255, 0.8), 0 3px 6px rgba(0,0,0,0.25); 
   padding:0; overflow:visible; position:relative;
   transition: transform 0.15s ease;
 }
-.icon-btn img{ 
-  width:140%; height:140%; 
-  object-fit:contain; 
-  position:absolute;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35)); 
-}
+.icon-btn img{ width:140%; height:140%; object-fit:contain; position:absolute; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35)); }
 .icon-btn:active{ transform:scale(0.9); }
 
 .modal-overlay{ display:none; position:absolute; inset:0; background:rgba(20,20,30,0.55); z-index:100; justify-content:center; align-items:center; padding:20px; }
@@ -197,13 +243,11 @@ html,body{
     <p class="sub">บ้านสัตว์เลี้ยงประจำตัวของคุณ</p>
     <input type="text" id="username" class="login-input" placeholder="รหัสนักเรียน (ID)">
     <input type="password" id="password" class="login-input" placeholder="รหัสผ่าน">
-    <button id="loginBtn" onclick="login()" disabled>กำลังโหลดบ้านสัตว์เลี้ยง...</button>
+    <button id="loginBtn" onclick="handleLogin()">เข้าบ้านสัตว์เลี้ยง</button>
   </div>
 
   <div id="dashboard">
     <div class="scene" id="scene">
-
-      <!-- พื้นที่แสดงสัตว์เลี้ยงทั้งหมดจะถูกสร้างด้วย JavaScript -->
       <div id="petsContainer"></div>
 
       <div class="pet-props">
@@ -215,29 +259,44 @@ html,body{
         </button>
       </div>
 
-      <!-- Top Overlay -->
       <div class="top-overlay">
-        <!-- ฝั่งซ้าย: ข้อมูลชื่อ, เลเวล, คะแนน, วันติด -->
         <div class="left-user-info">
           <div class="name-block">
             <div class="user-name" id="displayName">-</div>
             <div class="user-class">🏫 <span id="displaySheet">-</span></div>
+            <div class="xp-bar-container">
+              <div class="xp-info-row">
+                <span>⭐ Lv.<span id="displayLevel" class="num">1</span></span>
+                <span><span id="currentLevelExp" class="num">0</span>/<span id="nextLevelExp" class="num">300</span> XP</span>
+              </div>
+              <div class="xp-track">
+                <div class="xp-fill" id="xpFillBar"></div>
+              </div>
+            </div>
           </div>
           <div class="sub-stats-row">
-            <span class="stat-badge">⭐ Lv.<span class="num" id="displayLevel">0</span></span>
             <span class="stat-badge">📊 <span class="num" id="displayScore">0</span></span>
             <div class="streak-chip">🔥 <span class="num" id="displayStreak">0</span> วัน</div>
           </div>
+          
+          <div id="holdingStatusBadge" class="holding-status-badge">
+            <img id="holdingIconImg" src="" alt="icon">
+            <span id="holdingText">กำลังถือ...</span>
+            <button class="cancel-hold-btn" onclick="cancelHoldingTool(event)" title="ยกเลิก">✕</button>
+          </div>
         </div>
 
-        <!-- ตรงกลาง: coin กับ EXP -->
+        <!-- ป้ายแสดงเหรียญทองตรงกลางด้านบนแบบใหม่ (สวยงามขึ้น) -->
         <div class="center-stats">
-          <span class="stat-badge coin">💰 <span class="num" id="displayCoins">0</span></span>
-          <span class="stat-badge exp">✨ <span class="num" id="displayExp">0</span></span>
+          <div class="coin-badge-premium">
+            <span>💰</span> <span class="num" id="displayCoins">0</span>
+          </div>
         </div>
 
-        <!-- ฝั่งขวา: เมนูแนวดิ่ง (Shop, Rank, Quest, Exit) -->
         <div class="right-nav">
+          <button class="icon-btn" onclick="openBagModal()" aria-label="กระเป๋า">
+            <img src="bag.png" alt="กระเป๋า">
+          </button>
           <button class="icon-btn" onclick="openShopModal()" aria-label="ร้านค้า">
             <img src="shop.png" alt="ร้านค้า">
           </button>
@@ -256,12 +315,15 @@ html,body{
       <div class="toast-msg" id="toastMsg"></div>
     </div>
 
-    <!-- Modal ร้านค้าสัตว์เลี้ยง -->
+    <!-- Modal ร้านค้า -->
     <div class="modal-overlay" id="shopModal">
       <div class="modal-card">
         <div class="modal-header">
           <h3 class="modal-title">🛒 ร้านค้าสัตว์เลี้ยง</h3>
           <button class="close-btn" onclick="closeModal('shopModal')">✕</button>
+        </div>
+        <div style="text-align:center; font-size:12px; color:var(--ink-soft); margin-bottom:10px; background:#fff3e6; padding:6px; border-radius:10px;">
+          โควตาสัตว์เลี้ยงปัจจุบัน: <b id="shopPetQuotaText" style="color:var(--berry-dark);">1/1 ตัว</b> (Lv.<span id="shopCurrentLevel">1</span>)
         </div>
         <div class="shop-item">
           <img src="cat_shop.png" class="shop-img" alt="แมว">
@@ -269,7 +331,7 @@ html,body{
             <div class="shop-name">น้องแมวสุดน่ารัก</div>
             <div class="shop-price">💰 500 เหรียญ</div>
           </div>
-          <button class="buy-btn" onclick="buyPet('cat')">ซื้อ</button>
+          <button class="buy-btn" onclick="buyItem('pet', 'cat', 500)">ซื้อ</button>
         </div>
         <div class="shop-item">
           <img src="dog_shop.png" class="shop-img" alt="หมา">
@@ -277,12 +339,53 @@ html,body{
             <div class="shop-name">น้องหมาแสนรู้</div>
             <div class="shop-price">💰 500 เหรียญ</div>
           </div>
-          <button class="buy-btn" onclick="buyPet('dog')">ซื้อ</button>
+          <button class="buy-btn" onclick="buyItem('pet', 'dog', 500)">ซื้อ</button>
+        </div>
+        <div class="shop-item">
+          <img src="vaccine.png" class="shop-img" alt="วัคซีน">
+          <div class="shop-info">
+            <div class="shop-name">วัคซีนรักษาโรค</div>
+            <div class="shop-price">💰 150 เหรียญ</div>
+          </div>
+          <button class="buy-btn" onclick="buyItem('inventory', 'vaccine', 150)">ซื้อ</button>
+        </div>
+        <div class="shop-item">
+          <img src="potion.png" class="shop-img" alt="ยาเร่งโต">
+          <div class="shop-info">
+            <div class="shop-name">ยาเร่งโตเต็มวัย</div>
+            <div class="shop-price">💰 200 เหรียญ</div>
+          </div>
+          <button class="buy-btn" onclick="buyItem('inventory', 'potion', 200)">ซื้อ</button>
         </div>
       </div>
     </div>
 
-    <!-- Modal ภารกิจ -->
+    <!-- Modal กระเป๋าเก็บของ -->
+    <div class="modal-overlay" id="bagModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">🎒 กระเป๋าไอเทม</h3>
+          <button class="close-btn" onclick="closeModal('bagModal')">✕</button>
+        </div>
+        <div class="shop-item">
+          <img src="vaccine.png" class="shop-img" alt="วัคซีน">
+          <div class="shop-info">
+            <div class="shop-name">วัคซีนรักษาโรค</div>
+            <div class="shop-price">มีอยู่: <span id="bagVaccineCount" class="num">0</span> อัน</div>
+          </div>
+          <button class="buy-btn" onclick="useItemFromBag('vaccine')">ใช้</button>
+        </div>
+        <div class="shop-item">
+          <img src="potion.png" class="shop-img" alt="ยาเร่งโต">
+          <div class="shop-info">
+            <div class="shop-name">ยาเร่งโตเต็มวัย</div>
+            <div class="shop-price">มีอยู่: <span id="bagPotionCount" class="num">0</span> อัน</div>
+          </div>
+          <button class="buy-btn" onclick="useItemFromBag('potion')">ใช้</button>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-overlay" id="missionModal">
       <div class="modal-card">
         <div class="modal-header">
@@ -293,7 +396,6 @@ html,body{
       </div>
     </div>
 
-    <!-- Modal จัดอันดับ -->
     <div class="modal-overlay" id="rankModal">
       <div class="modal-card">
         <div class="modal-header">
@@ -308,92 +410,196 @@ html,body{
 </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbz3P-nc0in0Bj0gElWPzA7rL-agmIWNMDbG_VlNHT1xdAVWbe5pC_D57HVN3GtfPq7-6A/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbwf8kNTaykdB2_FCRUe8zVyOBO7Awca3A3oJF0iuY7-GPQNsaiT3moPNhUOTIWuQlYIxA/exec";
 
-  let allStudentsData = [];
   let currentStudent = null;
   let studentKey = null;
-  let wallet = { coins:0, exp:0 };
-  let petInstances = []; // เก็บสถานะตำแหน่งและการเคลื่อนที่ของสัตว์แต่ละตัว
+  let wallet = { coins:0, exp:0, level:1 };
+  let inventory = { vaccine: 0, potion: 0 };
+  let petInstances = [];
+  let serverTimeReference = new Date();
+  
+  let activeTool = null; 
 
-  window.onload = function(){
-    const loginBtn = document.getElementById("loginBtn");
-    if(loginBtn){ loginBtn.disabled = true; loginBtn.textContent = "กำลังดาวน์โหลดข้อมูลบ้านสัตว์เลี้ยง..."; }
-    fetch(`${API_URL}?t=${new Date().getTime()}`)
-      .then(r => { if(!r.ok) throw new Error("เชื่อมต่อล้มเหลว"); return r.json(); })
-      .then(data => {
-        allStudentsData = data;
-        if(loginBtn){ loginBtn.disabled = false; loginBtn.textContent = "เข้าบ้านสัตว์เลี้ยง"; }
-      })
-      .catch(err => {
-        console.error("Load Error:", err);
-        if(loginBtn){ loginBtn.textContent = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้"; }
-      });
-  };
-
-  function login(){
-    const u = document.getElementById("username").value.trim();
-    const p = document.getElementById("password").value.trim();
-    if(!u || !p) return alert("กรุณากรอกรหัสนักเรียนและรหัสผ่าน!");
-    if(!allStudentsData || allStudentsData.length === 0) return alert("ระบบกำลังโหลดข้อมูล กรุณารอสักครู่!");
-
-    const student = allStudentsData.find(s => String(s["รหัสนักเรียน"] || "").trim() === u);
-    if(!student) return alert("ไม่พบรหัสนักเรียนนี้!");
-    const dbPassword = String(student["รหัส"] || "").trim();
-    if(dbPassword !== p) return alert("รหัสผ่านไม่ถูกต้อง!");
-
-    const scoreVal = parseFloat(student["คะแนน"]) || 0;
-    const calculatedLevel = Math.floor(10 * Math.sqrt(scoreVal));
-
-    currentStudent = {
-      "รหัสนักเรียน": String(student["รหัสนักเรียน"]).trim(),
-      "ชื่อ": student["ชื่อ"] || "-",
-      "คะแนน": scoreVal,
-      "เลเวล": calculatedLevel,
-      "coin": parseInt(student["coin"]) || 0,
-      "pets": student["pets"] || [], 
-      "ClaimedRewards": student["ClaimedRewards"] || [],
-      "ชั้น": student["ชั้น"] || "-",
-      "ภารกิจ": student["ภารกิจ"] || []
-    };
-    studentKey = currentStudent["รหัสนักเรียน"];
-
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-
-    document.getElementById("displayName").textContent = currentStudent["ชื่อ"];
-    document.getElementById("displayLevel").textContent = currentStudent.เลเวล;
-    document.getElementById("displayScore").textContent = currentStudent["คะแนน"];
-    const classText = document.getElementById("displaySheet");
-    if(classText) classText.textContent = currentStudent["ชั้น"];
-
-    loadWallet(student);
-    checkAndInitPets();
-    renderPetsDOM();
-    refreshHungerState();
-    renderMissions();
-    renderRankList();
-    startWanderLoop();
+  function safeParse(value, fallback = []) {
+    if (Array.isArray(value)) return value;
+    if (!value) return fallback;
+    try {
+      const parsed = JSON.parse(value);
+      return parsed ?? fallback;
+    } catch(e) {
+      return fallback;
+    }
   }
 
-  function todayStr(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-  function yesterdayStr(){ const d = new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  async function fetchWithRetry(url, options = {}, retries = 3, delay = 1500, onRetry = null) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        if (i > 0 && onRetry) {
+          onRetry(i + 1, retries);
+        }
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error("Network response was not ok");
+        return await response.json();
+      } catch (err) {
+        if (i === retries - 1) throw err;
+        await new Promise(res => setTimeout(res, delay));
+      }
+    }
+  }
 
-  function loadWallet(student){
+  async function handleLogin() {
+    const u = document.getElementById("username").value.trim();
+    const p = document.getElementById("password").value.trim();
+    const loginBtn = document.getElementById("loginBtn");
+
+    if (!u || !p) {
+      alert("กรุณากรอกรหัสนักเรียนและรหัสผ่าน!");
+      return;
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = "กำลังเชื่อมต่อกับเซิร์ฟเวอร์...";
+
+    try {
+      const targetUrl = `${API_URL}?action=login&id=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`;
+      
+      const data = await fetchWithRetry(targetUrl, {}, 3, 1500, (attempt, max) => {
+        loginBtn.textContent = `กำลังเชื่อมต่อใหม่ (ครั้งที่ ${attempt}/${max})...`;
+      });
+
+      if (!data.success) {
+        alert(data.message || "รหัสนักเรียนหรือรหัสผ่านไม่ถูกต้อง");
+        loginBtn.disabled = false;
+        loginBtn.textContent = "เข้าบ้านสัตว์เลี้ยง";
+        return;
+      }
+
+      if (data.serverTime) {
+        serverTimeReference = new Date(data.serverTime);
+      }
+
+      const student = data.student;
+      const scoreVal = parseFloat(student["คะแนน"]) || 0;
+
+      let rawMissions = safeParse(student["ภารกิจ"]);
+      let filteredMissions = rawMissions.filter(m => String(m.name || "").trim().toLowerCase() !== "xp");
+
+      currentStudent = {
+        "รหัสนักเรียน": String(student["รหัสนักเรียน"]).trim(),
+        "ชื่อ": student["ชื่อ"] || "-",
+        "คะแนน": scoreVal,
+        "coin": parseInt(student["coin"]) || 0,
+        "exp": parseInt(student["exp"]) || 0,
+        "pets": safeParse(student["pets"]), 
+        "ClaimedRewards": safeParse(student["ClaimedRewards"]),
+        "ชั้น": student["ชั้น"] || "-",
+        "ภารกิจ": filteredMissions
+      };
+      studentKey = currentStudent["รหัสนักเรียน"];
+
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+
+      document.getElementById("displayName").textContent = currentStudent["ชื่อ"];
+      document.getElementById("displayScore").textContent = currentStudent["คะแนน"];
+      const classText = document.getElementById("displaySheet");
+      if(classText) classText.textContent = currentStudent["ชั้น"];
+
+      loadWalletAndInventory(student);
+      checkAndInitPets();
+      renderPetsDOM();
+      refreshHungerState();
+      renderMissions();
+      startWanderLoop();
+
+    } catch (err) {
+      console.error("Login Error:", err);
+      alert("เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ กรุณาลองใหม่");
+      loginBtn.disabled = false;
+      loginBtn.textContent = "เข้าบ้านสัตว์เลี้ยง";
+    }
+  }
+
+  function getReferenceDate() {
+    return serverTimeReference;
+  }
+
+  function todayStr(){ 
+    const d = getReferenceDate(); 
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; 
+  }
+
+  function yesterdayStr(){ 
+    const d = new Date(getReferenceDate().getTime()); 
+    d.setDate(d.getDate()-1); 
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; 
+  }
+
+  function loadWalletAndInventory(student){
     wallet.coins = parseInt(student["coin"]) || 0;
-    wallet.exp = parseInt(localStorage.getItem(`wallet_exp_${studentKey}`)) || 0;
+    wallet.exp = parseInt(student["exp"]) || 0;
+    inventory.vaccine = parseInt(localStorage.getItem(`inv_vaccine_${studentKey}`)) || 0;
+    inventory.potion = parseInt(localStorage.getItem(`inv_potion_${studentKey}`)) || 0;
+    
+    updateLevelFromExp();
     document.getElementById("displayStreak").textContent = localStorage.getItem(`pet_streak_${studentKey}`) || 0;
     updateWalletUI();
   }
 
+  function updateLevelFromExp() {
+    let exp = wallet.exp;
+    let lvl = 1;
+    let requiredExp = 300;
+    let increment = 320; 
+
+    if (exp < requiredExp) {
+      wallet.level = 1;
+    } else {
+      lvl = 2;
+      while (exp >= requiredExp) {
+        requiredExp += increment;
+        increment += 35; 
+        lvl++;
+      }
+      wallet.level = lvl - 1;
+    }
+
+    let prevReq = 0;
+    let currReq = 300;
+    let inc = 320;
+    for(let i = 1; i < wallet.level; i++) {
+      prevReq = currReq;
+      currReq += inc;
+      inc += 35;
+    }
+
+    const currentLevelProgress = exp - prevReq;
+    const spanNeeded = currReq - prevReq;
+    const percent = Math.min(100, Math.max(0, (currentLevelProgress / spanNeeded) * 100));
+
+    document.getElementById("displayLevel").textContent = wallet.level;
+    document.getElementById("currentLevelExp").textContent = currentLevelProgress;
+    document.getElementById("nextLevelExp").textContent = spanNeeded;
+    document.getElementById("xpFillBar").style.width = percent + "%";
+  }
+
+  function getMaxAllowedPets() {
+    if (wallet.level >= 6) return 3;
+    if (wallet.level >= 4) return 2;
+    return 1;
+  }
+
   function saveWalletAndData(){
-    localStorage.setItem(`wallet_exp_${studentKey}`, wallet.exp);
+    localStorage.setItem(`inv_vaccine_${studentKey}`, inventory.vaccine);
+    localStorage.setItem(`inv_potion_${studentKey}`, inventory.potion);
     updateWalletUI();
 
     const payload = new URLSearchParams({
       action: "saveGameData",
       id: studentKey,
       coin: wallet.coins,
+      exp: wallet.exp,
       pets: JSON.stringify(currentStudent.pets || []),
       claimed: JSON.stringify(currentStudent.ClaimedRewards || [])
     });
@@ -403,10 +609,11 @@ html,body{
 
   function updateWalletUI(){
     document.getElementById("displayCoins").textContent = wallet.coins;
-    document.getElementById("displayExp").textContent = wallet.exp;
+    document.getElementById("bagVaccineCount").textContent = inventory.vaccine;
+    document.getElementById("bagPotionCount").textContent = inventory.potion;
+    updateLevelFromExp();
   }
 
-  // ตรวจสอบหรือสุ่มสถานะป่วย (ทุก 2-3 วัน)
   function checkAndInitPets(){
     if(!Array.isArray(currentStudent.pets)) currentStudent.pets = [];
     const lastSickCheck = localStorage.getItem(`sick_check_${studentKey}`);
@@ -414,10 +621,10 @@ html,body{
 
     currentStudent.pets.forEach(pet => {
       if(pet.sick === undefined) pet.sick = false;
+      if(!pet.born) pet.born = todayStr(); // กำหนดวันเกิดหากไม่มีข้อมูล
     });
 
     if(lastSickCheck !== now && currentStudent.pets.length > 0) {
-      // สุ่มโอกาสป่วย 2-3 วันครั้ง
       if(Math.random() < 0.35) {
         const targetPet = currentStudent.pets[Math.floor(Math.random() * currentStudent.pets.length)];
         targetPet.sick = true;
@@ -426,7 +633,6 @@ html,body{
     }
   }
 
-  // สร้าง DOM สัตว์เลี้ยงในหน้าจอ
   function renderPetsDOM(){
     const container = document.getElementById("petsContainer");
     container.innerHTML = "";
@@ -442,7 +648,7 @@ html,body{
 
       petInstances.push({
         index: index,
-        type: pet.type, // 'cat' หรือ 'dog'
+        type: pet.type,
         born: pet.born,
         sick: pet.sick,
         x: x,
@@ -462,10 +668,11 @@ html,body{
       let bodyImg = pet.type === 'dog' ? 'dog_body.png' : 'cat_body.png';
       let legImg = pet.type === 'dog' ? 'dog_leg.png' : 'cat_leg.png';
 
-      // ไอคอนสถานะ (เรียลำดับ: ป่วย -> หิวน้ำ -> หิวข้าว)
       let iconHTML = '';
       if(pet.sick) {
         iconHTML = `<img src="sick.png" class="pet-icon-status" alt="ป่วย">`;
+      } else if(isBaby) {
+        iconHTML = `<img src="baby.png" class="pet-icon-status" alt="เด็ก">`;
       }
 
       el.innerHTML = `
@@ -487,9 +694,9 @@ html,body{
   function isPetBaby(bornDateStr){
     if(!bornDateStr) return false;
     const born = new Date(bornDateStr);
-    const now = new Date();
+    const now = getReferenceDate();
     const diffDays = (now - born) / (1000 * 60 * 60 * 24);
-    return diffDays < 3; // ถือกำเนิดยังไม่ถึง 3 วันถือว่าเป็นเด็ก
+    return diffDays < 3;
   }
 
   function refreshHungerState(){
@@ -501,20 +708,23 @@ html,body{
     petInstances.forEach((pInst, idx) => {
       const el = document.getElementById(`pet_el_${idx}`);
       if(!el) return;
-      // ลบไอคอนเก่าออกก่อน
       const oldIcon = el.querySelector('.pet-icon-status');
-      if(oldIcon && !pInst.sick) oldIcon.remove();
+      if(oldIcon) oldIcon.remove();
 
       let iconToUse = '';
+      const isBaby = isPetBaby(pInst.born);
+
       if(pInst.sick) {
         iconToUse = 'sick.png';
       } else if(isWaterNeeded) {
         iconToUse = 'drink.png';
       } else if(isFoodNeeded) {
         iconToUse = 'hungry.png';
+      } else if(isBaby) {
+        iconToUse = 'baby.png';
       }
 
-      if(iconToUse && !pInst.sick) {
+      if(iconToUse) {
         const ic = document.createElement("img");
         ic.src = iconToUse;
         ic.className = "pet-icon-status";
@@ -523,27 +733,111 @@ html,body{
     });
   }
 
-  // ระบบซื้อสัตว์เลี้ยง
-  function buyPet(type){
-    if(wallet.coins < 500){
-      popMessage("เหรียญไม่พอจ้า! (ต้องการ 500 เหรียญ)");
+  function updateHoldingUI() {
+    const badge = document.getElementById("holdingStatusBadge");
+    const iconImg = document.getElementById("holdingIconImg");
+    const textEl = document.getElementById("holdingText");
+
+    if (!activeTool) {
+      badge.style.display = "none";
       return;
     }
-    wallet.coins -= 500;
-    currentStudent.pets.push({
-      type: type,
-      born: todayStr(),
-      sick: false
-    });
+
+    badge.style.display = "flex";
+    if (activeTool === 'vaccine') {
+      iconImg.src = "vaccine.png";
+      textEl.textContent = "กำลังถือวัคซีน";
+    } else if (activeTool === 'potion') {
+      iconImg.src = "potion.png";
+      textEl.textContent = "กำลังถือยาเร่งโต";
+    }
+  }
+
+  function cancelHoldingTool(e) {
+    e.stopPropagation();
+    activeTool = null;
+    updateHoldingUI();
+    popMessage("ยกเลิกการถือไอเทมแล้ว");
+  }
+
+  function buyItem(category, type, price){
+    if(wallet.coins < price){
+      popMessage("เหรียญไม่พอจ้า!");
+      return;
+    }
+
+    if(category === 'pet'){
+      const currentPetCount = currentStudent.pets.length;
+      const maxPets = getMaxAllowedPets();
+      if(currentPetCount >= maxPets){
+        popMessage(`เลเวล ${wallet.level} เลี้ยงสัตว์ได้สูงสุด ${maxPets} ตัวเท่านั้น! ต้องเพิ่มเลเวลเพื่อรับสัตว์เพิ่ม`);
+        return;
+      }
+    }
+
+    wallet.coins -= price;
+
+    if(category === 'pet'){
+      currentStudent.pets.push({
+        type: type,
+        born: todayStr(),
+        sick: false
+      });
+      renderPetsDOM();
+      refreshHungerState();
+      updateShopQuotaDisplay();
+      popMessage(`ซื้อสัตว์เลี้ยงสำเร็จ! ยินดีต้อนรับสมาชิกใหม่`);
+    } else if(category === 'inventory'){
+      inventory[type]++;
+      popMessage(`ซื้อไอเทมสำเร็จ! บันทึกลงกระเป๋าแล้ว`);
+    }
+
     saveWalletAndData();
-    renderPetsDOM();
-    refreshHungerState();
     closeModal('shopModal');
-    popMessage(`ซื้อสำเร็จ! ยินดีต้อนรับสมาชิกใหม่เข้าบ้าน`);
+  }
+
+  function updateShopQuotaDisplay() {
+    const quotaText = document.getElementById("shopPetQuotaText");
+    const currentLvlText = document.getElementById("shopCurrentLevel");
+    if(quotaText && currentLvlText) {
+      const currentCount = currentStudent.pets.length;
+      const maxAllowed = getMaxAllowedPets();
+      quotaText.textContent = `${currentCount}/${maxAllowed} ตัว`;
+      currentLvlText.textContent = wallet.level;
+    }
+  }
+
+  function openBagModal(){
+    updateWalletUI();
+    document.getElementById("bagModal").style.display = "flex";
+  }
+
+  function useItemFromBag(itemType){
+    if(itemType === 'vaccine'){
+      if(inventory.vaccine <= 0){
+        popMessage("วัคซีนในกระเป๋าหมดแล้ว ไปซื้อเพิ่มที่ร้านค้าได้นะ!");
+        return;
+      }
+      activeTool = 'vaccine';
+      closeModal('bagModal');
+      updateHoldingUI();
+      popMessage("💉 เลือกตัวน้องที่ต้องการฉีดยาเลย!");
+    } else if(itemType === 'potion'){
+      if(inventory.potion <= 0){
+        popMessage("ยาเร่งโตในกระเป๋าหมดแล้ว ไปซื้อเพิ่มที่ร้านค้าได้นะ!");
+        return;
+      }
+      activeTool = 'potion';
+      closeModal('bagModal');
+      updateHoldingUI();
+      popMessage("🧪 เลือกตัวน้องที่ต้องการเร่งโตเลย!");
+    }
   }
 
   function giveWater(e){
     e.stopPropagation();
+    activeTool = null;
+    updateHoldingUI();
     const waterKey = `pet_water_${studentKey}`;
     const lastWater = localStorage.getItem(waterKey);
     if(lastWater === todayStr()){
@@ -551,8 +845,6 @@ html,body{
       return;
     }
     localStorage.setItem(waterKey, todayStr());
-    
-    // สัตว์ทุกตัวเดินมารวมกันที่ชามน้ำตรงกลางด้านล่าง
     moveAllPetsToBowl();
     refreshHungerState();
     spawnHeartsForAll(2);
@@ -561,6 +853,8 @@ html,body{
 
   function feedPet(e){
     e.stopPropagation();
+    activeTool = null;
+    updateHoldingUI();
     const lastWater = localStorage.getItem(`pet_water_${studentKey}`);
     if(lastWater !== todayStr()){
       popMessage("ต้องให้น้ำดื่มก่อน ให้น้องกินข้าวนะ!");
@@ -583,7 +877,6 @@ html,body{
     popMessage(`ให้อาหารแล้ว! ต่อเนื่อง ${streak} วัน`);
   }
 
-  // สัตว์ทุกตัวเดินมารวมที่ชาม
   function moveAllPetsToBowl(){
     const scene = document.getElementById("scene");
     const w = scene ? scene.clientWidth : 380;
@@ -591,7 +884,7 @@ html,body{
 
     petInstances.forEach((pInst, idx) => {
       pInst.targetX = bowlX + (Math.random() * 60 - 30);
-      pInst.targetY = 75;
+      pInst.targetY = 62;
       animatePetMove(idx);
     });
   }
@@ -623,6 +916,47 @@ html,body{
 
   function tapPet(e, idx){
     e.stopPropagation();
+
+    if(activeTool === 'vaccine'){
+      const pet = currentStudent.pets[idx];
+      if(pet.sick){
+        pet.sick = false;
+        inventory.vaccine--;
+        activeTool = null;
+        updateHoldingUI();
+        saveWalletAndData();
+        renderPetsDOM();
+        refreshHungerState();
+        spawnHearts(idx, 3);
+        popMessage("ฉีดวัคซีนรักษาน้องหายป่วยแล้ว! 💉✨");
+      } else {
+        popMessage("ตัวนี้ยังแข็งแรงดีนะ ไม่ต้องใช้วัคซีนจ้า!");
+      }
+      return;
+    }
+
+    if(activeTool === 'potion'){
+      const pet = currentStudent.pets[idx];
+      const isBaby = isPetBaby(pet.born);
+      if(isBaby){
+        const bornDate = new Date(pet.born);
+        bornDate.setDate(bornDate.getDate() - 3);
+        pet.born = `${bornDate.getFullYear()}-${String(bornDate.getMonth()+1).padStart(2,'0')}-${String(bornDate.getDate()).padStart(2,'0')}`;
+        
+        inventory.potion--;
+        activeTool = null;
+        updateHoldingUI();
+        saveWalletAndData();
+        renderPetsDOM();
+        refreshHungerState();
+        spawnHearts(idx, 3);
+        popMessage("ให้น้องกินยาเร่งโต โตเต็มวัยทันที! ✨🧪");
+      } else {
+        popMessage("ตัวนี้โตเต็มวัยแล้ว ไม่จำเป็นต้องใช้ยาเร่งโตจ้า!");
+      }
+      return;
+    }
+
     spawnHearts(idx, 1);
   }
 
@@ -654,12 +988,34 @@ html,body{
     msgTimer = setTimeout(() => { bubble.style.display = "none"; }, 1800);
   }
 
-  function openShopModal(){ document.getElementById("shopModal").style.display = "flex"; }
-  function openMissionModal(){ document.getElementById("missionModal").style.display = "flex"; }
-  function openRankModal(){ renderRankList(); document.getElementById("rankModal").style.display = "flex"; }
+  function openShopModal(){ 
+    updateShopQuotaDisplay();
+    document.getElementById("shopModal").style.display = "flex"; 
+  }
+
+  function openMissionModal(){ 
+    renderMissions();
+    document.getElementById("missionModal").style.display = "flex"; 
+  }
+  
+  async function openRankModal(){ 
+    document.getElementById("rankModal").style.display = "flex";
+    document.getElementById("rank-list").innerHTML = "<p style='text-align:center; color:#7f8c8d;'>กำลังโหลดอันดับ...</p>";
+    
+    try {
+      const data = await fetchWithRetry(`${API_URL}?action=ranking`);
+      if(data.success && Array.isArray(data.ranking)) {
+        renderRankList(data.ranking);
+      } else {
+        document.getElementById("rank-list").innerHTML = "<p style='text-align:center; color:#e74f66;'>ไม่สามารถโหลดข้อมูลอันดับได้</p>";
+      }
+    } catch(err) {
+      document.getElementById("rank-list").innerHTML = "<p style='text-align:center; color:#e74f66;'>เกิดข้อผิดพลาดในการเชื่อมต่อ</p>";
+    }
+  }
+
   function closeModal(id){ document.getElementById(id).style.display = "none"; }
 
-  // ระบบสุ่มเดินเล่นอิสระของสัตว์แต่ละตัว
   function startWanderLoop(){
     setInterval(() => {
       const scene = document.getElementById("scene");
@@ -667,7 +1023,7 @@ html,body{
       const w = scene.clientWidth;
 
       petInstances.forEach((pInst, idx) => {
-        if(Math.random() < 0.4) { // สุ่มโอกาสเดิน
+        if(Math.random() < 0.4) {
           const minX = w * 0.05;
           const maxX = Math.max(minX + 20, w * 0.85);
           const targetX = minX + Math.random() * (maxX - minX);
@@ -681,8 +1037,10 @@ html,body{
     }, 4500);
   }
 
-  function missionReward(scoreNum){
-    return { coins: Math.max(50, Math.round(scoreNum * 100)), exp: Math.max(20, Math.round(scoreNum * 40)) };
+  function missionReward(taskIndex){
+    let coins = (taskIndex === 0) ? 800 : (200 + (taskIndex - 1) * 20);
+    let exp = 50 + (taskIndex * 5);
+    return { coins: coins, exp: exp };
   }
 
   function getClaimedSet(){
@@ -707,17 +1065,17 @@ html,body{
       const isDone = scoreNum > 0;
       const missionName = m.name || "ภารกิจไม่มีชื่อ";
       const missionId = `quest_${idx}`;
+      const reward = missionReward(idx);
 
       let footer = "";
       if(isDone){
-        const reward = missionReward(scoreNum);
         if(claimedSet.has(missionId)){
           footer = `<div class="claimed-tag">รับรางวัลแล้ว</div>`;
         } else {
-          footer = `<button class="claim-btn" onclick="claimReward('${missionId}', ${reward.coins}, ${reward.exp})">รับรางวัล +${reward.coins} เหรียญ / +${reward.exp} EXP</button>`;
+          footer = `<button class="claim-btn" onclick="claimReward('${missionId}', ${reward.coins}, ${reward.exp})">รับรางวัล +${reward.coins} เหรียญ, +${reward.exp} XP</button>`;
         }
       }
-      return `<div class="mission-item"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'สำเร็จ':'รอ'}</span><b>${missionName}</b>${footer}</div>`;
+      return `<div class="mission-item"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'สำเร็จ':'รอ'}</span><b>${missionName}</b><div style="font-size:11px; color:var(--ink-soft); margin-top:2px;">รางวัล: ${reward.coins} เหรียญ | ${reward.exp} XP</div>${footer}</div>`;
     }).join('');
 
     document.getElementById("mission-list").innerHTML = html;
@@ -730,16 +1088,15 @@ html,body{
     saveClaimedSet(claimedSet);
     wallet.coins += coins;
     wallet.exp += exp;
+    updateLevelFromExp();
     saveWalletAndData();
     renderMissions();
-    popMessage(`ได้รับ +${coins} เหรียญ และ +${exp} EXP`);
+    popMessage(`ได้รับ +${coins} เหรียญ, +${exp} XP`);
     spawnHeartsForAll(2);
   }
 
-  function renderRankList(){
-    if(!allStudentsData || allStudentsData.length === 0) return;
-
-    const sorted = [...allStudentsData].map(s => ({
+  function renderRankList(rankingData){
+    const sorted = [...rankingData].map(s => ({
       id: String(s["รหัสนักเรียน"] || "").trim(),
       name: s["ชื่อ"] || "-",
       score: parseFloat(s["คะแนน"]) || 0
