@@ -142,7 +142,6 @@ html,body{
 .stat-badge.coin{ background:rgba(232,247,238,0.95); border-color:var(--leaf); color:#1f6b44; }
 .stat-badge.exp{ background:rgba(255,235,240,0.95); border-color:var(--berry); color:var(--berry-dark); }
 
-/* ฝั่งขวา: เพิ่มปุ่ม Rank เข้ามา */
 .right-nav{ display:flex; gap:8px; align-items:center; margin-top:4px; }
 .icon-btn{ 
   width:40px; height:40px; border-radius:50%; 
@@ -161,14 +160,12 @@ html,body{
 }
 .icon-btn:active{ transform:scale(0.9); box-shadow:0 0 6px rgba(255, 255, 255, 0.6), 0 2px 4px rgba(0,0,0,0.2); }
 
-/* Modal สไตล์ทั่วไปและตาราง Rank */
 .modal-overlay{ display:none; position:absolute; inset:0; background:rgba(20,20,30,0.55); z-index:100; justify-content:center; align-items:center; padding:20px; }
 .modal-card{ background:var(--cream); border-radius:24px; padding:18px; width:100%; max-width:360px; max-height:80%; overflow-y:auto; box-shadow:0 14px 30px rgba(0,0,0,0.35); }
 .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:2px solid var(--cream-dark); padding-bottom:10px; }
 .modal-title{ margin:0; font-size:17px; color:var(--ink); font-weight:600; }
 .close-btn{ background:var(--berry); color:#fff; border:none; border-radius:50%; width:28px; height:28px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:0 0 28px; }
 
-/* รายการภารกิจ */
 .mission-item{ padding:11px 12px; border-radius:14px; margin-bottom:9px; border-left:7px solid #ccc; font-size:13px; background:#fff4e6; }
 .status-badge{ font-size:10px; padding:3px 9px; border-radius:10px; float:right; color:#fff; font-weight:500; }
 .done-bg{ background:var(--leaf); }
@@ -177,7 +174,6 @@ html,body{
 .claim-btn:active{ transform:translateY(3px); box-shadow:0 0 0 var(--sun-dark); }
 .claimed-tag{ margin-top:8px; text-align:center; font-size:11px; color:var(--leaf); font-weight:600; }
 
-/* รายการตารางอันดับ (Rank List) */
 .rank-item{ display:flex; align-items:center; justify-content:between; padding:10px 12px; border-radius:12px; margin-bottom:7px; background:#fff; border:1px solid #eadecb; font-size:13px; gap:8px; }
 .rank-item.is-me{ background:#fff9db; border:2px solid var(--sun); font-weight:600; }
 .rank-num{ width:30px; font-weight:700; color:var(--ink-soft); text-align:center; }
@@ -226,9 +222,9 @@ html,body{
         </button>
       </div>
 
-      <!-- แถบด้านบน -->
+      <!-- Top Overlay -->
       <div class="top-overlay">
-        <!-- ฝั่งซ้าย: ข้อมูลชื่อ, เลเวล, คะแนน, วันติด -->
+        <!-- ฝั่งซ้าย: ข้อมูลชื่อ, เลเวลคำนวณเอง, คะแนน, วันติด -->
         <div class="left-user-info">
           <div class="name-block">
             <div class="user-name" id="displayName">-</div>
@@ -241,13 +237,13 @@ html,body{
           </div>
         </div>
 
-        <!-- ตรงกลาง: เหรียญกับ EXP -->
+        <!-- ตรงกลาง: coin กับ EXP -->
         <div class="center-stats">
           <span class="stat-badge coin">💰 <span class="num" id="displayCoins">0</span></span>
           <span class="stat-badge exp">✨ <span class="num" id="displayExp">0</span></span>
         </div>
 
-        <!-- ฝั่งขวา: เพิ่มปุ่ม Rank และปุ่ม Quest / Exit -->
+        <!-- ฝั่งขวา: ปุ่ม Rank, Quest, Exit -->
         <div class="right-nav">
           <button class="icon-btn" onclick="openRankModal()" aria-label="อันดับ">
             <img src="rank.png" alt="อันดับ">
@@ -275,7 +271,7 @@ html,body{
       </div>
     </div>
 
-    <!-- Modal ตารางอันดับ (Rank) -->
+    <!-- Modal จัดอันดับ -->
     <div class="modal-overlay" id="rankModal">
       <div class="modal-card">
         <div class="modal-header">
@@ -290,7 +286,8 @@ html,body{
 </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbxg0xhtPcOjhhc-0udhctTCIxJeSuWAwpAuQVqA6MMwy7k2ZYb7XSawanf9XshEwzkeWA/exec";
+  // อัปเดต URL Google Apps Script ใหม่ล่าสุดที่นี่
+  const API_URL = "https://script.google.com/macros/s/AKfycbz3P-nc0in0Bj0gElWPzA7rL-agmIWNMDbG_VlNHT1xdAVWbe5pC_D57HVN3GtfPq7-6A/exec";
 
   let allStudentsData = [];
   let currentStudent = null;
@@ -299,15 +296,6 @@ html,body{
   let petX = 120;
   let petY = 55;
   let wanderTimer = null;
-
-  function clearAllSavedData(){
-    if(!studentKey) return;
-    localStorage.removeItem(`wallet_coins_${studentKey}`);
-    localStorage.removeItem(`wallet_exp_${studentKey}`);
-    localStorage.removeItem(`pet_streak_${studentKey}`);
-    localStorage.removeItem(`pet_fed_${studentKey}`);
-    localStorage.removeItem(`claimed_${studentKey}`);
-  }
 
   window.onload = function(){
     const loginBtn = document.getElementById("loginBtn");
@@ -330,22 +318,28 @@ html,body{
     if(!u || !p) return alert("กรุณากรอกรหัสนักเรียนและรหัสผ่าน!");
     if(!allStudentsData || allStudentsData.length === 0) return alert("ระบบกำลังโหลดข้อมูล กรุณารอสักครู่!");
 
-    const student = allStudentsData.find(s => String(s["รหัสเข้า"] || "").trim() === u);
+    // ค้นหาจาก รหัสนักเรียน และตรวจสอบรหัสผ่าน
+    const student = allStudentsData.find(s => String(s["รหัสนักเรียน"] || "").trim() === u);
     if(!student) return alert("ไม่พบรหัสนักเรียนนี้!");
-    const dbPassword = String(student["รหัสผ่าน"] || "").trim();
+    const dbPassword = String(student["รหัส"] || "").trim();
     if(dbPassword !== p) return alert("รหัสผ่านไม่ถูกต้อง!");
 
+    const scoreVal = parseFloat(student["คะแนน"]) || 0;
+    // คำนวณเลเวลในเกมเองตามสูตร: Level = 10 * sqrt(คะแนน)
+    const calculatedLevel = Math.floor(10 * Math.sqrt(scoreVal));
+
     currentStudent = {
-      "รหัสนักเรียน": student["รหัสเข้า"],
+      "รหัสนักเรียน": String(student["รหัสนักเรียน"]).trim(),
       "ชื่อ": student["ชื่อ"] || "-",
-      "คะแนน": parseFloat(student["คะแนน"]) || 0,
-      "เลเวล": parseInt(student["เลเวล"]) || 0,
+      "คะแนน": scoreVal,
+      "เลเวล": calculatedLevel,
+      "coin": parseInt(student["coin"]) || 0,
+      "pets": student["pets"] || [], 
+      "ClaimedRewards": student["ClaimedRewards"] || [],
       "ชั้น": student["ชั้น"] || "-",
       "ภารกิจ": student["ภารกิจ"] || []
     };
-    studentKey = String(currentStudent["รหัสนักเรียน"]);
-
-    clearAllSavedData();
+    studentKey = currentStudent["รหัสนักเรียน"];
 
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("dashboard").style.display = "block";
@@ -356,7 +350,7 @@ html,body{
     const classText = document.getElementById("displaySheet");
     if(classText) classText.textContent = currentStudent["ชั้น"];
 
-    loadWallet();
+    loadWallet(student);
     refreshHungerState();
     renderMissions();
     renderRankList();
@@ -367,17 +361,32 @@ html,body{
   function todayStr(){ const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
   function yesterdayStr(){ const d = new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
 
-  function loadWallet(){
-    wallet.coins = parseInt(localStorage.getItem(`wallet_coins_${studentKey}`) || "0");
-    wallet.exp = parseInt(localStorage.getItem(`wallet_exp_${studentKey}`) || "0");
+  function loadWallet(student){
+    wallet.coins = parseInt(student["coin"]) || 0;
+    wallet.exp = parseInt(localStorage.getItem(`wallet_exp_${studentKey}`)) || 0;
     document.getElementById("displayStreak").textContent = localStorage.getItem(`pet_streak_${studentKey}`) || 0;
     updateWalletUI();
   }
-  function saveWallet(){
-    localStorage.setItem(`wallet_coins_${studentKey}`, wallet.coins);
+
+  function saveWalletAndData(){
     localStorage.setItem(`wallet_exp_${studentKey}`, wallet.exp);
     updateWalletUI();
+
+    // ส่งข้อมูลบันทึกไปยัง Google Sheet ผ่าน Apps Script (action=saveGameData)
+    const payload = new URLSearchParams({
+      action: "saveGameData",
+      id: studentKey,
+      coin: wallet.coins,
+      pets: JSON.stringify(currentStudent.pets || []),
+      claimed: JSON.stringify(currentStudent.ClaimedRewards || [])
+    });
+
+    fetch(API_URL, {
+      method: "POST",
+      body: payload
+    }).catch(err => console.error("Save Data Error:", err));
   }
+
   function updateWalletUI(){
     document.getElementById("displayCoins").textContent = wallet.coins;
     document.getElementById("displayExp").textContent = wallet.exp;
@@ -463,15 +472,12 @@ html,body{
     const targetY = minY + Math.random() * (maxY - minY);
 
     const distance = Math.hypot(targetX - petX, targetY - petY);
-
     const speed = 12; 
     const duration = Math.max(3.0, distance / speed);
 
     petEl.classList.toggle("facing-left", targetX < petX);
     petEl.classList.add("walking");
-    
     petEl.style.transition = `left ${duration}s ease-in-out, top ${duration}s ease-in-out`;
-    
     petEl.style.left = targetX + "px";
     petEl.style.top = targetY + "%";
     
@@ -489,11 +495,19 @@ html,body{
     return { coins: Math.max(50, Math.round(scoreNum * 100)), exp: Math.max(20, Math.round(scoreNum * 40)) };
   }
 
-  function getClaimedSet(){ return new Set(JSON.parse(localStorage.getItem(`claimed_${studentKey}`) || "[]")); }
-  function saveClaimedSet(set){ localStorage.setItem(`claimed_${studentKey}`, JSON.stringify(Array.from(set))); }
+  function getClaimedSet(){
+    if(Array.isArray(currentStudent.ClaimedRewards)) {
+      return new Set(currentStudent.ClaimedRewards);
+    }
+    return new Set();
+  }
+
+  function saveClaimedSet(set){
+    currentStudent.ClaimedRewards = Array.from(set);
+  }
 
   function renderMissions(){
-    const missions = currentStudent.ภารกิจ || currentStudent.missions || [];
+    const missions = currentStudent.ภารกิจ || [];
     let passedMidterm = false;
     const claimedSet = getClaimedSet();
 
@@ -503,10 +517,10 @@ html,body{
     }
 
     const html = missions.map((m, idx) => {
-      const scoreNum = parseFloat(m.score || m.คะแนน) || 0;
+      const scoreNum = parseFloat(m.score) || 0;
       const isDone = scoreNum > 0;
-      const missionName = m.name || m.ชื่อภารกิจ || m.ชื่อ || "ภารกิจไม่มีชื่อ";
-      const missionId = `${idx}_${missionName}`;
+      const missionName = m.name || "ภารกิจไม่มีชื่อ";
+      const missionId = `quest_${idx}`;
 
       let cls = "background:#fff4e6; border-left-color:#f39c12;";
       if(passedMidterm) cls = "background:#f3e5f5; border-left-color:#8e44ad;";
@@ -518,7 +532,7 @@ html,body{
         if(claimedSet.has(missionId)){
           footer = `<div class="claimed-tag">รับรางวัลแล้ว</div>`;
         } else {
-          footer = `<button class="claim-btn" onclick="claimReward('${missionId.replace(/'/g,"\\'")}', ${reward.coins}, ${reward.exp})">รับรางวัล +${reward.coins} เหรียญ / +${reward.exp} EXP</button>`;
+          footer = `<button class="claim-btn" onclick="claimReward('${missionId}', ${reward.coins}, ${reward.exp})">รับรางวัล +${reward.coins} เหรียญ / +${reward.exp} EXP</button>`;
         }
       }
       return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'สำเร็จ':'รอ'}</span><b>${missionName}</b>${footer}</div>`;
@@ -534,7 +548,7 @@ html,body{
     saveClaimedSet(claimedSet);
     wallet.coins += coins;
     wallet.exp += exp;
-    saveWallet();
+    saveWalletAndData();
     renderMissions();
     popMessage(`ได้รับ +${coins} เหรียญ และ +${exp} EXP`);
     spawnHearts(4);
@@ -543,12 +557,15 @@ html,body{
   function renderRankList(){
     if(!allStudentsData || allStudentsData.length === 0) return;
 
-    // คัดลอกและเรียงลำดับตามคะแนนจากมากไปน้อย
-    const sorted = [...allStudentsData].map(s => ({
-      id: String(s["รหัสเข้า"] || "").trim(),
-      name: s["ชื่อ"] || "-",
-      score: parseFloat(s["คะแนน"]) || 0
-    })).sort((a, b) => b.score - a.score);
+    // จัดเรียงตามคะแนนจากมากไปน้อย
+    const sorted = [...allStudentsData].map(s => {
+      const sScore = parseFloat(s["คะแนน"]) || 0;
+      return {
+        id: String(s["รหัสนักเรียน"] || "").trim(),
+        name: s["ชื่อ"] || "-",
+        score: sScore
+      };
+    }).sort((a, b) => b.score - a.score);
 
     const html = sorted.map((s, index) => {
       const isMe = (s.id === studentKey);
