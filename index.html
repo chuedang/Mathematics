@@ -8,14 +8,10 @@
 <style>
 :root{
   --scene-bg:url("BG.png");
-  --sky-top:#7fd2ff; --sky-bottom:#cdf1ff;
-  --grass-top:#93e6ac; --grass-bottom:#57bf8a;
-  --wood:#d89a5d; --wood-dark:#a86b37;
   --cream:#fff9ee; --cream-dark:#f2e6cf;
   --ink:#3b3a45; --ink-soft:#7c7a8a;
   --sun:#ffc857; --sun-dark:#e7a92e;
   --berry:#ff6b81; --berry-dark:#e14f66;
-  --water:#4fb6e8; --water-dark:#2f93c6;
   --leaf:#3f9463;
 }
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -55,29 +51,30 @@ html,body{
   background:linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 18%, rgba(0,0,0,0) 78%, rgba(0,0,0,0.2) 100%);
 }
 
+/* สัตว์เลี้ยงรองรับหลายตัว */
 .avatar-container{ 
-  position:absolute; width:110px; height:100px; z-index:5; cursor:pointer; 
-  left:120px; top:55%; 
-  transition: left 3s ease-in-out, top 3s ease-in-out;
+  position:absolute; width:100px; height:90px; z-index:5; cursor:pointer; 
+  transition: left 2.5s ease-in-out, top 2.5s ease-in-out, transform 0.3s;
 }
+.avatar-container.baby { transform: scale(0.7); }
 .pet-flip{ width:100%; height:100%; transition:transform 0.25s; transform:scaleX(1); position:relative; }
 .avatar-container.facing-left .pet-flip{ transform:scaleX(-1); }
 
-.cat-assembly{ position:relative; width:100%; height:100%; }
+.pet-assembly{ position:relative; width:100%; height:100%; }
 .body-img{ width:100%; height:100%; object-fit:contain; position:relative; z-index:2; animation:idle-bob 2.4s ease-in-out infinite; }
 .avatar-container.walking .body-img{ animation:walk-bob 0.8s ease-in-out infinite; }
 
 .leg{ 
-  position:absolute; width:38px; height:32px; object-fit:contain; 
+  position:absolute; width:34px; height:28px; object-fit:contain; 
   transform-origin: top center; 
 }
 .leg-back{ z-index:1; filter:brightness(0.75); }
-.leg-back-left{ left:18px; top:72px; }
-.leg-back-right{ left:48px; top:72px; }
+.leg-back-left{ left:14px; top:65px; }
+.leg-back-right{ left:42px; top:65px; }
 
 .leg-front{ z-index:3; }
-.leg-front-left{ left:12px; top:72px; }
-.leg-front-right{ left:42px; top:72px; }
+.leg-front-left{ left:10px; top:65px; }
+.leg-front-right{ left:38px; top:65px; }
 
 .avatar-container.walking .leg-back-left{ animation:leg-swing 0.8s ease-in-out infinite alternate; }
 .avatar-container.walking .leg-front-left{ animation:leg-swing 0.8s ease-in-out infinite alternate-reverse; }
@@ -92,14 +89,13 @@ html,body{
 @keyframes idle-bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-2px);} }
 @keyframes walk-bob{ 0%,100%{ transform:translateY(0) rotate(0deg);} 50%{ transform:translateY(-3px) rotate(-1deg);} }
 
-.hunger-icon{ 
-  position:absolute; top:-28px; left:50%; transform:translateX(-50%); 
-  width:32px; height:32px; object-fit:contain;
+.pet-icon-status {
+  position:absolute; top:-30px; left:50%; transform:translateX(-50%); 
+  width:30px; height:30px; object-fit:contain;
   filter:drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
-  display:none; z-index:10;
+  z-index:10;
   animation:float-icon 1.8s ease-in-out infinite;
 }
-.avatar-container.hungry .hunger-icon{ display:block; }
 @keyframes float-icon{ 0%,100%{ transform:translateX(-50%) translateY(0); } 50%{ transform:translateX(-50%) translateY(-5px); } }
 
 .heart-pop{ position:absolute; font-size:18px; opacity:0; pointer-events:none; z-index:6; animation:popfloat 1s ease-out forwards; }
@@ -115,12 +111,12 @@ html,body{
   outline:none; transition:transform 0.1s ease;
 }
 .bowl-btn img{ 
-  width:100px; height:100px; object-fit:contain; 
+  width:90px; height:90px; object-fit:contain; 
   filter:drop-shadow(0px 4px 6px rgba(0,0,0,0.3)); 
 }
 .bowl-btn:active{ transform:scale(0.88); }
 
-/* --- Top Overlay --- */
+/* --- Top Overlay & Menu แนวตั้งขวาบน --- */
 .top-overlay{ 
   position:absolute; top:0; left:0; right:0; 
   padding:calc(env(safe-area-inset-top) + 10px) 12px 0; 
@@ -142,29 +138,38 @@ html,body{
 .stat-badge.coin{ background:rgba(232,247,238,0.95); border-color:var(--leaf); color:#1f6b44; }
 .stat-badge.exp{ background:rgba(255,235,240,0.95); border-color:var(--berry); color:var(--berry-dark); }
 
-.right-nav{ display:flex; gap:8px; align-items:center; margin-top:4px; }
+/* เปลี่ยนขวาบนเป็นแนวดิ่ง */
+.right-nav{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; margin-top:4px; }
 .icon-btn{ 
-  width:40px; height:40px; border-radius:50%; 
+  width:38px; height:38px; border-radius:50%; 
   background:rgba(255, 255, 255, 0.3); 
-  border:2.5px solid #ffffff; 
+  border:2px solid #ffffff; 
   cursor:pointer; display:flex; align-items:center; justify-content:center; 
-  box-shadow:0 0 12px rgba(255, 255, 255, 0.8), 0 4px 8px rgba(0,0,0,0.25); 
+  box-shadow:0 0 10px rgba(255, 255, 255, 0.8), 0 3px 6px rgba(0,0,0,0.25); 
   padding:0; overflow:visible; position:relative;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease;
 }
 .icon-btn img{ 
-  width:145%; height:145%; 
+  width:140%; height:140%; 
   object-fit:contain; 
   position:absolute;
-  filter:drop-shadow(0 3px 5px rgba(0,0,0,0.35)); 
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35)); 
 }
-.icon-btn:active{ transform:scale(0.9); box-shadow:0 0 6px rgba(255, 255, 255, 0.6), 0 2px 4px rgba(0,0,0,0.2); }
+.icon-btn:active{ transform:scale(0.9); }
 
 .modal-overlay{ display:none; position:absolute; inset:0; background:rgba(20,20,30,0.55); z-index:100; justify-content:center; align-items:center; padding:20px; }
 .modal-card{ background:var(--cream); border-radius:24px; padding:18px; width:100%; max-width:360px; max-height:80%; overflow-y:auto; box-shadow:0 14px 30px rgba(0,0,0,0.35); }
 .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:2px solid var(--cream-dark); padding-bottom:10px; }
 .modal-title{ margin:0; font-size:17px; color:var(--ink); font-weight:600; }
 .close-btn{ background:var(--berry); color:#fff; border:none; border-radius:50%; width:28px; height:28px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:0 0 28px; }
+
+.shop-item{ display:flex; align-items:center; justify-content:space-between; background:#fff; padding:10px 12px; border-radius:14px; margin-bottom:8px; border:1px solid #e2d7c3; gap:10px; }
+.shop-img{ width:48px; height:48px; object-fit:contain; }
+.shop-info{ flex:1; }
+.shop-name{ font-weight:600; font-size:13px; color:var(--ink); }
+.shop-price{ font-size:11px; color:var(--leaf); font-weight:600; }
+.buy-btn{ background:var(--sun); border:none; padding:7px 14px; border-radius:10px; font-family:'Mitr'; font-size:12px; font-weight:600; color:#7a4a06; cursor:pointer; box-shadow:0 2px 0 var(--sun-dark); }
+.buy-btn:active{ transform:translateY(2px); box-shadow:none; }
 
 .mission-item{ padding:11px 12px; border-radius:14px; margin-bottom:9px; border-left:7px solid #ccc; font-size:13px; background:#fff4e6; }
 .status-badge{ font-size:10px; padding:3px 9px; border-radius:10px; float:right; color:#fff; font-weight:500; }
@@ -174,7 +179,7 @@ html,body{
 .claim-btn:active{ transform:translateY(3px); box-shadow:0 0 0 var(--sun-dark); }
 .claimed-tag{ margin-top:8px; text-align:center; font-size:11px; color:var(--leaf); font-weight:600; }
 
-.rank-item{ display:flex; align-items:center; justify-content:between; padding:10px 12px; border-radius:12px; margin-bottom:7px; background:#fff; border:1px solid #eadecb; font-size:13px; gap:8px; }
+.rank-item{ display:flex; align-items:center; padding:10px 12px; border-radius:12px; margin-bottom:7px; background:#fff; border:1px solid #eadecb; font-size:13px; gap:8px; }
 .rank-item.is-me{ background:#fff9db; border:2px solid var(--sun); font-weight:600; }
 .rank-num{ width:30px; font-weight:700; color:var(--ink-soft); text-align:center; }
 .rank-item.is-me .rank-num{ color:var(--sun-dark); }
@@ -198,33 +203,21 @@ html,body{
   <div id="dashboard">
     <div class="scene" id="scene">
 
-      <div class="avatar-container" id="avatarContainer" onclick="tapPet()">
-        <img src="hungry.png" class="hunger-icon" alt="หิวแล้ว">
-        <div class="pet-flip">
-          <div class="cat-assembly">
-            <img src="cat_leg.png" class="leg leg-back leg-back-left" alt="ขาหลังซ้าย">
-            <img src="cat_leg.png" class="leg leg-back leg-back-right" alt="ขาหลังขวา">
-            
-            <img src="cat_body.png" id="petImgCat" class="body-img" alt="น้องแมว">
-            
-            <img src="cat_leg.png" class="leg leg-front leg-front-left" alt="ขาหน้าซ้าย">
-            <img src="cat_leg.png" class="leg leg-front leg-front-right" alt="ขาหน้าขวา">
-          </div>
-        </div>
-      </div>
+      <!-- พื้นที่แสดงสัตว์เลี้ยงทั้งหมดจะถูกสร้างด้วย JavaScript -->
+      <div id="petsContainer"></div>
 
       <div class="pet-props">
         <button class="bowl-btn" onclick="feedPet(event)" aria-label="ให้อาหาร">
           <img src="bowl_feed.png" alt="ชามอาหาร">
         </button>
-        <button class="bowl-btn" onclick="splashWater(event)" aria-label="เติมน้ำ">
+        <button class="bowl-btn" onclick="giveWater(event)" aria-label="เติมน้ำ">
           <img src="bowl_water.png" alt="ชามน้ำ">
         </button>
       </div>
 
       <!-- Top Overlay -->
       <div class="top-overlay">
-        <!-- ฝั่งซ้าย: ข้อมูลชื่อ, เลเวลคำนวณเอง, คะแนน, วันติด -->
+        <!-- ฝั่งซ้าย: ข้อมูลชื่อ, เลเวล, คะแนน, วันติด -->
         <div class="left-user-info">
           <div class="name-block">
             <div class="user-name" id="displayName">-</div>
@@ -243,8 +236,11 @@ html,body{
           <span class="stat-badge exp">✨ <span class="num" id="displayExp">0</span></span>
         </div>
 
-        <!-- ฝั่งขวา: ปุ่ม Rank, Quest, Exit -->
+        <!-- ฝั่งขวา: เมนูแนวดิ่ง (Shop, Rank, Quest, Exit) -->
         <div class="right-nav">
+          <button class="icon-btn" onclick="openShopModal()" aria-label="ร้านค้า">
+            <img src="shop.png" alt="ร้านค้า">
+          </button>
           <button class="icon-btn" onclick="openRankModal()" aria-label="อันดับ">
             <img src="rank.png" alt="อันดับ">
           </button>
@@ -258,6 +254,32 @@ html,body{
       </div>
 
       <div class="toast-msg" id="toastMsg"></div>
+    </div>
+
+    <!-- Modal ร้านค้าสัตว์เลี้ยง -->
+    <div class="modal-overlay" id="shopModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">🛒 ร้านค้าสัตว์เลี้ยง</h3>
+          <button class="close-btn" onclick="closeModal('shopModal')">✕</button>
+        </div>
+        <div class="shop-item">
+          <img src="cat_shop.png" class="shop-img" alt="แมว">
+          <div class="shop-info">
+            <div class="shop-name">น้องแมวสุดน่ารัก</div>
+            <div class="shop-price">💰 500 เหรียญ</div>
+          </div>
+          <button class="buy-btn" onclick="buyPet('cat')">ซื้อ</button>
+        </div>
+        <div class="shop-item">
+          <img src="dog_shop.png" class="shop-img" alt="หมา">
+          <div class="shop-info">
+            <div class="shop-name">น้องหมาแสนรู้</div>
+            <div class="shop-price">💰 500 เหรียญ</div>
+          </div>
+          <button class="buy-btn" onclick="buyPet('dog')">ซื้อ</button>
+        </div>
+      </div>
     </div>
 
     <!-- Modal ภารกิจ -->
@@ -286,16 +308,13 @@ html,body{
 </div>
 
 <script>
-  // อัปเดต URL Google Apps Script ใหม่ล่าสุดที่นี่
   const API_URL = "https://script.google.com/macros/s/AKfycbz3P-nc0in0Bj0gElWPzA7rL-agmIWNMDbG_VlNHT1xdAVWbe5pC_D57HVN3GtfPq7-6A/exec";
 
   let allStudentsData = [];
   let currentStudent = null;
   let studentKey = null;
   let wallet = { coins:0, exp:0 };
-  let petX = 120;
-  let petY = 55;
-  let wanderTimer = null;
+  let petInstances = []; // เก็บสถานะตำแหน่งและการเคลื่อนที่ของสัตว์แต่ละตัว
 
   window.onload = function(){
     const loginBtn = document.getElementById("loginBtn");
@@ -318,14 +337,12 @@ html,body{
     if(!u || !p) return alert("กรุณากรอกรหัสนักเรียนและรหัสผ่าน!");
     if(!allStudentsData || allStudentsData.length === 0) return alert("ระบบกำลังโหลดข้อมูล กรุณารอสักครู่!");
 
-    // ค้นหาจาก รหัสนักเรียน และตรวจสอบรหัสผ่าน
     const student = allStudentsData.find(s => String(s["รหัสนักเรียน"] || "").trim() === u);
     if(!student) return alert("ไม่พบรหัสนักเรียนนี้!");
     const dbPassword = String(student["รหัส"] || "").trim();
     if(dbPassword !== p) return alert("รหัสผ่านไม่ถูกต้อง!");
 
     const scoreVal = parseFloat(student["คะแนน"]) || 0;
-    // คำนวณเลเวลในเกมเองตามสูตร: Level = 10 * sqrt(คะแนน)
     const calculatedLevel = Math.floor(10 * Math.sqrt(scoreVal));
 
     currentStudent = {
@@ -351,15 +368,16 @@ html,body{
     if(classText) classText.textContent = currentStudent["ชั้น"];
 
     loadWallet(student);
+    checkAndInitPets();
+    renderPetsDOM();
     refreshHungerState();
     renderMissions();
     renderRankList();
-    initPetPosition();
-    scheduleWander();
+    startWanderLoop();
   }
 
-  function todayStr(){ const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
-  function yesterdayStr(){ const d = new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+  function todayStr(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  function yesterdayStr(){ const d = new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
   function loadWallet(student){
     wallet.coins = parseInt(student["coin"]) || 0;
@@ -372,7 +390,6 @@ html,body{
     localStorage.setItem(`wallet_exp_${studentKey}`, wallet.exp);
     updateWalletUI();
 
-    // ส่งข้อมูลบันทึกไปยัง Google Sheet ผ่าน Apps Script (action=saveGameData)
     const payload = new URLSearchParams({
       action: "saveGameData",
       id: studentKey,
@@ -381,10 +398,7 @@ html,body{
       claimed: JSON.stringify(currentStudent.ClaimedRewards || [])
     });
 
-    fetch(API_URL, {
-      method: "POST",
-      body: payload
-    }).catch(err => console.error("Save Data Error:", err));
+    fetch(API_URL, { method: "POST", body: payload }).catch(err => console.error("Save Error:", err));
   }
 
   function updateWalletUI(){
@@ -392,47 +406,243 @@ html,body{
     document.getElementById("displayExp").textContent = wallet.exp;
   }
 
+  // ตรวจสอบหรือสุ่มสถานะป่วย (ทุก 2-3 วัน)
+  function checkAndInitPets(){
+    if(!Array.isArray(currentStudent.pets)) currentStudent.pets = [];
+    const lastSickCheck = localStorage.getItem(`sick_check_${studentKey}`);
+    const now = todayStr();
+
+    currentStudent.pets.forEach(pet => {
+      if(pet.sick === undefined) pet.sick = false;
+    });
+
+    if(lastSickCheck !== now && currentStudent.pets.length > 0) {
+      // สุ่มโอกาสป่วย 2-3 วันครั้ง
+      if(Math.random() < 0.35) {
+        const targetPet = currentStudent.pets[Math.floor(Math.random() * currentStudent.pets.length)];
+        targetPet.sick = true;
+      }
+      localStorage.setItem(`sick_check_${studentKey}`, now);
+    }
+  }
+
+  // สร้าง DOM สัตว์เลี้ยงในหน้าจอ
+  function renderPetsDOM(){
+    const container = document.getElementById("petsContainer");
+    container.innerHTML = "";
+    petInstances = [];
+
+    const scene = document.getElementById("scene");
+    const sceneW = scene ? scene.clientWidth : 380;
+
+    currentStudent.pets.forEach((pet, index) => {
+      const isBaby = isPetBaby(pet.born);
+      const x = sceneW * 0.2 + (index * 60) % (sceneW * 0.6);
+      const y = 45 + (index * 10) % 20;
+
+      petInstances.push({
+        index: index,
+        type: pet.type, // 'cat' หรือ 'dog'
+        born: pet.born,
+        sick: pet.sick,
+        x: x,
+        y: y,
+        targetX: x,
+        targetY: y,
+        isWalking: false
+      });
+
+      const el = document.createElement("div");
+      el.className = `avatar-container ${isBaby ? 'baby' : ''}`;
+      el.id = `pet_el_${index}`;
+      el.style.left = x + "px";
+      el.style.top = y + "%";
+      el.onclick = (e) => tapPet(e, index);
+
+      let bodyImg = pet.type === 'dog' ? 'dog_body.png' : 'cat_body.png';
+      let legImg = pet.type === 'dog' ? 'dog_leg.png' : 'cat_leg.png';
+
+      // ไอคอนสถานะ (เรียลำดับ: ป่วย -> หิวน้ำ -> หิวข้าว)
+      let iconHTML = '';
+      if(pet.sick) {
+        iconHTML = `<img src="sick.png" class="pet-icon-status" alt="ป่วย">`;
+      }
+
+      el.innerHTML = `
+        ${iconHTML}
+        <div class="pet-flip" id="pet_flip_${index}">
+          <div class="pet-assembly">
+            <img src="${legImg}" class="leg leg-back leg-back-left" alt="ขาหลังซ้าย">
+            <img src="${legImg}" class="leg leg-back leg-back-right" alt="ขาหลังขวา">
+            <img src="${bodyImg}" class="body-img" alt="${pet.type}">
+            <img src="${legImg}" class="leg leg-front leg-front-left" alt="ขาหน้าซ้าย">
+            <img src="${legImg}" class="leg leg-front leg-front-right" alt="ขาหน้าขวา">
+          </div>
+        </div>
+      `;
+      container.appendChild(el);
+    });
+  }
+
+  function isPetBaby(bornDateStr){
+    if(!bornDateStr) return false;
+    const born = new Date(bornDateStr);
+    const now = new Date();
+    const diffDays = (now - born) / (1000 * 60 * 60 * 24);
+    return diffDays < 3; // ถือกำเนิดยังไม่ถึง 3 วันถือว่าเป็นเด็ก
+  }
+
   function refreshHungerState(){
     const lastFed = localStorage.getItem(`pet_fed_${studentKey}`);
-    const container = document.getElementById("avatarContainer");
-    if(lastFed === todayStr()){
-      container.classList.remove("hungry");
-    } else {
-      container.classList.add("hungry");
+    const lastWater = localStorage.getItem(`pet_water_${studentKey}`);
+    const isWaterNeeded = (lastWater !== todayStr());
+    const isFoodNeeded = (lastFed !== todayStr());
+
+    petInstances.forEach((pInst, idx) => {
+      const el = document.getElementById(`pet_el_${idx}`);
+      if(!el) return;
+      // ลบไอคอนเก่าออกก่อน
+      const oldIcon = el.querySelector('.pet-icon-status');
+      if(oldIcon && !pInst.sick) oldIcon.remove();
+
+      let iconToUse = '';
+      if(pInst.sick) {
+        iconToUse = 'sick.png';
+      } else if(isWaterNeeded) {
+        iconToUse = 'drink.png';
+      } else if(isFoodNeeded) {
+        iconToUse = 'hungry.png';
+      }
+
+      if(iconToUse && !pInst.sick) {
+        const ic = document.createElement("img");
+        ic.src = iconToUse;
+        ic.className = "pet-icon-status";
+        el.insertBefore(ic, el.firstChild);
+      }
+    });
+  }
+
+  // ระบบซื้อสัตว์เลี้ยง
+  function buyPet(type){
+    if(wallet.coins < 500){
+      popMessage("เหรียญไม่พอจ้า! (ต้องการ 500 เหรียญ)");
+      return;
     }
+    wallet.coins -= 500;
+    currentStudent.pets.push({
+      type: type,
+      born: todayStr(),
+      sick: false
+    });
+    saveWalletAndData();
+    renderPetsDOM();
+    refreshHungerState();
+    closeModal('shopModal');
+    popMessage(`ซื้อสำเร็จ! ยินดีต้อนรับสมาชิกใหม่เข้าบ้าน`);
+  }
+
+  function giveWater(e){
+    e.stopPropagation();
+    const waterKey = `pet_water_${studentKey}`;
+    const lastWater = localStorage.getItem(waterKey);
+    if(lastWater === todayStr()){
+      popMessage("น้องๆ ดื่มน้ำสะอาดอิ่มแล้วจ้า");
+      return;
+    }
+    localStorage.setItem(waterKey, todayStr());
+    
+    // สัตว์ทุกตัวเดินมารวมกันที่ชามน้ำตรงกลางด้านล่าง
+    moveAllPetsToBowl();
+    refreshHungerState();
+    spawnHeartsForAll(2);
+    popMessage("เติมน้ำสะอาดให้แล้ว สัตว์ๆ ชื่นใจมาก!");
   }
 
   function feedPet(e){
     e.stopPropagation();
+    const lastWater = localStorage.getItem(`pet_water_${studentKey}`);
+    if(lastWater !== todayStr()){
+      popMessage("ต้องให้น้ำดื่มก่อน ให้น้องกินข้าวนะ!");
+      return;
+    }
+
     const key = `pet_fed_${studentKey}`;
     const lastFed = localStorage.getItem(key);
     if(lastFed === todayStr()){ popMessage("อิ่มแล้วนะ วันพรุ่งนี้ค่อยมาให้ใหม่"); return; }
+    
     let streak = parseInt(localStorage.getItem(`pet_streak_${studentKey}`) || "0");
     streak = (lastFed === yesterdayStr()) ? streak + 1 : 1;
     localStorage.setItem(`pet_streak_${studentKey}`, streak);
     localStorage.setItem(key, todayStr());
     document.getElementById("displayStreak").textContent = streak;
+
+    moveAllPetsToBowl();
     refreshHungerState();
-    spawnHearts();
+    spawnHeartsForAll(3);
     popMessage(`ให้อาหารแล้ว! ต่อเนื่อง ${streak} วัน`);
   }
 
-  function splashWater(e){ e.stopPropagation(); popMessage("เติมน้ำสะอาดให้แล้ว"); spawnHearts(2); }
-  function tapPet(){ spawnHearts(1); }
+  // สัตว์ทุกตัวเดินมารวมที่ชาม
+  function moveAllPetsToBowl(){
+    const scene = document.getElementById("scene");
+    const w = scene ? scene.clientWidth : 380;
+    const bowlX = w * 0.45;
 
-  function spawnHearts(count){
-    const n = count || 3;
-    const container = document.getElementById("avatarContainer");
-    for(let i=0;i<n;i++){
+    petInstances.forEach((pInst, idx) => {
+      pInst.targetX = bowlX + (Math.random() * 60 - 30);
+      pInst.targetY = 75;
+      animatePetMove(idx);
+    });
+  }
+
+  function animatePetMove(idx){
+    const pInst = petInstances[idx];
+    const el = document.getElementById(`pet_el_${idx}`);
+    const flip = document.getElementById(`pet_flip_${idx}`);
+    if(!el || !flip) return;
+
+    const currentLeft = parseFloat(el.style.left) || pInst.x;
+    if(pInst.targetX < currentLeft) {
+      el.classList.add("facing-left");
+    } else {
+      el.classList.remove("facing-left");
+    }
+
+    el.classList.add("walking");
+    el.style.transition = "left 1.8s ease-in-out, top 1.8s ease-in-out";
+    el.style.left = pInst.targetX + "px";
+    el.style.top = pInst.targetY + "%";
+    pInst.x = pInst.targetX;
+    pInst.y = pInst.targetY;
+
+    setTimeout(() => {
+      el.classList.remove("walking");
+    }, 1800);
+  }
+
+  function tapPet(e, idx){
+    e.stopPropagation();
+    spawnHearts(idx, 1);
+  }
+
+  function spawnHearts(idx, count){
+    const el = document.getElementById(`pet_el_${idx}`);
+    if(!el) return;
+    for(let i=0;i<count;i++){
       const h = document.createElement("div");
       h.className = "heart-pop";
       h.textContent = "💕";
-      h.style.left = (30 + Math.random()*50) + "px";
-      h.style.top = (0 + Math.random()*20) + "px";
+      h.style.left = (20 + Math.random()*40) + "px";
+      h.style.top = (0 + Math.random()*15) + "px";
       h.style.animationDelay = (i*0.12) + "s";
-      container.appendChild(h);
-      setTimeout(() => h.remove(), 1100 + i*120);
+      el.appendChild(h);
+      setTimeout(() => h.remove(), 1100);
     }
+  }
+
+  function spawnHeartsForAll(count){
+    petInstances.forEach((_, idx) => spawnHearts(idx, count));
   }
 
   let msgTimer = null;
@@ -444,51 +654,31 @@ html,body{
     msgTimer = setTimeout(() => { bubble.style.display = "none"; }, 1800);
   }
 
+  function openShopModal(){ document.getElementById("shopModal").style.display = "flex"; }
   function openMissionModal(){ document.getElementById("missionModal").style.display = "flex"; }
   function openRankModal(){ renderRankList(); document.getElementById("rankModal").style.display = "flex"; }
   function closeModal(id){ document.getElementById(id).style.display = "none"; }
 
-  function initPetPosition(){
-    const scene = document.getElementById("scene");
-    petX = scene.clientWidth * 0.28;
-    petY = 55;
-    const petEl = document.getElementById("avatarContainer");
-    petEl.style.left = petX + "px";
-    petEl.style.top = petY + "%";
-  }
+  // ระบบสุ่มเดินเล่นอิสระของสัตว์แต่ละตัว
+  function startWanderLoop(){
+    setInterval(() => {
+      const scene = document.getElementById("scene");
+      if(!scene) return;
+      const w = scene.clientWidth;
 
-  function scheduleWander(){
-    const scene = document.getElementById("scene");
-    const petEl = document.getElementById("avatarContainer");
-    const w = scene.clientWidth;
-    const petW = petEl.offsetWidth || 110;
-    
-    const minX = w * 0.05;
-    const maxX = Math.max(minX + 20, w * 0.85 - petW);
-    const targetX = minX + Math.random() * (maxX - minX);
+      petInstances.forEach((pInst, idx) => {
+        if(Math.random() < 0.4) { // สุ่มโอกาสเดิน
+          const minX = w * 0.05;
+          const maxX = Math.max(minX + 20, w * 0.85);
+          const targetX = minX + Math.random() * (maxX - minX);
+          const targetY = 35 + Math.random() * 30;
 
-    const minY = 32; 
-    const maxY = 68;
-    const targetY = minY + Math.random() * (maxY - minY);
-
-    const distance = Math.hypot(targetX - petX, targetY - petY);
-    const speed = 12; 
-    const duration = Math.max(3.0, distance / speed);
-
-    petEl.classList.toggle("facing-left", targetX < petX);
-    petEl.classList.add("walking");
-    petEl.style.transition = `left ${duration}s ease-in-out, top ${duration}s ease-in-out`;
-    petEl.style.left = targetX + "px";
-    petEl.style.top = targetY + "%";
-    
-    petX = targetX;
-    petY = targetY;
-
-    wanderTimer = setTimeout(() => {
-      petEl.classList.remove("walking");
-      const pause = 3000 + Math.random() * 4000;
-      wanderTimer = setTimeout(scheduleWander, pause);
-    }, duration * 1000);
+          pInst.targetX = targetX;
+          pInst.targetY = targetY;
+          animatePetMove(idx);
+        }
+      });
+    }, 4500);
   }
 
   function missionReward(scoreNum){
@@ -496,10 +686,7 @@ html,body{
   }
 
   function getClaimedSet(){
-    if(Array.isArray(currentStudent.ClaimedRewards)) {
-      return new Set(currentStudent.ClaimedRewards);
-    }
-    return new Set();
+    return Array.isArray(currentStudent.ClaimedRewards) ? new Set(currentStudent.ClaimedRewards) : new Set();
   }
 
   function saveClaimedSet(set){
@@ -508,7 +695,6 @@ html,body{
 
   function renderMissions(){
     const missions = currentStudent.ภารกิจ || [];
-    let passedMidterm = false;
     const claimedSet = getClaimedSet();
 
     if(missions.length === 0){
@@ -522,10 +708,6 @@ html,body{
       const missionName = m.name || "ภารกิจไม่มีชื่อ";
       const missionId = `quest_${idx}`;
 
-      let cls = "background:#fff4e6; border-left-color:#f39c12;";
-      if(passedMidterm) cls = "background:#f3e5f5; border-left-color:#8e44ad;";
-      if(missionName.includes("สอบกลางภาค")) passedMidterm = true;
-
       let footer = "";
       if(isDone){
         const reward = missionReward(scoreNum);
@@ -535,7 +717,7 @@ html,body{
           footer = `<button class="claim-btn" onclick="claimReward('${missionId}', ${reward.coins}, ${reward.exp})">รับรางวัล +${reward.coins} เหรียญ / +${reward.exp} EXP</button>`;
         }
       }
-      return `<div class="mission-item" style="${cls}"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'สำเร็จ':'รอ'}</span><b>${missionName}</b>${footer}</div>`;
+      return `<div class="mission-item"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'สำเร็จ':'รอ'}</span><b>${missionName}</b>${footer}</div>`;
     }).join('');
 
     document.getElementById("mission-list").innerHTML = html;
@@ -551,21 +733,17 @@ html,body{
     saveWalletAndData();
     renderMissions();
     popMessage(`ได้รับ +${coins} เหรียญ และ +${exp} EXP`);
-    spawnHearts(4);
+    spawnHeartsForAll(2);
   }
 
   function renderRankList(){
     if(!allStudentsData || allStudentsData.length === 0) return;
 
-    // จัดเรียงตามคะแนนจากมากไปน้อย
-    const sorted = [...allStudentsData].map(s => {
-      const sScore = parseFloat(s["คะแนน"]) || 0;
-      return {
-        id: String(s["รหัสนักเรียน"] || "").trim(),
-        name: s["ชื่อ"] || "-",
-        score: sScore
-      };
-    }).sort((a, b) => b.score - a.score);
+    const sorted = [...allStudentsData].map(s => ({
+      id: String(s["รหัสนักเรียน"] || "").trim(),
+      name: s["ชื่อ"] || "-",
+      score: parseFloat(s["คะแนน"]) || 0
+    })).sort((a, b) => b.score - a.score);
 
     const html = sorted.map((s, index) => {
       const isMe = (s.id === studentKey);
