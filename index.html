@@ -166,7 +166,6 @@ html,body{
 
 .center-stats{ display:flex; justify-content:center; }
 
-/* ป้ายแสดงเหรียญตรงกลางด้านบนแบบพรีเมียม */
 .coin-badge-premium {
   background: linear-gradient(135deg, #fffcf0 0%, #fff2c6 100%);
   border: 2px solid #f4c430;
@@ -233,6 +232,27 @@ html,body{
 .rank-score{ font-weight:700; color:var(--leaf); white-space:nowrap; }
 
 .toast-msg{ position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 68px); transform:translateX(-50%); background:#fff; padding:8px 16px; border-radius:14px; font-size:12px; color:#3b3a45; box-shadow:0 6px 14px rgba(0,0,0,0.25); z-index:8; font-weight:500; white-space:nowrap; display:none; }
+
+/* Grid เมนูอาหาร */
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 5px 0;
+}
+.food-card {
+  background: #fff;
+  border: 1px solid #e2d7c3;
+  border-radius: 14px;
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.food-card:active { transform: scale(0.95); background: #fff8eb; }
+.food-card img { width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px; }
+.food-card .f-name { font-size: 11px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.food-card .f-duration { font-size: 9px; color: var(--berry-dark); font-weight: 500; }
 </style>
 </head>
 <body>
@@ -251,7 +271,7 @@ html,body{
       <div id="petsContainer"></div>
 
       <div class="pet-props">
-        <button class="bowl-btn" onclick="feedPet(event)" aria-label="ให้อาหาร">
+        <button class="bowl-btn" onclick="openFoodModal(event)" aria-label="ให้อาหาร">
           <img src="bowl_feed.png" alt="ชามอาหาร">
         </button>
         <button class="bowl-btn" onclick="giveWater(event)" aria-label="เติมน้ำ">
@@ -286,7 +306,6 @@ html,body{
           </div>
         </div>
 
-        <!-- ป้ายแสดงเหรียญทองตรงกลางด้านบนแบบใหม่ (สวยงามขึ้น) -->
         <div class="center-stats">
           <div class="coin-badge-premium">
             <span>💰</span> <span class="num" id="displayCoins">0</span>
@@ -313,6 +332,19 @@ html,body{
       </div>
 
       <div class="toast-msg" id="toastMsg"></div>
+    </div>
+
+    <!-- Modal เลือกอาหาร -->
+    <div class="modal-overlay" id="foodModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">🍲 เลือกเมนูอาหารให้น้อง</h3>
+          <button class="close-btn" onclick="closeModal('foodModal')">✕</button>
+        </div>
+        <div class="food-grid" id="foodGridContainer">
+          <!-- สร้างผ่าน Javascript -->
+        </div>
+      </div>
     </div>
 
     <!-- Modal ร้านค้า -->
@@ -410,7 +442,23 @@ html,body{
 </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbwf8kNTaykdB2_FCRUe8zVyOBO7Awca3A3oJF0iuY7-GPQNsaiT3moPNhUOTIWuQlYIxA/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbxXIvY7lcpCbcrdzL174pgj8JB_1gPsmJZ6WmSUOJOBlItrM715gK_8eKxXpCw17Jc7QA/exec";
+
+  // รายการอาหาร 12 ชนิด พร้อมกำหนดระยะเวลาอิ่ม (หน่วยเป็นวัน)
+  const FOOD_LIST = [
+    { id: "custard.png", name: "คัสตาร์ด", days: 1 },
+    { id: "icecream.png", name: "ไอศกรีม", days: 1 },
+    { id: "pie.png", name: "พาย", days: 2 },
+    { id: "chocolate.png", name: "ช็อกโกแลต", days: 1 },
+    { id: "cake.png", name: "เค้ก", days: 2 },
+    { id: "bread.png", name: "ขนมปัง", days: 1 },
+    { id: "soup.png", name: "ซุปอุ่นๆ", days: 2 },
+    { id: "pizza.png", name: "พิซซ่า", days: 3 },
+    { id: "salad.png", name: "สลัดผัก", days: 1 },
+    { id: "grilchicken.png", name: "ไก่ย่าง", days: 3 },
+    { id: "pancake.png", name: "แพน케이크", days: 2 },
+    { id: "macaron.png", name: "มาการอง", days: 1 }
+  ];
 
   let currentStudent = null;
   let studentKey = null;
@@ -485,14 +533,29 @@ html,body{
       let rawMissions = safeParse(student["ภารกิจ"]);
       let filteredMissions = rawMissions.filter(m => String(m.name || "").trim().toLowerCase() !== "xp");
 
+      let rawLastFed = student["LastFed"];
+      let parsedLastFed = { food: "", water: "", validUntil: "" };
+      try {
+        if (rawLastFed) {
+          if (typeof rawLastFed === "string" && rawLastFed.startsWith("{")) {
+            parsedLastFed = JSON.parse(rawLastFed);
+          } else {
+            parsedLastFed.food = rawLastFed;
+          }
+        }
+      } catch(e) {
+        parsedLastFed = { food: "", water: "", validUntil: "" };
+      }
+
       currentStudent = {
         "รหัสนักเรียน": String(student["รหัสนักเรียน"]).trim(),
         "ชื่อ": student["ชื่อ"] || "-",
         "คะแนน": scoreVal,
         "coin": parseInt(student["coin"]) || 0,
-        "exp": parseInt(student["exp"]) || 0,
+        "xp": parseInt(student["xp"]) || 0,
         "pets": safeParse(student["pets"]), 
         "ClaimedRewards": safeParse(student["ClaimedRewards"]),
+        "lastFed": parsedLastFed,
         "ชั้น": student["ชั้น"] || "-",
         "ภารกิจ": filteredMissions
       };
@@ -511,6 +574,7 @@ html,body{
       renderPetsDOM();
       refreshHungerState();
       renderMissions();
+      renderFoodGrid();
       startWanderLoop();
 
     } catch (err) {
@@ -536,9 +600,16 @@ html,body{
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; 
   }
 
+  // ฟังก์ชันคำนวณวันหมดอายุความอิ่มตามจำนวนวันที่กำหนด
+  function calculateFutureDate(days) {
+    const d = getReferenceDate();
+    d.setDate(d.getDate() + days);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
   function loadWalletAndInventory(student){
     wallet.coins = parseInt(student["coin"]) || 0;
-    wallet.exp = parseInt(student["exp"]) || 0;
+    wallet.exp = parseInt(student["xp"]) || 0;
     inventory.vaccine = parseInt(localStorage.getItem(`inv_vaccine_${studentKey}`)) || 0;
     inventory.potion = parseInt(localStorage.getItem(`inv_potion_${studentKey}`)) || 0;
     
@@ -601,7 +672,8 @@ html,body{
       coin: wallet.coins,
       exp: wallet.exp,
       pets: JSON.stringify(currentStudent.pets || []),
-      claimed: JSON.stringify(currentStudent.ClaimedRewards || [])
+      claimed: JSON.stringify(currentStudent.ClaimedRewards || []),
+      lastFed: JSON.stringify(currentStudent.lastFed || { food: "", water: "", validUntil: "" })
     });
 
     fetch(API_URL, { method: "POST", body: payload }).catch(err => console.error("Save Error:", err));
@@ -621,7 +693,7 @@ html,body{
 
     currentStudent.pets.forEach(pet => {
       if(pet.sick === undefined) pet.sick = false;
-      if(!pet.born) pet.born = todayStr(); // กำหนดวันเกิดหากไม่มีข้อมูล
+      if(!pet.born) pet.born = todayStr(); 
     });
 
     if(lastSickCheck !== now && currentStudent.pets.length > 0) {
@@ -700,10 +772,12 @@ html,body{
   }
 
   function refreshHungerState(){
-    const lastFed = localStorage.getItem(`pet_fed_${studentKey}`);
-    const lastWater = localStorage.getItem(`pet_water_${studentKey}`);
+    const lastWater = currentStudent.lastFed ? currentStudent.lastFed.water : "";
+    const validUntil = currentStudent.lastFed ? currentStudent.lastFed.validUntil : "";
+    
     const isWaterNeeded = (lastWater !== todayStr());
-    const isFoodNeeded = (lastFed !== todayStr());
+    // เช็คว่ายังไม่หมดอายุความอิ่มตาม validUntil หรือไม่
+    const isFoodNeeded = !validUntil || todayStr() > validUntil;
 
     petInstances.forEach((pInst, idx) => {
       const el = document.getElementById(`pet_el_${idx}`);
@@ -838,43 +912,74 @@ html,body{
     e.stopPropagation();
     activeTool = null;
     updateHoldingUI();
-    const waterKey = `pet_water_${studentKey}`;
-    const lastWater = localStorage.getItem(waterKey);
+
+    const lastWater = currentStudent.lastFed ? currentStudent.lastFed.water : "";
     if(lastWater === todayStr()){
       popMessage("น้องๆ ดื่มน้ำสะอาดอิ่มแล้วจ้า");
       return;
     }
-    localStorage.setItem(waterKey, todayStr());
+
+    currentStudent.lastFed.water = todayStr();
+
     moveAllPetsToBowl();
     refreshHungerState();
     spawnHeartsForAll(2);
+    saveWalletAndData();
     popMessage("เติมน้ำสะอาดให้แล้ว สัตว์ๆ ชื่นใจมาก!");
   }
 
-  function feedPet(e){
+  // เปิด Modal เลือกรายการอาหาร 12 ชนิด
+  function openFoodModal(e){
     e.stopPropagation();
     activeTool = null;
     updateHoldingUI();
-    const lastWater = localStorage.getItem(`pet_water_${studentKey}`);
+
+    const lastWater = currentStudent.lastFed ? currentStudent.lastFed.water : "";
     if(lastWater !== todayStr()){
       popMessage("ต้องให้น้ำดื่มก่อน ให้น้องกินข้าวนะ!");
       return;
     }
 
-    const key = `pet_fed_${studentKey}`;
-    const lastFed = localStorage.getItem(key);
-    if(lastFed === todayStr()){ popMessage("อิ่มแล้วนะ วันพรุ่งนี้ค่อยมาให้ใหม่"); return; }
-    
+    const validUntil = currentStudent.lastFed ? currentStudent.lastFed.validUntil : "";
+    if(validUntil && todayStr() <= validUntil){ 
+      popMessage("น้องยังอิ่มอยู่ ยังไม่หิวในตอนนี้จ้า!"); 
+      return; 
+    }
+
+    document.getElementById("foodModal").style.display = "flex";
+  }
+
+  function renderFoodGrid(){
+    const container = document.getElementById("foodGridContainer");
+    if(!container) return;
+
+    container.innerHTML = FOOD_LIST.map(f => `
+      <div class="food-card" onclick="feedWithFood('${f.id}', ${f.days})">
+        <img src="${f.id}" alt="${f.name}">
+        <div class="f-name">${f.name}</div>
+        <div class="f-duration">อิ่ม ${f.days} วัน</div>
+      </div>
+    `).join('');
+  }
+
+  function feedWithFood(foodId, durationDays){
+    closeModal('foodModal');
+
+    const lastFedFood = currentStudent.lastFed ? currentStudent.lastFed.food : "";
     let streak = parseInt(localStorage.getItem(`pet_streak_${studentKey}`) || "0");
-    streak = (lastFed === yesterdayStr()) ? streak + 1 : 1;
+    streak = (lastFedFood === yesterdayStr()) ? streak + 1 : 1;
     localStorage.setItem(`pet_streak_${studentKey}`, streak);
-    localStorage.setItem(key, todayStr());
+    
+    currentStudent.lastFed.food = foodId;
+    currentStudent.lastFed.validUntil = calculateFutureDate(durationDays);
+    
     document.getElementById("displayStreak").textContent = streak;
 
     moveAllPetsToBowl();
     refreshHungerState();
     spawnHeartsForAll(3);
-    popMessage(`ให้อาหารแล้ว! ต่อเนื่อง ${streak} วัน`);
+    saveWalletAndData();
+    popMessage(`ให้อาหารสำเร็จ! อิ่มท้องไปอีก ${durationDays} วัน (ต่อเนื่อง ${streak} วัน)`);
   }
 
   function moveAllPetsToBowl(){
@@ -1038,7 +1143,7 @@ html,body{
   }
 
   function missionReward(taskIndex){
-    let coins = (taskIndex === 0) ? 800 : (200 + (taskIndex - 1) * 20);
+    let coins = (taskIndex === 0) ? 600 : (20 + (taskIndex - 1) * 10);
     let exp = 50 + (taskIndex * 5);
     return { coins: coins, exp: exp };
   }
@@ -1093,6 +1198,60 @@ html,body{
     renderMissions();
     popMessage(`ได้รับ +${coins} เหรียญ, +${exp} XP`);
     spawnHeartsForAll(2);
+  }
+
+function giveWater(e){
+    e.stopPropagation();
+    
+    // ➕ เพิ่มเงื่อนไขตรวจสอบว่ามีสัตว์เลี้ยงหรือไม่
+    if (!currentStudent.pets || currentStudent.pets.length === 0) {
+      popMessage("คุณยังไม่มีสัตว์เลี้ยงในบ้าน ต้องซื้อสัตว์เลี้ยงก่อนนะ!");
+      return;
+    }
+
+    activeTool = null;
+    updateHoldingUI();
+
+    const lastWater = currentStudent.lastFed ? currentStudent.lastFed.water : "";
+    if(lastWater === todayStr()){
+      popMessage("น้องๆ ดื่มน้ำสะอาดอิ่มแล้วจ้า");
+      return;
+    }
+
+    currentStudent.lastFed.water = todayStr();
+
+    moveAllPetsToBowl();
+    refreshHungerState();
+    spawnHeartsForAll(2);
+    saveWalletAndData();
+    popMessage("เติมน้ำสะอาดให้แล้ว สัตว์ๆ ชื่นใจมาก!");
+  }
+
+function openFoodModal(e){
+    e.stopPropagation();
+    
+    // ➕ เพิ่มเงื่อนไขตรวจสอบว่ามีสัตว์เลี้ยงหรือไม่
+    if (!currentStudent.pets || currentStudent.pets.length === 0) {
+      popMessage("คุณยังไม่มีสัตว์เลี้ยงในบ้าน ต้องซื้อสัตว์เลี้ยงก่อนนะ!");
+      return;
+    }
+
+    activeTool = null;
+    updateHoldingUI();
+
+    const lastWater = currentStudent.lastFed ? currentStudent.lastFed.water : "";
+    if(lastWater !== todayStr()){
+      popMessage("ต้องให้น้ำดื่มก่อน ให้น้องกินข้าวนะ!");
+      return;
+    }
+
+    const validUntil = currentStudent.lastFed ? currentStudent.lastFed.validUntil : "";
+    if(validUntil && todayStr() <= validUntil){ 
+      popMessage("น้องยังอิ่มอยู่ ยังไม่หิวในตอนนี้จ้า!"); 
+      return; 
+    }
+
+    document.getElementById("foodModal").style.display = "flex";
   }
 
   function renderRankList(rankingData){
