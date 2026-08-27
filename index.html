@@ -1565,7 +1565,7 @@ html,body{
   }
 
   function missionReward(taskIndex){
-    let coins = (taskIndex === 0) ? 600 : (20 + (taskIndex - 1) * 10);
+    let coins = (taskIndex === 0) ? 500 : (20 + (taskIndex - 1) * 1);
     let exp = 50 + (taskIndex * 5);
     return { coins: coins, exp: exp };
   }
