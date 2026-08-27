@@ -63,7 +63,6 @@ html,body{
 .body-img{ width:100%; height:100%; object-fit:contain; position:relative; z-index:2; animation:idle-bob 2.4s ease-in-out infinite; }
 .avatar-container.walking .body-img{ animation:walk-bob 0.8s ease-in-out infinite; }
 
-/* เอฟเฟกต์สัตว์ตาย (ซีดขาวดำ) */
 .avatar-container.dead .body-img,
 .avatar-container.dead .leg {
   filter: grayscale(100%) brightness(0.7);
@@ -186,9 +185,7 @@ html,body{
   box-shadow: 0 6px 16px rgba(244, 196, 48, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.8);
   animation: coin-glow 3s infinite alternate;
 }
-.coin-badge-premium span {
-  letter-spacing: 0.5px;
-}
+.coin-badge-premium span { letter-spacing: 0.5px; }
 @keyframes coin-glow {
   0% { box-shadow: 0 4px 12px rgba(244, 196, 48, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.8); }
   100% { box-shadow: 0 6px 18px rgba(244, 196, 48, 0.6), inset 0 2px 6px rgba(255, 255, 255, 0.95); }
@@ -214,7 +211,7 @@ html,body{
 .modal-title{ margin:0; font-size:17px; color:var(--ink); font-weight:600; }
 .close-btn{ background:var(--berry); color:#fff; border:none; border-radius:50%; width:28px; height:28px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:0 0 28px; }
 
-/* ── แท็บหมวดหมู่ร้านค้า ── */
+/* ── แท็บหมวดหมู่ร้านค้า & ภารกิจ ── */
 .shop-tabs {
   display: flex;
   gap: 5px;
@@ -288,7 +285,6 @@ html,body{
 .food-card .f-name { font-size: 11px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .food-card .f-duration { font-size: 9px; color: var(--berry-dark); font-weight: 500; }
 
-/* ── ระบบผสมพันธุ์ ── */
 .breed-slots-area {
   display: flex;
   justify-content: center;
@@ -310,47 +306,13 @@ html,body{
   overflow: hidden;
   transition: all 0.2s;
 }
-.breed-slot img {
-  width: 55px;
-  height: 55px;
-  object-fit: contain;
-}
-.breed-slot.filled {
-  border-style: solid;
-  border-color: var(--leaf);
-  background: #f0f9f4;
-}
-.breed-plus {
-  font-size: 20px;
-  font-weight: bold;
-  color: var(--ink-soft);
-}
-.breed-select-list {
-  max-height: 200px;
-  overflow-y: auto;
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.breed-candidate-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid #e2d7c3;
-  cursor: pointer;
-}
-.breed-candidate-item:active {
-  background: #fff4e6;
-}
-.breed-candidate-img {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-}
+.breed-slot img { width: 55px; height: 55px; object-fit: contain; }
+.breed-slot.filled { border-style: solid; border-color: var(--leaf); background: #f0f9f4; }
+.breed-plus { font-size: 20px; font-weight: bold; color: var(--ink-soft); }
+.breed-select-list { max-height: 200px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.breed-candidate-item { display: flex; align-items: center; gap: 10px; background: #fff; padding: 8px 12px; border-radius: 12px; border: 1px solid #e2d7c3; cursor: pointer; }
+.breed-candidate-item:active { background: #fff4e6; }
+.breed-candidate-img { width: 40px; height: 40px; object-fit: contain; }
 </style>
 </head>
 <body>
@@ -456,15 +418,12 @@ html,body{
         <div id="shopQuotaBox" style="text-align:center; font-size:12px; color:var(--ink-soft); margin-bottom:10px; background:#fff3e6; padding:6px; border-radius:10px;">
           โควตาสัตว์เลี้ยงปัจจุบัน: <b id="shopPetQuotaText" style="color:var(--berry-dark);">1/1 ตัว</b> (Lv.<span id="shopCurrentLevel">1</span>)
         </div>
-        
-        <!-- แท็บแบ่งหมวดหมู่ 4 หน้า -->
         <div class="shop-tabs">
           <button class="shop-tab-btn active" onclick="switchShopTab('pet', this)">🐾 สัตว์</button>
           <button class="shop-tab-btn" onclick="switchShopTab('medicine', this)">💊 ยา</button>
           <button class="shop-tab-btn" onclick="switchShopTab('food', this)">🍲 อาหาร</button>
           <button class="shop-tab-btn" onclick="switchShopTab('bg', this)">🏡 บ้านแมว</button>
         </div>
-
         <div id="shopListContainer"></div>
       </div>
     </div>
@@ -503,17 +462,11 @@ html,body{
           <button class="close-btn" onclick="closeModal('breedModal')">✕</button>
         </div>
         <p style="font-size:12px; color:var(--ink-soft); text-align:center; margin:0 0 10px;">เลือกสัตว์ 2 ตัวมาผสมพันธุ์เพื่อสุ่มรับสมาชิกใหม่!</p>
-        
         <div class="breed-slots-area">
-          <div class="breed-slot" id="breedSlot1" onclick="openBreedSelector(0)">
-            <span class="breed-plus">+</span>
-          </div>
+          <div class="breed-slot" id="breedSlot1" onclick="openBreedSelector(0)"><span class="breed-plus">+</span></div>
           <div style="font-size:24px; color:var(--berry);">+</div>
-          <div class="breed-slot" id="breedSlot2" onclick="openBreedSelector(1)">
-            <span class="breed-plus">+</span>
-          </div>
+          <div class="breed-slot" id="breedSlot2" onclick="openBreedSelector(1)"><span class="breed-plus">+</span></div>
         </div>
-
         <button id="startBreedBtn" onclick="executeBreed()" class="buy-btn" style="width:100%; padding:12px; font-size:14px; background:var(--berry); color:#fff; box-shadow:0 3px 0 var(--berry-dark); margin-top:5px;" disabled>เริ่มผสมพันธุ์ (ฟรี)</button>
       </div>
     </div>
@@ -529,16 +482,23 @@ html,body{
       </div>
     </div>
 
+    <!-- Modal ภารกิจ (ระบบ 2 แท็บ: วิชาหลัก / วิชาเพิ่มเติม) -->
     <div class="modal-overlay" id="missionModal">
       <div class="modal-card">
         <div class="modal-header">
           <h3 class="modal-title">📜 รายการภารกิจ</h3>
           <button class="close-btn" onclick="closeModal('missionModal')">✕</button>
         </div>
+        <!-- แท็บสลับหน้าภารกิจ -->
+        <div class="shop-tabs">
+          <button class="shop-tab-btn active" onclick="switchMissionTab('main', this)">📚 วิชาหลัก</button>
+          <button class="shop-tab-btn" onclick="switchMissionTab('extra', this)">📖 วิชาเพิ่มเติม</button>
+        </div>
         <div id="mission-list"></div>
       </div>
     </div>
 
+    <!-- Modal จัดอันดับ -->
     <div class="modal-overlay" id="rankModal">
       <div class="modal-card">
         <div class="modal-header">
@@ -553,18 +513,14 @@ html,body{
 </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbxk0XiHR1hmcOSXtfhD571hsajkTol17QmqCk71b6TJOrcYEyP2ikUayvkRewybaqMNrQ/exec";
+  // อัปเดต Web App URL ใหม่ตรงนี้เรียบร้อย[cite: 2]
+  const API_URL = "https://script.google.com/macros/s/AKfycbwOg8nkItdatrHKLqf-ieEmLd5-WqqkAFgob73uTNYiu_7dBzh86MNUYYYZ5Xi4wP-pkw/exec";
 
   let SHOP_ITEMS = [
-    // หมวด pet (สัตว์)
     { id: "cat", type: "pet", name: "น้องแมวสุดน่ารัก", price: 500, img: "cat_shop.png" },
     { id: "dog", type: "pet", name: "น้องหมาแสนรู้", price: 500, img: "dog_shop.png" },
-    
-    // หมวด medicine (ยา)
     { id: "vaccine", type: "medicine", name: "วัคซีนรักษาโรค", price: 150, img: "vaccine.png" },
     { id: "potion", type: "medicine", name: "ยาเร่งโตเต็มวัย", price: 200, img: "potion.png" },
-    
-    // หมวด food (อาหาร)
     { id: "custard.png", type: "food", name: "คัสตาร์ด", price: 50, days: 1, img: "custard.png" },
     { id: "icecream.png", type: "food", name: "ไอศกรีม", price: 50, days: 1, img: "icecream.png" },
     { id: "pie.png", type: "food", name: "พาย", price: 90, days: 2, img: "pie.png" },
@@ -577,8 +533,6 @@ html,body{
     { id: "grilchicken.png", type: "food", name: "ไก่ย่าง", price: 130, days: 3, img: "grilchicken.png" },
     { id: "pancake.png", type: "food", name: "แพนเค้ก", price: 90, days: 2, img: "pancake.png" },
     { id: "macaron.png", type: "food", name: "มาการอง", price: 70, days: 1, img: "macaron.png" },
-
-    // หมวด bg (บ้านแมว / ฉากหลังใหม่)
     { id: "BG.png", type: "bg", name: "ฉากหลังเริ่มต้น", price: 0, img: "BG.png" },
     { id: "pinkBG.png", type: "bg", name: "ฉากหลังสีชมพูหวาน", price: 1000, img: "pinkBG.png" },
     { id: "grayBG.png", type: "bg", name: "ฉากหลังเทาสุดเท่", price: 1500, img: "grayBG.png" },
@@ -586,6 +540,8 @@ html,body{
   ];
 
   let currentStudent = null;
+  let extraStudentMission = null; // เก็บข้อมูลภารกิจวิชาเพิ่มเติม (รหัสนักเรียน+a)
+  let currentMissionTab = 'main'; // แท็บภารกิจปัจจุบัน ('main' หรือ 'extra')
   let studentKey = null;
   let wallet = { coins:0, exp:0, level:1 };
   let inventory = { vaccine: 0, potion: 0 };
@@ -596,19 +552,13 @@ html,body{
   let currentShopTab = 'pet';
   let currentBackground = 'BG.png';
 
-  // ตัวแปรสำหรับระบบผสมพันธุ์
   let breedSelectedPets = [null, null];
   let activeBreedSlotIndex = 0;
 
   function safeParse(value, fallback = []) {
     if (Array.isArray(value)) return value;
     if (!value) return fallback;
-    try {
-      const parsed = JSON.parse(value);
-      return parsed ?? fallback;
-    } catch(e) {
-      return fallback;
-    }
+    try { const parsed = JSON.parse(value); return parsed ?? fallback; } catch(e) { return fallback; }
   }
 
   async function fetchWithRetry(url, options = {}, retries = 3, delay = 1500, onRetry = null) {
@@ -630,10 +580,7 @@ html,body{
     const p = document.getElementById("password").value.trim();
     const loginBtn = document.getElementById("loginBtn");
 
-    if (!u || !p) {
-      alert("กรุณากรอกรหัสนักเรียนและรหัสผ่าน!");
-      return;
-    }
+    if (!u || !p) { alert("กรุณากรอกรหัสนักเรียนและรหัสผ่าน!"); return; }
 
     loginBtn.disabled = true;
     loginBtn.textContent = "กำลังเชื่อมต่อกับเซิร์ฟเวอร์...";
@@ -654,24 +601,18 @@ html,body{
       if (data.serverTime) serverTimeReference = new Date(data.serverTime);
 
       const student = data.student;
+      extraStudentMission = data.extraMission || null; // รับข้อมูลวิชาเพิ่มเติม (รหัสนักเรียน+a) จาก Google Apps Script
+      
       const scoreVal = parseFloat(student["คะแนน"]) || 0;
-
-      let rawMissions = safeParse(student["ภารกิจ"]);
-      let filteredMissions = rawMissions.filter(m => String(m.name || "").trim().toLowerCase() !== "xp");
+      let filteredMissions = safeParse(student["ภารกิจ"]).filter(m => String(m.name || "").trim().toLowerCase() !== "xp");
 
       let rawLastFed = student["LastFed"];
       let parsedLastFed = { food: "", water: "", validUntil: "" };
       try {
         if (rawLastFed) {
-          if (typeof rawLastFed === "string" && rawLastFed.startsWith("{")) {
-            parsedLastFed = JSON.parse(rawLastFed);
-          } else {
-            parsedLastFed.food = rawLastFed;
-          }
+          parsedLastFed = typeof rawLastFed === "string" && rawLastFed.startsWith("{") ? JSON.parse(rawLastFed) : { food: rawLastFed, water: "", validUntil: "" };
         }
-      } catch(e) {
-        parsedLastFed = { food: "", water: "", validUntil: "" };
-      }
+      } catch(e) { parsedLastFed = { food: "", water: "", validUntil: "" }; }
 
       currentStudent = {
         "รหัสนักเรียน": String(student["รหัสนักเรียน"]).trim(),
@@ -680,22 +621,26 @@ html,body{
         "coin": parseInt(student["coin"]) || 0,
         "xp": parseInt(student["xp"]) || 0,
         "pets": safeParse(student["pets"]), 
-        "ClaimedRewards": safeParse(student["ClaimedRewards"]),
+        "ClaimedRewards": safeParse(student["ClaimedRewards"]), // ของวิชาหลัก
         "lastFed": parsedLastFed,
         "ชั้น": student["ชั้น"] || "-",
         "ภารกิจ": filteredMissions,
         "items": safeParse(student["items"])
       };
+      
+      // จัดการแปลงโครงสร้าง extraStudentMission ให้ ClaimedRewards รองรับแยกอิสระ
+      if (extraStudentMission) {
+        extraStudentMission.ClaimedRewards = safeParse(extraStudentMission.ClaimedRewards);
+        let extraFilteredMissions = safeParse(extraStudentMission.ภารกิจ).filter(m => String(m.name || "").trim().toLowerCase() !== "xp");
+        extraStudentMission.ภารกิจ = extraFilteredMissions;
+      }
+
       studentKey = currentStudent["รหัสนักเรียน"];
       purchasedItems = currentStudent.items;
       
       const savedBg = localStorage.getItem(`pet_bg_${studentKey}`);
-      if(savedBg) {
-        currentBackground = savedBg;
-      } else {
-        currentBackground = "BG.png";
-        if(!purchasedItems.includes("BG.png")) purchasedItems.push("BG.png");
-      }
+      currentBackground = savedBg ? savedBg : "BG.png";
+      if(!purchasedItems.includes("BG.png")) purchasedItems.push("BG.png");
       applyBackground(currentBackground);
 
       document.getElementById("loginPage").style.display = "none";
@@ -724,70 +669,32 @@ html,body{
   }
 
   function getReferenceDate() { return serverTimeReference; }
-
-  function todayStr(){ 
-    const d = getReferenceDate(); 
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; 
-  }
-
-  function yesterdayStr(){ 
-    const d = new Date(getReferenceDate().getTime()); 
-    d.setDate(d.getDate()-1); 
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; 
-  }
-
-  function calculateFutureDate(days) {
-    const d = getReferenceDate();
-    d.setDate(d.getDate() + days);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-
-  function diffDays(dateStr1, dateStr2) {
-    const d1 = new Date(dateStr1);
-    const d2 = new Date(dateStr2);
-    return Math.floor((d1 - d2) / (1000 * 60 * 60 * 24));
-  }
+  function todayStr(){ const d = getReferenceDate(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  function yesterdayStr(){ const d = new Date(getReferenceDate().getTime()); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  function calculateFutureDate(days) { const d = getReferenceDate(); d.setDate(d.getDate() + days); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  function diffDays(dateStr1, dateStr2) { return Math.floor((new Date(dateStr1) - new Date(dateStr2)) / (1000 * 60 * 60 * 24)); }
 
   function loadWalletAndInventory(student){
     wallet.coins = parseInt(student["coin"]) || 0;
     wallet.exp = parseInt(student["xp"]) || 0;
     inventory.vaccine = parseInt(localStorage.getItem(`inv_vaccine_${studentKey}`)) || 0;
     inventory.potion = parseInt(localStorage.getItem(`inv_potion_${studentKey}`)) || 0;
-    
     updateLevelFromExp();
     document.getElementById("displayStreak").textContent = localStorage.getItem(`pet_streak_${studentKey}`) || 0;
     updateWalletUI();
   }
 
   function updateLevelFromExp() {
-    let exp = wallet.exp;
-    let lvl = 1;
-    let requiredExp = 300;
-    let increment = 320; 
-
-    if (exp < requiredExp) {
-      wallet.level = 1;
-    } else {
+    let exp = wallet.exp, lvl = 1, requiredExp = 300, increment = 320; 
+    if (exp >= requiredExp) {
       lvl = 2;
-      while (exp >= requiredExp) {
-        requiredExp += increment;
-        increment += 35; 
-        lvl++;
-      }
+      while (exp >= requiredExp) { requiredExp += increment; increment += 35; lvl++; }
       wallet.level = lvl - 1;
-    }
+    } else { wallet.level = 1; }
 
-    let prevReq = 0;
-    let currReq = 300;
-    let inc = 320;
-    for(let i = 1; i < wallet.level; i++) {
-      prevReq = currReq;
-      currReq += inc;
-      inc += 35;
-    }
-
-    const currentLevelProgress = exp - prevReq;
-    const spanNeeded = currReq - prevReq;
+    let prevReq = 0, currReq = 300, inc = 320;
+    for(let i = 1; i < wallet.level; i++) { prevReq = currReq; currReq += inc; inc += 35; }
+    const currentLevelProgress = exp - prevReq, spanNeeded = currReq - prevReq;
     const percent = Math.min(100, Math.max(0, (currentLevelProgress / spanNeeded) * 100));
 
     document.getElementById("displayLevel").textContent = wallet.level;
@@ -796,10 +703,9 @@ html,body{
     document.getElementById("xpFillBar").style.width = percent + "%";
   }
 
-  function getMaxAllowedPets() {
-    return Math.floor((wallet.level - 1) / 3) + 1;
-  }
+  function getMaxAllowedPets() { return Math.floor((wallet.level - 1) / 3) + 1; }
 
+  // ── ฟังก์ชันบันทึกข้อมูล (ส่งข้อมูล ClaimedRewards แยกวิชาหลักและวิชาเพิ่มเติมกลับไปที่ Backend) ──
   function saveWalletAndData(){
     localStorage.setItem(`inv_vaccine_${studentKey}`, inventory.vaccine);
     localStorage.setItem(`inv_potion_${studentKey}`, inventory.potion);
@@ -812,10 +718,10 @@ html,body{
       xp: wallet.exp,
       pets: JSON.stringify(currentStudent.pets || []),
       claimed: JSON.stringify(currentStudent.ClaimedRewards || []),
+      extraClaimed: extraStudentMission ? JSON.stringify(extraStudentMission.ClaimedRewards || []) : JSON.stringify([]), // ส่งข้อมูลรางวัลวิชาเพิ่มเติม
       lastFed: JSON.stringify(currentStudent.lastFed || { food: "", water: "", validUntil: "" }),
       items: JSON.stringify(purchasedItems || [])
     });
-
     fetch(API_URL, { method: "POST", body: payload }).catch(err => console.error("Save Error:", err));
   }
 
@@ -836,18 +742,8 @@ html,body{
       if(pet.sick === undefined) pet.sick = false;
       if(pet.dead === undefined) pet.dead = false;
       if(!pet.born) pet.born = nowStr; 
-
-      if (lastWater && !pet.dead) {
-        if (diffDays(nowStr, lastWater) >= 3) {
-          pet.sick = true;
-        }
-      }
-
-      if (validUntil && !pet.dead) {
-        if (diffDays(nowStr, validUntil) >= 5) {
-          pet.dead = true;
-        }
-      }
+      if (lastWater && !pet.dead && diffDays(nowStr, lastWater) >= 3) pet.sick = true;
+      if (validUntil && !pet.dead && diffDays(nowStr, validUntil) >= 5) pet.dead = true;
     });
   }
 
@@ -863,27 +759,14 @@ html,body{
     const container = document.getElementById("petsContainer");
     container.innerHTML = "";
     petInstances = [];
-
-    const scene = document.getElementById("scene");
-    const sceneW = scene ? scene.clientWidth : 380;
+    const sceneW = document.getElementById("scene") ? document.getElementById("scene").clientWidth : 380;
 
     currentStudent.pets.forEach((pet, index) => {
       const isBaby = isPetBaby(pet.born);
       const x = sceneW * 0.2 + (index * 60) % (sceneW * 0.6);
       const y = 45 + (index * 10) % 20;
 
-      petInstances.push({
-        index: index,
-        type: pet.type,
-        born: pet.born,
-        sick: pet.sick,
-        dead: pet.dead,
-        x: x,
-        y: y,
-        targetX: x,
-        targetY: y,
-        isWalking: false
-      });
+      petInstances.push({ index: index, type: pet.type, born: pet.born, sick: pet.sick, dead: pet.dead, x: x, y: y, targetX: x, targetY: y, isWalking: false });
 
       const el = document.createElement("div");
       el.className = `avatar-container ${isBaby ? 'baby' : ''} ${pet.dead ? 'dead' : ''}`;
@@ -892,17 +775,8 @@ html,body{
       el.style.top = y + "%";
       el.onclick = (e) => tapPet(e, index);
 
-      let bodyImg = getPetImage(pet.type, false);
-      let legImg = getPetImage(pet.type, true);
-
-      let iconHTML = '';
-      if(pet.dead) {
-        iconHTML = `<img src="ghost.png" class="pet-icon-status" alt="วิญญาณ">`;
-      } else if(pet.sick) {
-        iconHTML = `<img src="sick.png" class="pet-icon-status" alt="ป่วย">`;
-      } else if(isBaby) {
-        iconHTML = `<img src="baby.png" class="pet-icon-status" alt="เด็ก">`;
-      }
+      let bodyImg = getPetImage(pet.type, false), legImg = getPetImage(pet.type, true);
+      let iconHTML = pet.dead ? `<img src="ghost.png" class="pet-icon-status" alt="วิญญาณ">` : (pet.sick ? `<img src="sick.png" class="pet-icon-status" alt="ป่วย">` : (isBaby ? `<img src="baby.png" class="pet-icon-status" alt="เด็ก">` : ''));
 
       el.innerHTML = `
         ${iconHTML}
@@ -922,16 +796,12 @@ html,body{
 
   function isPetBaby(bornDateStr){
     if(!bornDateStr) return false;
-    const born = new Date(bornDateStr);
-    const now = getReferenceDate();
-    const diffDaysVal = (now - born) / (1000 * 60 * 60 * 24);
-    return diffDaysVal < 3;
+    return (getReferenceDate() - new Date(bornDateStr)) / (1000 * 60 * 60 * 24) < 3;
   }
 
   function refreshHungerState(){
     const lastWater = currentStudent.lastFed ? currentStudent.lastFed.water : "";
     const validUntil = currentStudent.lastFed ? currentStudent.lastFed.validUntil : "";
-    
     const isWaterNeeded = (lastWater !== todayStr());
     const isFoodNeeded = !validUntil || todayStr() > validUntil;
 
@@ -941,25 +811,10 @@ html,body{
       const oldIcon = el.querySelector('.pet-icon-status');
       if(oldIcon) oldIcon.remove();
 
-      let iconToUse = '';
-      const isBaby = isPetBaby(pInst.born);
-
-      if(pInst.dead) {
-        iconToUse = 'ghost.png';
-      } else if(pInst.sick) {
-        iconToUse = 'sick.png';
-      } else if(isWaterNeeded) {
-        iconToUse = 'drink.png';
-      } else if(isFoodNeeded) {
-        iconToUse = 'hungry.png';
-      } else if(isBaby) {
-        iconToUse = 'baby.png';
-      }
-
+      let iconToUse = pInst.dead ? 'ghost.png' : (pInst.sick ? 'sick.png' : (isWaterNeeded ? 'drink.png' : (isFoodNeeded ? 'hungry.png' : (isPetBaby(pInst.born) ? 'baby.png' : ''))));
       if(iconToUse) {
         const ic = document.createElement("img");
-        ic.src = iconToUse;
-        ic.className = "pet-icon-status";
+        ic.src = iconToUse; ic.className = "pet-icon-status";
         el.insertBefore(ic, el.firstChild);
       }
     });
@@ -967,160 +822,71 @@ html,body{
 
   function updateHoldingUI() {
     const badge = document.getElementById("holdingStatusBadge");
-    const iconImg = document.getElementById("holdingIconImg");
-    const textEl = document.getElementById("holdingText");
-
-    if (!activeTool) {
-      badge.style.display = "none";
-      return;
-    }
-
+    if (!activeTool) { badge.style.display = "none"; return; }
     badge.style.display = "flex";
-    if (activeTool === 'vaccine') {
-      iconImg.src = "vaccine.png";
-      textEl.textContent = "กำลังถือวัคซีน";
-    } else if (activeTool === 'potion') {
-      iconImg.src = "potion.png";
-      textEl.textContent = "กำลังถือยาเร่งโต";
-    }
+    document.getElementById("holdingIconImg").src = `${activeTool}.png`;
+    document.getElementById("holdingText").textContent = activeTool === 'vaccine' ? "กำลังถือวัคซีน" : "กำลังถือยาเร่งโต";
   }
 
-  function cancelHoldingTool(e) {
-    e.stopPropagation();
-    activeTool = null;
-    updateHoldingUI();
-    popMessage("ยกเลิกการถือไอเทมแล้ว");
-  }
+  function cancelHoldingTool(e) { e.stopPropagation(); activeTool = null; updateHoldingUI(); popMessage("ยกเลิกการถือไอเทมแล้ว"); }
 
   function switchShopTab(tabType, btnEl) {
     currentShopTab = tabType;
-    document.querySelectorAll('.shop-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('#shopModal .shop-tab-btn').forEach(btn => btn.classList.remove('active'));
     btnEl.classList.add('active');
-    
-    const quotaBox = document.getElementById("shopQuotaBox");
-    if(tabType === 'pet') {
-      quotaBox.style.display = "block";
-      updateShopQuotaDisplay();
-    } else {
-      quotaBox.style.display = "none";
-    }
-    
+    document.getElementById("shopQuotaBox").style.display = (tabType === 'pet') ? "block" : "none";
+    if(tabType === 'pet') updateShopQuotaDisplay();
     renderShopList(tabType);
   }
 
+  function switchMissionTab(tabType, btnEl) {
+    currentMissionTab = tabType;
+    document.querySelectorAll('#missionModal .shop-tab-btn').forEach(btn => btn.classList.remove('active'));
+    btnEl.classList.add('active');
+    renderMissions();
+  }
+
   function buyItem(itemObj){
-    if(itemObj.type === 'pet'){
-      if(wallet.coins < itemObj.price){
-        popMessage("เหรียญไม่พอจ้า!");
-        return;
-      }
-      const currentPetCount = currentStudent.pets.length;
-      const maxPets = getMaxAllowedPets();
-      if(currentPetCount >= maxPets){
-        popMessage(`เลเวล ${wallet.level} เลี้ยงสัตว์ได้สูงสุด ${maxPets} ตัวเท่านั้น!`);
-        return;
-      }
+    if(itemObj.type === 'pet' || itemObj.type === 'medicine' || itemObj.type === 'food' || (itemObj.type === 'bg' && !purchasedItems.includes(itemObj.id))){
+      if(wallet.coins < itemObj.price){ popMessage("เหรียญไม่พอจ้า!"); return; }
+      if(itemObj.type === 'pet' && currentStudent.pets.length >= getMaxAllowedPets()){ popMessage(`เลเวล ${wallet.level} เลี้ยงสัตว์ได้สูงสุด ${getMaxAllowedPets()} ตัวเท่านั้น!`); return; }
+      
       wallet.coins -= itemObj.price;
-      currentStudent.pets.push({
-        type: itemObj.id,
-        born: todayStr(),
-        sick: false,
-        dead: false
-      });
-      renderPetsDOM();
-      refreshHungerState();
-      updateShopQuotaDisplay();
-      popMessage(`ซื้อสัตว์เลี้ยงสำเร็จ! ยินดีต้อนรับสมาชิกใหม่`);
+      if(itemObj.type === 'pet') currentStudent.pets.push({ type: itemObj.id, born: todayStr(), sick: false, dead: false });
+      else if(itemObj.type === 'medicine') inventory[itemObj.id]++;
+      else if(!purchasedItems.includes(itemObj.id)) purchasedItems.push(itemObj.id);
+
+      popMessage("ซื้อสำเร็จ!");
+      if(itemObj.type === 'pet') { renderPetsDOM(); refreshHungerState(); updateShopQuotaDisplay(); }
+      if(itemObj.type === 'food') renderFoodGrid();
       saveWalletAndData();
       renderShopList(currentShopTab);
       return;
     }
 
-    if(itemObj.type === 'medicine'){
-      if(wallet.coins < itemObj.price){
-        popMessage("เหรียญไม่พอจ้า!");
-        return;
-      }
-      wallet.coins -= itemObj.price;
-      inventory[itemObj.id]++;
-      popMessage(`ซื้อไอเทมสำเร็จ! บันทึกลงกระเป๋าแล้ว`);
-      saveWalletAndData();
-      renderShopList(currentShopTab);
-      return;
-    }
-
-    if(itemObj.type === 'food'){
-      if(wallet.coins < itemObj.price){
-        popMessage("เหรียญไม่พอจ้า!");
-        return;
-      }
-      wallet.coins -= itemObj.price;
-      if(!purchasedItems.includes(itemObj.id)) {
-        purchasedItems.push(itemObj.id);
-      }
-      popMessage(`ซื้อเมนู ${itemObj.name} สำเร็จ! พร้อมให้น้องทานแล้ว`);
-      renderFoodGrid();
-      saveWalletAndData();
-      renderShopList(currentShopTab);
-      return;
-    }
-
-    if(itemObj.type === 'bg'){
-      if(purchasedItems.includes(itemObj.id)) {
-        currentBackground = itemObj.id;
-        localStorage.setItem(`pet_bg_${studentKey}`, currentBackground);
-        applyBackground(currentBackground);
-        popMessage(`เปลี่ยนฉากหลังเป็น ${itemObj.name} แล้ว!`);
-        renderShopList(currentShopTab);
-        return;
-      }
-
-      if(wallet.coins < itemObj.price){
-        popMessage("เหรียญไม่พอจ้า!");
-        return;
-      }
-
-      wallet.coins -= itemObj.price;
-      if(!purchasedItems.includes(itemObj.id)) {
-        purchasedItems.push(itemObj.id);
-      }
+    if(itemObj.type === 'bg' && purchasedItems.includes(itemObj.id)){
       currentBackground = itemObj.id;
       localStorage.setItem(`pet_bg_${studentKey}`, currentBackground);
       applyBackground(currentBackground);
-      popMessage(`ซื้อและเปลี่ยนฉากหลังสำเร็จ!`);
-      saveWalletAndData();
+      popMessage(`เปลี่ยนฉากหลังเป็น ${itemObj.name} แล้ว!`);
       renderShopList(currentShopTab);
     }
   }
 
   function applyBackground(bgFilename) {
     const sceneEl = document.getElementById("scene");
-    if(sceneEl) {
-      sceneEl.style.backgroundImage = `url("${bgFilename}")`;
-    }
+    if(sceneEl) sceneEl.style.backgroundImage = `url("${bgFilename}")`;
   }
 
   function renderShopList(tabType = 'pet'){
     const container = document.getElementById("shopListContainer");
     if(!container) return;
-
-    const filteredItems = SHOP_ITEMS.filter(item => item.type === tabType);
-
-    container.innerHTML = filteredItems.map(item => {
-      let isOwnedOrEquipped = false;
-      let btnText = "ซื้อ";
-      let btnClass = "buy-btn";
-
+    container.innerHTML = SHOP_ITEMS.filter(item => item.type === tabType).map(item => {
+      let btnText = "ซื้อ", btnClass = "buy-btn";
       if(item.type === 'bg') {
-        if(currentBackground === item.id) {
-          isOwnedOrEquipped = true;
-          btnText = "ใช้อยู่";
-          btnClass = "buy-btn equipped";
-        } else if(purchasedItems.includes(item.id)) {
-          btnText = "ใช้";
-        }
+        if(currentBackground === item.id) { btnText = "ใช้อยู่"; btnClass = "buy-btn equipped"; }
+        else if(purchasedItems.includes(item.id)) { btnText = "ใช้"; }
       }
-
       return `
         <div class="shop-item">
           <img src="${item.img}" class="shop-img" alt="${item.name}">
@@ -1135,49 +901,25 @@ html,body{
   }
 
   function updateShopQuotaDisplay() {
-    const quotaText = document.getElementById("shopPetQuotaText");
-    const currentLvlText = document.getElementById("shopCurrentLevel");
+    const quotaText = document.getElementById("shopPetQuotaText"), currentLvlText = document.getElementById("shopCurrentLevel");
     if(quotaText && currentLvlText) {
-      const currentCount = currentStudent.pets.length;
-      const maxAllowed = getMaxAllowedPets();
-      quotaText.textContent = `${currentCount}/${maxAllowed} ตัว`;
+      quotaText.textContent = `${currentStudent.pets.length}/${getMaxAllowedPets()} ตัว`;
       currentLvlText.textContent = wallet.level;
     }
   }
 
-  function openBagModal(){
-    updateWalletUI();
-    document.getElementById("bagModal").style.display = "flex";
-  }
+  function openBagModal(){ updateWalletUI(); document.getElementById("bagModal").style.display = "flex"; }
 
   function useItemFromBag(itemType){
-    if(itemType === 'vaccine'){
-      if(inventory.vaccine <= 0){
-        popMessage("วัคซีนในกระเป๋าหมดแล้ว ไปซื้อเพิ่มที่ร้านค้าได้นะ!");
-        return;
-      }
-      activeTool = 'vaccine';
-      closeModal('bagModal');
-      updateHoldingUI();
-      popMessage("💉 เลือกตัวน้องที่ต้องการฉีดยาเลย!");
-    } else if(itemType === 'potion'){
-      if(inventory.potion <= 0){
-        popMessage("ยาเร่งโตในกระเป๋าหมดแล้ว ไปซื้อเพิ่มที่ร้านค้าได้นะ!");
-        return;
-      }
-      activeTool = 'potion';
-      closeModal('bagModal');
-      updateHoldingUI();
-      popMessage("🧪 เลือกตัวน้องที่ต้องการเร่งโตเลย!");
-    }
+    if(inventory[itemType] <= 0){ popMessage("ไอเทมในกระเป๋าหมดแล้ว!"); return; }
+    activeTool = itemType;
+    closeModal('bagModal');
+    updateHoldingUI();
+    popMessage(itemType === 'vaccine' ? "💉 เลือกตัวน้องที่ต้องการฉีดยาเลย!" : "🧪 เลือกตัวน้องที่ต้องการเร่งโตเลย!");
   }
 
-  // ── ฟังก์ชันระบบผสมพันธุ์ ──
   function openBreedModal() {
-    if (!currentStudent.pets || currentStudent.pets.length < 2) {
-      popMessage("คุณต้องมีสัตว์เลี้ยงอย่างน้อย 2 ตัวจึงจะสามารถผสมพันธุ์ได้!");
-      return;
-    }
+    if (currentStudent.pets.length < 2) { popMessage("คุณต้องมีสัตว์เลี้ยงอย่างน้อย 2 ตัวจึงจะสามารถผสมพันธุ์ได้!"); return; }
     breedSelectedPets = [null, null];
     updateBreedSlotsUI();
     document.getElementById("breedModal").style.display = "flex";
@@ -1186,90 +928,51 @@ html,body{
   function openBreedSelector(slotIndex) {
     activeBreedSlotIndex = slotIndex;
     const listEl = document.getElementById("breedSelectorList");
-    
-    // กรองสัตว์ที่ไม่ตาย และไม่ซ้ำกับตัวที่ถูกเลือกไปแล้วในอีกช่อง
     const otherSlotPetIndex = slotIndex === 0 ? breedSelectedPets[1] : breedSelectedPets[0];
-
     let html = "";
+
     currentStudent.pets.forEach((pet, idx) => {
-      if (pet.dead) return;
-      if (idx === otherSlotPetIndex) return;
-
+      if (pet.dead || idx === otherSlotPetIndex) return;
       const shopItemRef = SHOP_ITEMS.find(si => si.id === pet.type);
-      const petName = shopItemRef ? shopItemRef.name : pet.type;
-      const petImg = getPetImage(pet.type, false);
-
       html += `
         <div class="breed-candidate-item" onclick="selectPetForBreed(${idx})">
-          <img src="${petImg}" class="breed-candidate-img" alt="${pet.type}">
+          <img src="${getPetImage(pet.type, false)}" class="breed-candidate-img" alt="${pet.type}">
           <div>
-            <div style="font-weight:600; font-size:13px; color:var(--ink);">${petName}</div>
+            <div style="font-weight:600; font-size:13px; color:var(--ink);">${shopItemRef ? shopItemRef.name : pet.type}</div>
             <div style="font-size:10px; color:var(--ink-soft);">เกิดเมื่อ: ${pet.born}</div>
           </div>
         </div>
       `;
     });
-
-    if (html === "") {
-      html = `<div style="text-align:center; padding:15px; color:var(--ink-soft); font-size:12px;">ไม่มีสัตว์เลี้ยงที่สามารถเลือกได้</div>`;
-    }
-
-    listEl.innerHTML = html;
+    listEl.innerHTML = html || `<div style="text-align:center; padding:15px; color:var(--ink-soft); font-size:12px;">ไม่มีสัตว์เลี้ยงที่สามารถเลือกได้</div>`;
     document.getElementById("breedSelectorModal").style.display = "flex";
   }
 
-  function selectPetForBreed(petIndex) {
-    breedSelectedPets[activeBreedSlotIndex] = petIndex;
-    closeModal('breedSelectorModal');
-    updateBreedSlotsUI();
-  }
+  function selectPetForBreed(petIndex) { breedSelectedPets[activeBreedSlotIndex] = petIndex; closeModal('breedSelectorModal'); updateBreedSlotsUI(); }
 
   function updateBreedSlotsUI() {
     for (let i = 0; i < 2; i++) {
-      const slotEl = document.getElementById(`breedSlot${i+1}`);
-      const petIdx = breedSelectedPets[i];
-
+      const slotEl = document.getElementById(`breedSlot${i+1}`), petIdx = breedSelectedPets[i];
       if (petIdx !== null && currentStudent.pets[petIdx]) {
-        const pet = currentStudent.pets[petIdx];
-        const petImg = getPetImage(pet.type, false);
         slotEl.className = "breed-slot filled";
-        slotEl.innerHTML = `<img src="${petImg}" alt="${pet.type}">`;
+        slotEl.innerHTML = `<img src="${getPetImage(currentStudent.pets[petIdx].type, false)}" alt="">`;
       } else {
         slotEl.className = "breed-slot";
         slotEl.innerHTML = `<span class="breed-plus">+</span>`;
       }
     }
-
     const startBtn = document.getElementById("startBreedBtn");
-    if (breedSelectedPets[0] !== null && breedSelectedPets[1] !== null) {
-      startBtn.disabled = false;
-      startBtn.style.opacity = "1";
-    } else {
-      startBtn.disabled = true;
-      startBtn.style.opacity = "0.5";
-    }
+    startBtn.disabled = (breedSelectedPets[0] === null || breedSelectedPets[1] === null);
+    startBtn.style.opacity = startBtn.disabled ? "0.5" : "1";
   }
 
   function executeBreed() {
     if (breedSelectedPets[0] === null || breedSelectedPets[1] === null) return;
+    if (currentStudent.pets.length >= getMaxAllowedPets()) { popMessage(`เลเวล ${wallet.level} เลี้ยงสัตว์ได้สูงสุด ${getMaxAllowedPets()} ตัวเท่านั้น!`); return; }
 
-    const currentPetCount = currentStudent.pets.length;
-    const maxPets = getMaxAllowedPets();
-    if (currentPetCount >= maxPets) {
-      popMessage(`เลเวล ${wallet.level} เลี้ยงสัตว์ได้สูงสุด ${maxPets} ตัวเท่านั้น ไม่สามารถรับสัตว์เพิ่มได้!`);
-      return;
-    }
-
-    // สุ่มชนิดสัตว์ที่จะได้ (หมา, แมว, ยีราฟ, แกะ, กวาง)[cite: 2]
     const possibleTypes = ["dog", "cat", "giraffe", "sheep", "deer"];
     const randomType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
-
-    currentStudent.pets.push({
-      type: randomType,
-      born: todayStr(),
-      sick: false,
-      dead: false
-    });
+    currentStudent.pets.push({ type: randomType, born: todayStr(), sick: false, dead: false });
 
     closeModal('breedModal');
     renderPetsDOM();
@@ -1277,65 +980,27 @@ html,body{
     updateShopQuotaDisplay();
     spawnHeartsForAll(3);
     saveWalletAndData();
-
-    const shopItemRef = SHOP_ITEMS.find(si => si.id === randomType);
-    const newPetName = shopItemRef ? shopItemRef.name : randomType;
-    popMessage(`🎉 ผสมพันธุ์สำเร็จ! ได้รับ ${newPetName} สมาชิกใหม่เข้าบ้านแล้ว!`);
+    popMessage(`🎉 ผสมพันธุ์สำเร็จ! ได้รับสมาชิกใหม่เข้าบ้านแล้ว!`);
   }
-  // ────────────────────────────
 
   function giveWater(e){
     e.stopPropagation();
-    
-    if (!currentStudent.pets || currentStudent.pets.length === 0) {
-      popMessage("คุณยังไม่มีสัตว์เลี้ยงในบ้าน ต้องซื้อสัตว์เลี้ยงก่อนนะ!");
-      return;
-    }
-
-    activeTool = null;
-    updateHoldingUI();
-
-    const lastWater = currentStudent.lastFed ? currentStudent.lastFed.water : "";
-    if(lastWater === todayStr()){
-      popMessage("น้องๆ ดื่มน้ำสะอาดอิ่มแล้วจ้า");
-      return;
-    }
+    if (currentStudent.pets.length === 0) { popMessage("คุณยังไม่มีสัตว์เลี้ยงในบ้าน!"); return; }
+    activeTool = null; updateHoldingUI();
+    if (currentStudent.lastFed.water === todayStr()) { popMessage("น้องๆ ดื่มน้ำสะอาดอิ่มแล้วจ้า"); return; }
 
     currentStudent.lastFed.water = todayStr();
-
-    currentStudent.pets.forEach(pet => {
-      if(!pet.dead) pet.sick = false;
-    });
-
-    moveAllPetsToBowl();
-    refreshHungerState();
-    spawnHeartsForAll(2);
-    saveWalletAndData();
+    currentStudent.pets.forEach(pet => { if(!pet.dead) pet.sick = false; });
+    moveAllPetsToBowl(); refreshHungerState(); spawnHeartsForAll(2); saveWalletAndData();
     popMessage("เติมน้ำสะอาดให้แล้ว สัตว์ๆ ชื่นใจมาก!");
   }
 
   function openFoodModal(e){
     e.stopPropagation();
-    
-    if (!currentStudent.pets || currentStudent.pets.length === 0) {
-      popMessage("คุณยังไม่มีสัตว์เลี้ยงในบ้าน ต้องซื้อสัตว์เลี้ยงก่อนนะ!");
-      return;
-    }
-
-    activeTool = null;
-    updateHoldingUI();
-
-    const lastWater = currentStudent.lastFed ? currentStudent.lastFed.water : "";
-    if(lastWater !== todayStr()){
-      popMessage("ต้องให้น้ำดื่มก่อน ให้น้องกินข้าวนะ!");
-      return;
-    }
-
-    const validUntil = currentStudent.lastFed ? currentStudent.lastFed.validUntil : "";
-    if(validUntil && todayStr() <= validUntil){ 
-      popMessage("น้องยังอิ่มอยู่ ยังไม่หิวในตอนนี้จ้า!"); 
-      return; 
-    }
+    if (currentStudent.pets.length === 0) { popMessage("คุณยังไม่มีสัตว์เลี้ยงในบ้าน!"); return; }
+    activeTool = null; updateHoldingUI();
+    if (currentStudent.lastFed.water !== todayStr()) { popMessage("ต้องให้น้ำดื่มก่อน ให้น้องกินข้าวนะ!"); return; }
+    if (currentStudent.lastFed.validUntil && todayStr() <= currentStudent.lastFed.validUntil) { popMessage("น้องยังอิ่มอยู่ ยังไม่หิวในตอนนี้จ้า!"); return; }
 
     renderFoodGrid();
     document.getElementById("foodModal").style.display = "flex";
@@ -1344,14 +1009,11 @@ html,body{
   function renderFoodGrid(){
     const container = document.getElementById("foodGridContainer");
     if(!container) return;
-
     const availableFoods = SHOP_ITEMS.filter(item => item.type === 'food' && purchasedItems.includes(item.id));
-
     if(availableFoods.length === 0) {
       container.innerHTML = `<div style="grid-column: span 3; text-align:center; padding: 20px; font-size: 13px; color: var(--ink-soft);">ยังไม่มีเมนูอาหารในครอบครอง<br>ไปเลือกซื้อเมนูอาหารได้ที่ร้านค้าก่อนนะ! 🛒</div>`;
       return;
     }
-
     container.innerHTML = availableFoods.map(f => `
       <div class="food-card" onclick="feedWithFood('${f.id}', ${f.days})">
         <img src="${f.img}" alt="${f.name}">
@@ -1363,163 +1025,89 @@ html,body{
 
   function feedWithFood(foodId, durationDays){
     closeModal('foodModal');
-
-    const currentWater = currentStudent.lastFed ? currentStudent.lastFed.water : "";
-    const lastFedFood = currentStudent.lastFed ? currentStudent.lastFed.food : "";
     let streak = parseInt(localStorage.getItem(`pet_streak_${studentKey}`) || "0");
-    streak = (lastFedFood === yesterdayStr()) ? streak + 1 : 1;
+    streak = (currentStudent.lastFed.food === yesterdayStr()) ? streak + 1 : 1;
     localStorage.setItem(`pet_streak_${studentKey}`, streak);
     
-    currentStudent.lastFed = {
-      food: foodId,
-      water: currentWater,
-      validUntil: calculateFutureDate(durationDays)
-    };
-    
+    currentStudent.lastFed = { food: foodId, water: currentStudent.lastFed.water, validUntil: calculateFutureDate(durationDays) };
     document.getElementById("displayStreak").textContent = streak;
 
-    moveAllPetsToBowl();
-    refreshHungerState();
-    spawnHeartsForAll(3);
-    saveWalletAndData();
+    moveAllPetsToBowl(); refreshHungerState(); spawnHeartsForAll(3); saveWalletAndData();
     popMessage(`ให้อาหารสำเร็จ! อิ่มท้องไปอีก ${durationDays} วัน (ต่อเนื่อง ${streak} วัน)`);
   }
 
   function moveAllPetsToBowl(){
-    const scene = document.getElementById("scene");
-    const w = scene ? scene.clientWidth : 380;
-    const bowlX = w * 0.45;
-
+    const sceneW = document.getElementById("scene") ? document.getElementById("scene").clientWidth : 380;
+    const bowlX = sceneW * 0.45;
     petInstances.forEach((pInst, idx) => {
       if(currentStudent.pets[idx].dead) return;
-      pInst.targetX = bowlX + (Math.random() * 60 - 30);
-      pInst.targetY = 75;
+      pInst.targetX = bowlX + (Math.random() * 60 - 30); pInst.targetY = 75;
       animatePetMove(idx);
     });
   }
 
   function animatePetMove(idx){
-    const pInst = petInstances[idx];
-    const el = document.getElementById(`pet_el_${idx}`);
-    const flip = document.getElementById(`pet_flip_${idx}`);
-    if(!el || !flip) return;
-
-    const currentLeft = parseFloat(el.style.left) || pInst.x;
-    if(pInst.targetX < currentLeft) {
-      el.classList.add("facing-left");
-    } else {
-      el.classList.remove("facing-left");
-    }
-
+    const pInst = petInstances[idx], el = document.getElementById(`pet_el_${idx}`);
+    if(!el) return;
+    if(pInst.targetX < (parseFloat(el.style.left) || pInst.x)) el.classList.add("facing-left"); else el.classList.remove("facing-left");
     el.classList.add("walking");
     el.style.transition = "left 1.8s ease-in-out, top 1.8s ease-in-out";
-    el.style.left = pInst.targetX + "px";
-    el.style.top = pInst.targetY + "%";
-    pInst.x = pInst.targetX;
-    pInst.y = pInst.targetY;
-
-    setTimeout(() => {
-      el.classList.remove("walking");
-    }, 1800);
+    el.style.left = pInst.targetX + "px"; el.style.top = pInst.targetY + "%";
+    pInst.x = pInst.targetX; pInst.y = pInst.targetY;
+    setTimeout(() => el.classList.remove("walking"), 1800);
   }
 
   function tapPet(e, idx){
     e.stopPropagation();
     const pet = currentStudent.pets[idx];
-
-    if(pet.dead){
-      currentStudent.pets.splice(idx, 1);
-      saveWalletAndData();
-      renderPetsDOM();
-      refreshHungerState();
-      popMessage("สัตว์เลี้ยงได้จากไปสู่สุคติแล้ว... 👻");
-      return;
-    }
-
+    if(pet.dead){ currentStudent.pets.splice(idx, 1); saveWalletAndData(); renderPetsDOM(); refreshHungerState(); popMessage("สัตว์เลี้ยงได้จากไปสู่สุคติแล้ว... 👻"); return; }
     if(activeTool === 'vaccine'){
-      if(pet.sick){
-        pet.sick = false;
-        inventory.vaccine--;
-        activeTool = null;
-        updateHoldingUI();
-        saveWalletAndData();
-        renderPetsDOM();
-        refreshHungerState();
-        spawnHearts(idx, 3);
-        popMessage("ฉีดวัคซีนรักษาน้องหายป่วยแล้ว! 💉✨");
-      } else {
-        popMessage("ตัวนี้ยังแข็งแรงดีนะ ไม่ต้องใช้วัคซีนจ้า!");
-      }
+      if(pet.sick){ pet.sick = false; inventory.vaccine--; activeTool = null; updateHoldingUI(); saveWalletAndData(); renderPetsDOM(); refreshHungerState(); spawnHearts(idx, 3); popMessage("ฉีดวัคซีนรักษาน้องหายป่วยแล้ว! 💉✨"); }
+      else { popMessage("ตัวนี้ยังแข็งแรงดีนะ ไม่ต้องใช้วัคซีนจ้า!"); }
       return;
     }
-
     if(activeTool === 'potion'){
-      const isBaby = isPetBaby(pet.born);
-      if(isBaby){
-        const bornDate = new Date(pet.born);
-        bornDate.setDate(bornDate.getDate() - 3);
+      if(isPetBaby(pet.born)){
+        const bornDate = new Date(pet.born); bornDate.setDate(bornDate.getDate() - 3);
         pet.born = `${bornDate.getFullYear()}-${String(bornDate.getMonth()+1).padStart(2,'0')}-${String(bornDate.getDate()).padStart(2,'0')}`;
-        
-        inventory.potion--;
-        activeTool = null;
-        updateHoldingUI();
-        saveWalletAndData();
-        renderPetsDOM();
-        refreshHungerState();
-        spawnHearts(idx, 3);
-        popMessage("ให้น้องกินยาเร่งโต โตเต็มวัยทันที! ✨🧪");
-      } else {
-        popMessage("ตัวนี้โตเต็มวัยแล้ว ไม่จำเป็นต้องใช้ยาเร่งโตจ้า!");
-      }
+        inventory.potion--; activeTool = null; updateHoldingUI(); saveWalletAndData(); renderPetsDOM(); refreshHungerState(); spawnHearts(idx, 3); popMessage("ให้น้องกินยาเร่งโต โตเต็มวัยทันที! ✨🧪");
+      } else { popMessage("ตัวนี้โตเต็มวัยแล้ว ไม่จำเป็นต้องใช้ยาเร่งโตจ้า!"); }
       return;
     }
-
     spawnHearts(idx, 1);
   }
 
   function spawnHearts(idx, count){
     const el = document.getElementById(`pet_el_${idx}`);
     if(!el) return;
-    for(let i=0;i<count;i++){
+    for(let i=0; i<count; i++){
       const h = document.createElement("div");
-      h.className = "heart-pop";
-      h.textContent = "💕";
-      h.style.left = (20 + Math.random()*40) + "px";
-      h.style.top = (0 + Math.random()*15) + "px";
-      h.style.animationDelay = (i*0.12) + "s";
-      el.appendChild(h);
-      setTimeout(() => h.remove(), 1100);
+      h.className = "heart-pop"; h.textContent = "💕";
+      h.style.left = (20 + Math.random()*40) + "px"; h.style.top = (0 + Math.random()*15) + "px"; h.style.animationDelay = (i*0.12) + "s";
+      el.appendChild(h); setTimeout(() => h.remove(), 1100);
     }
   }
 
-  function spawnHeartsForAll(count){
-    petInstances.forEach((_, idx) => {
-      if(!currentStudent.pets[idx].dead) spawnHearts(idx, count);
-    });
-  }
+  function spawnHeartsForAll(count){ petInstances.forEach((_, idx) => { if(!currentStudent.pets[idx].dead) spawnHearts(idx, count); }); }
 
   let msgTimer = null;
   function popMessage(text){
     const bubble = document.getElementById("toastMsg");
-    bubble.textContent = text;
-    bubble.style.display = "block";
-    clearTimeout(msgTimer);
-    msgTimer = setTimeout(() => { bubble.style.display = "none"; }, 1800);
+    bubble.textContent = text; bubble.style.display = "block";
+    clearTimeout(msgTimer); msgTimer = setTimeout(() => { bubble.style.display = "none"; }, 1800);
   }
 
   function openShopModal(){ 
     currentShopTab = 'pet';
-    document.querySelectorAll('.shop-tab-btn').forEach((b, i) => {
-      if(i === 0) b.classList.add('active');
-      else b.classList.remove('active');
-    });
+    document.querySelectorAll('#shopModal .shop-tab-btn').forEach((b, i) => { if(i === 0) b.classList.add('active'); else b.classList.remove('active'); });
     document.getElementById("shopQuotaBox").style.display = "block";
-    updateShopQuotaDisplay();
-    renderShopList('pet');
+    updateShopQuotaDisplay(); renderShopList('pet');
     document.getElementById("shopModal").style.display = "flex"; 
   }
 
   function openMissionModal(){ 
+    currentMissionTab = 'main';
+    document.querySelectorAll('#missionModal .shop-tab-btn').forEach((b, i) => { if(i === 0) b.classList.add('active'); else b.classList.remove('active'); });
     renderMissions();
     document.getElementById("missionModal").style.display = "flex"; 
   }
@@ -1527,14 +1115,10 @@ html,body{
   async function openRankModal(){ 
     document.getElementById("rankModal").style.display = "flex";
     document.getElementById("rank-list").innerHTML = "<p style='text-align:center; color:#7f8c8d;'>กำลังโหลดอันดับ...</p>";
-    
     try {
       const data = await fetchWithRetry(`${API_URL}?action=ranking`);
-      if(data.success && Array.isArray(data.ranking)) {
-        renderRankList(data.ranking);
-      } else {
-        document.getElementById("rank-list").innerHTML = "<p style='text-align:center; color:#e74f66;'>ไม่สามารถโหลดข้อมูลอันดับได้</p>";
-      }
+      if(data.success && Array.isArray(data.ranking)) renderRankList(data.ranking);
+      else document.getElementById("rank-list").innerHTML = "<p style='text-align:center; color:#e74f66;'>ไม่สามารถโหลดข้อมูลอันดับได้</p>";
     } catch(err) {
       document.getElementById("rank-list").innerHTML = "<p style='text-align:center; color:#e74f66;'>เกิดข้อผิดพลาดในการเชื่อมต่อ</p>";
     }
@@ -1544,46 +1128,38 @@ html,body{
 
   function startWanderLoop(){
     setInterval(() => {
-      const scene = document.getElementById("scene");
-      if(!scene) return;
-      const w = scene.clientWidth;
-
+      const sceneW = document.getElementById("scene") ? document.getElementById("scene").clientWidth : 380;
       petInstances.forEach((pInst, idx) => {
-        if(currentStudent.pets[idx] && currentStudent.pets[idx].dead) return;
-        if(Math.random() < 0.4) {
-          const minX = w * 0.05;
-          const maxX = Math.max(minX + 20, w * 0.85);
-          const targetX = minX + Math.random() * (maxX - minX);
-          const targetY = 35 + Math.random() * 30;
-
-          pInst.targetX = targetX;
-          pInst.targetY = targetY;
+        if(currentStudent.pets[idx] && !currentStudent.pets[idx].dead && Math.random() < 0.4) {
+          pInst.targetX = (sceneW * 0.05) + Math.random() * (sceneW * 0.8);
+          pInst.targetY = 35 + Math.random() * 30;
           animatePetMove(idx);
         }
       });
     }, 4500);
   }
 
-  function missionReward(taskIndex){
-    let coins = (taskIndex === 0) ? 500 : (20 + (taskIndex - 1) * 1);
-    let exp = 50 + (taskIndex * 5);
-    return { coins: coins, exp: exp };
-  }
+  function missionReward(taskIndex){ return { coins: (taskIndex === 0) ? 500 : (20 + (taskIndex - 1) * 1), exp: 50 + (taskIndex * 5) }; }
 
-  function getClaimedSet(){
-    return Array.isArray(currentStudent.ClaimedRewards) ? new Set(currentStudent.ClaimedRewards) : new Set();
-  }
-
-  function saveClaimedSet(set){
-    currentStudent.ClaimedRewards = Array.from(set);
-  }
-
+  // ── ระบบเรนเดอร์ภารกิจตามแท็บ (วิชาหลัก / วิชาเพิ่มเติม แยก ClaimedRewards กันอย่างอิสระ) ──
   function renderMissions(){
-    const missions = currentStudent.ภารกิจ || [];
-    const claimedSet = getClaimedSet();
+    let missions = [];
+    let claimedSet = new Set();
+
+    if (currentMissionTab === 'main') {
+      missions = currentStudent.ภารกิจ || [];
+      claimedSet = Array.isArray(currentStudent.ClaimedRewards) ? new Set(currentStudent.ClaimedRewards) : new Set();
+    } else {
+      if (!extraStudentMission) {
+        document.getElementById("mission-list").innerHTML = "<p style='text-align:center; color:#7f8c8d; padding:20px;'>ไม่พบข้อมูลภารกิจวิชาเพิ่มเติม (รหัสนักเรียน+a)</p>";
+        return;
+      }
+      missions = extraStudentMission.ภารกิจ || [];
+      claimedSet = Array.isArray(extraStudentMission.ClaimedRewards) ? new Set(extraStudentMission.ClaimedRewards) : new Set();
+    }
 
     if(missions.length === 0){
-      document.getElementById("mission-list").innerHTML = "<p style='text-align:center; color:#7f8c8d;'>ไม่มีรายการภารกิจ</p>";
+      document.getElementById("mission-list").innerHTML = "<p style='text-align:center; color:#7f8c8d; padding:20px;'>ไม่มีรายการภารกิจ</p>";
       return;
     }
 
@@ -1591,7 +1167,7 @@ html,body{
       const scoreNum = parseFloat(m.score) || 0;
       const isDone = scoreNum > 0;
       const missionName = m.name || "ภารกิจไม่มีชื่อ";
-      const missionId = `quest_${idx}`;
+      const missionId = `${currentMissionTab}_quest_${idx}`;
       const reward = missionReward(idx);
 
       let footer = "";
@@ -1602,17 +1178,34 @@ html,body{
           footer = `<button class="claim-btn" onclick="claimReward('${missionId}', ${reward.coins}, ${reward.exp})">รับรางวัล +${reward.coins} เหรียญ, +${reward.exp} XP</button>`;
         }
       }
-      return `<div class="mission-item"><span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'สำเร็จ':'รอ'}</span><b>${missionName}</b><div style="font-size:11px; color:var(--ink-soft); margin-top:2px;">รางวัล: ${reward.coins} เหรียญ | ${reward.exp} XP</div>${footer}</div>`;
+      return `
+        <div class="mission-item" style="border-left-color: ${currentMissionTab === 'extra' ? 'var(--berry)' : 'var(--leaf)'};">
+          <span class="status-badge ${isDone?'done-bg':'wait-bg'}">${isDone?'สำเร็จ':'รอ'}</span>
+          <b>${missionName}</b>
+          <div style="font-size:11px; color:var(--ink-soft); margin-top:2px;">รางวัล: ${reward.coins} เหรียญ | ${reward.exp} XP</div>
+          ${footer}
+        </div>`;
     }).join('');
 
     document.getElementById("mission-list").innerHTML = html;
   }
 
+  // ── ฟังก์ชันกดรับรางวัล (แยกเก็บ ClaimedRewards ระหว่างวิชาหลักและวิชาเพิ่มเติม) ──
   function claimReward(missionId, coins, exp){
-    const claimedSet = getClaimedSet();
-    if(claimedSet.has(missionId)) return;
-    claimedSet.add(missionId);
-    saveClaimedSet(claimedSet);
+    let claimedSet;
+    if (currentMissionTab === 'main') {
+      claimedSet = Array.isArray(currentStudent.ClaimedRewards) ? new Set(currentStudent.ClaimedRewards) : new Set();
+      if(claimedSet.has(missionId)) return;
+      claimedSet.add(missionId);
+      currentStudent.ClaimedRewards = Array.from(claimedSet);
+    } else {
+      if (!extraStudentMission) return;
+      claimedSet = Array.isArray(extraStudentMission.ClaimedRewards) ? new Set(extraStudentMission.ClaimedRewards) : new Set();
+      if(claimedSet.has(missionId)) return;
+      claimedSet.add(missionId);
+      extraStudentMission.ClaimedRewards = Array.from(claimedSet);
+    }
+
     wallet.coins += coins;
     wallet.exp += exp;
     updateLevelFromExp();
@@ -1631,18 +1224,13 @@ html,body{
 
     const html = sorted.map((s, index) => {
       const isMe = (s.id === studentKey);
-      let rankDisplay = `#${index + 1}`;
-      if(index === 0) rankDisplay = `👑 1`;
-      else if(index === 1) rankDisplay = `🥈 2`;
-      else if(index === 2) rankDisplay = `🥉 3`;
-
+      let rankDisplay = index === 0 ? "👑 1" : (index === 1 ? "🥈 2" : (index === 2 ? "🥉 3" : `#${index + 1}`));
       return `
         <div class="rank-item ${isMe ? 'is-me' : ''}">
           <div class="rank-num num">${rankDisplay}</div>
           <div class="rank-name">${s.name} ${isMe ? '(คุณ)' : ''}</div>
           <div class="rank-score num">${s.score} คะแนน</div>
-        </div>
-      `;
+        </div>`;
     }).join('');
 
     document.getElementById("rank-list").innerHTML = html;
