@@ -358,7 +358,7 @@ html,body{
             <span class="stat-badge">📊 <span class="num" id="displayScore">0</span></span>
             <div class="streak-chip">🔥 <span class="num" id="displayStreak">0</span> วัน</div>
           </div>
-          
+
           <div id="holdingStatusBadge" class="holding-status-badge">
             <img id="holdingIconImg" src="" alt="icon">
             <span id="holdingText">กำลังถือ...</span>
@@ -459,15 +459,19 @@ html,body{
       <div class="modal-card">
         <div class="modal-header">
           <h3 class="modal-title">💖 ศูนย์ผสมพันธุ์สัตว์</h3>
-          <button class="close-btn" onclick="closeModal('breedModal')">✕</button>
+          <button class="close-btn" onclick="closeBreedModal('breedModal')">✕</button>
         </div>
-        <p style="font-size:12px; color:var(--ink-soft); text-align:center; margin:0 0 10px;">เลือกสัตว์ 2 ตัวมาผสมพันธุ์เพื่อสุ่มรับสมาชิกใหม่!</p>
+        <p id="breedDescText" style="font-size:12px; color:var(--ink-soft); text-align:center; margin:0 0 10px;">เลือกสัตว์ 2 ตัวมาผสมพันธุ์เพื่อสุ่มรับสมาชิกใหม่!</p>
+        
         <div class="breed-slots-area">
           <div class="breed-slot" id="breedSlot1" onclick="openBreedSelector(0)"><span class="breed-plus">+</span></div>
           <div style="font-size:24px; color:var(--berry);">+</div>
           <div class="breed-slot" id="breedSlot2" onclick="openBreedSelector(1)"><span class="breed-plus">+</span></div>
         </div>
-        <button id="startBreedBtn" onclick="executeBreed()" class="buy-btn" style="width:100%; padding:12px; font-size:14px; background:var(--berry); color:#fff; box-shadow:0 3px 0 var(--berry-dark); margin-top:5px;" disabled>เริ่มผสมพันธุ์ (ฟรี)</button>
+
+        <div id="breedActionArea">
+          <button id="startBreedBtn" onclick="executeBreed()" class="buy-btn" style="width:100%; padding:12px; font-size:14px; background:var(--berry); color:#fff; box-shadow:0 3px 0 var(--berry-dark); margin-top:5px;" disabled>เริ่มผสมพันธุ์ (6 ชม.)</button>
+        </div>
       </div>
     </div>
 
@@ -489,7 +493,6 @@ html,body{
           <h3 class="modal-title">📜 รายการภารกิจ</h3>
           <button class="close-btn" onclick="closeModal('missionModal')">✕</button>
         </div>
-        <!-- แท็บสลับหน้าภารกิจ -->
         <div class="shop-tabs">
           <button class="shop-tab-btn active" onclick="switchMissionTab('main', this)">📚 วิชาหลัก</button>
           <button class="shop-tab-btn" onclick="switchMissionTab('extra', this)">📖 วิชาเพิ่มเติม</button>
@@ -513,7 +516,6 @@ html,body{
 </div>
 
 <script>
-  // อัปเดต Web App URL ใหม่ตรงนี้เรียบร้อย[cite: 2]
   const API_URL = "https://script.google.com/macros/s/AKfycbwOg8nkItdatrHKLqf-ieEmLd5-WqqkAFgob73uTNYiu_7dBzh86MNUYYYZ5Xi4wP-pkw/exec";
 
   let SHOP_ITEMS = [
@@ -540,8 +542,8 @@ html,body{
   ];
 
   let currentStudent = null;
-  let extraStudentMission = null; // เก็บข้อมูลภารกิจวิชาเพิ่มเติม (รหัสนักเรียน+a)
-  let currentMissionTab = 'main'; // แท็บภารกิจปัจจุบัน ('main' หรือ 'extra')
+  let extraStudentMission = null; 
+  let currentMissionTab = 'main'; 
   let studentKey = null;
   let wallet = { coins:0, exp:0, level:1 };
   let inventory = { vaccine: 0, potion: 0 };
@@ -554,6 +556,7 @@ html,body{
 
   let breedSelectedPets = [null, null];
   let activeBreedSlotIndex = 0;
+  let breedTimerInterval = null;
 
   function safeParse(value, fallback = []) {
     if (Array.isArray(value)) return value;
@@ -601,7 +604,7 @@ html,body{
       if (data.serverTime) serverTimeReference = new Date(data.serverTime);
 
       const student = data.student;
-      extraStudentMission = data.extraMission || null; // รับข้อมูลวิชาเพิ่มเติม (รหัสนักเรียน+a) จาก Google Apps Script
+      extraStudentMission = data.extraMission || null;
       
       const scoreVal = parseFloat(student["คะแนน"]) || 0;
       let filteredMissions = safeParse(student["ภารกิจ"]).filter(m => String(m.name || "").trim().toLowerCase() !== "xp");
@@ -621,14 +624,13 @@ html,body{
         "coin": parseInt(student["coin"]) || 0,
         "xp": parseInt(student["xp"]) || 0,
         "pets": safeParse(student["pets"]), 
-        "ClaimedRewards": safeParse(student["ClaimedRewards"]), // ของวิชาหลัก
+        "ClaimedRewards": safeParse(student["ClaimedRewards"]),
         "lastFed": parsedLastFed,
         "ชั้น": student["ชั้น"] || "-",
         "ภารกิจ": filteredMissions,
         "items": safeParse(student["items"])
       };
       
-      // จัดการแปลงโครงสร้าง extraStudentMission ให้ ClaimedRewards รองรับแยกอิสระ
       if (extraStudentMission) {
         extraStudentMission.ClaimedRewards = safeParse(extraStudentMission.ClaimedRewards);
         let extraFilteredMissions = safeParse(extraStudentMission.ภารกิจ).filter(m => String(m.name || "").trim().toLowerCase() !== "xp");
@@ -705,7 +707,6 @@ html,body{
 
   function getMaxAllowedPets() { return Math.floor((wallet.level - 1) / 3) + 1; }
 
-  // ── ฟังก์ชันบันทึกข้อมูล (ส่งข้อมูล ClaimedRewards แยกวิชาหลักและวิชาเพิ่มเติมกลับไปที่ Backend) ──
   function saveWalletAndData(){
     localStorage.setItem(`inv_vaccine_${studentKey}`, inventory.vaccine);
     localStorage.setItem(`inv_potion_${studentKey}`, inventory.potion);
@@ -718,7 +719,7 @@ html,body{
       xp: wallet.exp,
       pets: JSON.stringify(currentStudent.pets || []),
       claimed: JSON.stringify(currentStudent.ClaimedRewards || []),
-      extraClaimed: extraStudentMission ? JSON.stringify(extraStudentMission.ClaimedRewards || []) : JSON.stringify([]), // ส่งข้อมูลรางวัลวิชาเพิ่มเติม
+      extraClaimed: extraStudentMission ? JSON.stringify(extraStudentMission.ClaimedRewards || []) : JSON.stringify([]),
       lastFed: JSON.stringify(currentStudent.lastFed || { food: "", water: "", validUntil: "" }),
       items: JSON.stringify(purchasedItems || [])
     });
@@ -762,6 +763,8 @@ html,body{
     const sceneW = document.getElementById("scene") ? document.getElementById("scene").clientWidth : 380;
 
     currentStudent.pets.forEach((pet, index) => {
+      if (pet.breed) return;
+
       const isBaby = isPetBaby(pet.born);
       const x = sceneW * 0.2 + (index * 60) % (sceneW * 0.6);
       const y = 45 + (index * 10) % 20;
@@ -919,40 +922,68 @@ html,body{
   }
 
   function openBreedModal() {
-    if (currentStudent.pets.length < 2) { popMessage("คุณต้องมีสัตว์เลี้ยงอย่างน้อย 2 ตัวจึงจะสามารถผสมพันธุ์ได้!"); return; }
-    breedSelectedPets = [null, null];
-    updateBreedSlotsUI();
+    if (currentStudent.pets.length < 2) { 
+      popMessage("คุณต้องมีสัตว์เลี้ยงอย่างน้อย 2 ตัวจึงจะสามารถผสมพันธุ์ได้!"); 
+      return; 
+    }
+
+    const activeBreedingPets = currentStudent.pets.filter(p => p.breed && !p.isPendingBreedResult);
+    const pendingChild = currentStudent.pets.find(p => p.isPendingBreedResult);
+
+    if (activeBreedingPets.length >= 2 || pendingChild) {
+      if (activeBreedingPets.length >= 2) {
+        breedSelectedPets = [
+          currentStudent.pets.indexOf(activeBreedingPets[0]),
+          currentStudent.pets.indexOf(activeBreedingPets[1])
+        ];
+      }
+      updateBreedSlotsUI(true);
+      startBreedCountdownTimer();
+    } else {
+      breedSelectedPets = [null, null];
+      updateBreedSlotsUI(false);
+    }
+
     document.getElementById("breedModal").style.display = "flex";
   }
 
-  function openBreedSelector(slotIndex) {
-    activeBreedSlotIndex = slotIndex;
-    const listEl = document.getElementById("breedSelectorList");
-    const otherSlotPetIndex = slotIndex === 0 ? breedSelectedPets[1] : breedSelectedPets[0];
-    let html = "";
+function openBreedSelector(slotIndex) {
+  activeBreedSlotIndex = slotIndex;
+  const listEl = document.getElementById("breedSelectorList");
+  const otherSlotPetIndex = slotIndex === 0 ? breedSelectedPets[1] : breedSelectedPets[0];
+  let html = "";
 
-    currentStudent.pets.forEach((pet, idx) => {
-      if (pet.dead || idx === otherSlotPetIndex) return;
-      const shopItemRef = SHOP_ITEMS.find(si => si.id === pet.type);
-      html += `
-        <div class="breed-candidate-item" onclick="selectPetForBreed(${idx})">
-          <img src="${getPetImage(pet.type, false)}" class="breed-candidate-img" alt="${pet.type}">
-          <div>
-            <div style="font-weight:600; font-size:13px; color:var(--ink);">${shopItemRef ? shopItemRef.name : pet.type}</div>
-            <div style="font-size:10px; color:var(--ink-soft);">เกิดเมื่อ: ${pet.born}</div>
-          </div>
+  currentStudent.pets.forEach((pet, idx) => {
+    // ── [เพิ่มเงื่อนไข] ข้ามตัวที่ตายแล้ว, ตัวที่อยู่ในอีกช่อง, หรือตัวที่เป็น Baby ──
+    if (pet.dead || idx === otherSlotPetIndex || isPetBaby(pet.born)) return;
+    
+    const shopItemRef = SHOP_ITEMS.find(si => si.id === pet.type);
+    html += `
+      <div class="breed-candidate-item" onclick="selectPetForBreed(${idx})">
+        <img src="${getPetImage(pet.type, false)}" class="breed-candidate-img" alt="${pet.type}">
+        <div>
+          <div style="font-weight:600; font-size:13px; color:var(--ink);">${shopItemRef ? shopItemRef.name : pet.type}</div>
+          <div style="font-size:10px; color:var(--ink-soft);">เกิดเมื่อ: ${pet.born} (โตเต็มวัยแล้ว)</div>
         </div>
-      `;
-    });
-    listEl.innerHTML = html || `<div style="text-align:center; padding:15px; color:var(--ink-soft); font-size:12px;">ไม่มีสัตว์เลี้ยงที่สามารถเลือกได้</div>`;
-    document.getElementById("breedSelectorModal").style.display = "flex";
+      </div>
+    `;
+  });
+  
+  listEl.innerHTML = html || `<div style="text-align:center; padding:15px; color:var(--ink-soft); font-size:12px;">ไม่มีสัตว์เลี้ยงที่โตเต็มวัยสำหรับผสมพันธุ์</div>`;
+  document.getElementById("breedSelectorModal").style.display = "flex";
+}
+
+  function selectPetForBreed(petIndex) { 
+    breedSelectedPets[activeBreedSlotIndex] = petIndex; 
+    closeModal('breedSelectorModal'); 
+    updateBreedSlotsUI(); 
   }
 
-  function selectPetForBreed(petIndex) { breedSelectedPets[activeBreedSlotIndex] = petIndex; closeModal('breedSelectorModal'); updateBreedSlotsUI(); }
-
-  function updateBreedSlotsUI() {
+  function updateBreedSlotsUI(isLocked = false) {
     for (let i = 0; i < 2; i++) {
-      const slotEl = document.getElementById(`breedSlot${i+1}`), petIdx = breedSelectedPets[i];
+      const slotEl = document.getElementById(`breedSlot${i+1}`);
+      const petIdx = breedSelectedPets[i];
+      
       if (petIdx !== null && currentStudent.pets[petIdx]) {
         slotEl.className = "breed-slot filled";
         slotEl.innerHTML = `<img src="${getPetImage(currentStudent.pets[petIdx].type, false)}" alt="">`;
@@ -960,27 +991,149 @@ html,body{
         slotEl.className = "breed-slot";
         slotEl.innerHTML = `<span class="breed-plus">+</span>`;
       }
+      
+      if (isLocked) {
+        slotEl.onclick = null;
+        slotEl.style.cursor = "default";
+      } else {
+        slotEl.onclick = () => openBreedSelector(i);
+        slotEl.style.cursor = "pointer";
+      }
     }
-    const startBtn = document.getElementById("startBreedBtn");
-    startBtn.disabled = (breedSelectedPets[0] === null || breedSelectedPets[1] === null);
-    startBtn.style.opacity = startBtn.disabled ? "0.5" : "1";
+
+    const actionArea = document.getElementById("breedActionArea");
+    const descText = document.getElementById("breedDescText");
+    const activeBreedingPets = currentStudent.pets.filter(p => p.breed && !p.isPendingBreedResult);
+    const pendingChild = currentStudent.pets.find(p => p.isPendingBreedResult);
+
+    if (activeBreedingPets.length >= 2 || pendingChild) {
+      descText.textContent = "🐾 คู่ผสมพันธุ์นี้กำลังปฏิบัติภารกิจ กรุณารอเวลาให้เสร็จสิ้น!";
+    } else {
+      descText.textContent = "เลือกสัตว์ 2 ตัวมาผสมพันธุ์เพื่อสุ่มรับสมาชิกใหม่!";
+      const isValid = (breedSelectedPets[0] !== null && breedSelectedPets[1] !== null);
+      actionArea.innerHTML = `
+        <button id="startBreedBtn" onclick="executeBreed()" class="buy-btn" style="width:100%; padding:12px; font-size:14px; background:var(--berry); color:#fff; box-shadow:0 3px 0 var(--berry-dark); margin-top:5px; opacity:${isValid ? '1' : '0.5'};" ${isValid ? '' : 'disabled'}>
+          เริ่มผสมพันธุ์ (6 ชม.)
+        </button>`;
+    }
   }
 
   function executeBreed() {
     if (breedSelectedPets[0] === null || breedSelectedPets[1] === null) return;
-    if (currentStudent.pets.length >= getMaxAllowedPets()) { popMessage(`เลเวล ${wallet.level} เลี้ยงสัตว์ได้สูงสุด ${getMaxAllowedPets()} ตัวเท่านั้น!`); return; }
+    
+    // ตรวจสอบโควตาสัตว์เลี้ยงว่าเกินหรือไม่ หากเพิ่มลูกสัตว์เข้ามา 1 ตัว
+    const activePetsCount = currentStudent.pets.filter(p => !p.dead).length;
+    if (activePetsCount + 1 > getMaxAllowedPets()) { 
+      popMessage(`พื้นที่เลี้ยงสัตว์ไม่พอสำหรับสัตว์ใหม่! (สูงสุด ${getMaxAllowedPets()} ตัว)`); 
+      return; 
+    }
+
+    const p1 = currentStudent.pets[breedSelectedPets[0]];
+    const p2 = currentStudent.pets[breedSelectedPets[1]];
+
+if (isPetBaby(p1.born) || isPetBaby(p2.born)) {
+    popMessage("สัตว์เลี้ยงต้องโตเต็มวัย (ไม่ใช่ Baby) ถึงจะผสมพันธุ์ได้!");
+    return;
+  }
+
+    const endTimeMs = getReferenceDate().getTime() + 6 * 60 * 60 * 1000;
+    const endTimeIso = new Date(endTimeMs).toISOString();
+
+    p1.breed = true;
+    p2.breed = true;
+    p1.breedEndTime = endTimeIso;
+    p2.breedEndTime = endTimeIso;
 
     const possibleTypes = ["dog", "cat", "giraffe", "sheep", "deer"];
-    const randomType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
-    currentStudent.pets.push({ type: randomType, born: todayStr(), sick: false, dead: false });
+    const babyType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
+    
+    currentStudent.pets.push({
+      type: babyType,
+      born: todayStr(),
+      sick: false,
+      dead: false,
+      breed: true,
+      isPendingBreedResult: true,
+      breedEndTime: endTimeIso
+    });
 
-    closeModal('breedModal');
+    renderPetsDOM();
+    refreshHungerState();
+    saveWalletAndData();
+
+    updateBreedSlotsUI(true);
+    startBreedCountdownTimer();
+    popMessage(`💖 เริ่มผสมพันธุ์สำเร็จ! สัตว์ทั้งสองตัวหลบไปผสมพันธุ์แล้ว (ใช้เวลา 6 ชม.)`);
+  }
+
+  function startBreedCountdownTimer() {
+    if (breedTimerInterval) clearInterval(breedTimerInterval);
+
+    const actionArea = document.getElementById("breedActionArea");
+
+    function updateTimer() {
+      const pendingChild = currentStudent.pets.find(p => p.isPendingBreedResult);
+      if (!pendingChild) {
+        clearInterval(breedTimerInterval);
+        return;
+      }
+
+      const now = new Date().getTime();
+      const endTime = new Date(pendingChild.breedEndTime).getTime();
+      const diffTime = endTime - now;
+
+      if (diffTime <= 0) {
+        clearInterval(breedTimerInterval);
+        actionArea.innerHTML = `
+          <button onclick="claimBreedResult()" class="buy-btn" style="background:var(--leaf); color:#fff; width:100%; padding:12px; font-size:14px; box-shadow:0 3px 0 #2c7048; margin-top:5px;">
+            🎉 ผสมพันธุ์เสร็จสิ้น! กดรับลูกสัตว์
+          </button>`;
+      } else {
+        const hours = Math.floor(diffTime / (1000 * 60 * 60));
+        const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
+
+        actionArea.innerHTML = `
+          <div style="background:#fff3e6; border:1.5px solid var(--sun-dark); padding:10px; border-radius:12px; text-align:center; margin-top:8px;">
+            <div style="font-size:11px; color:var(--ink-soft);">⏳ กำลังผสมพันธุ์...</div>
+            <div class="num" style="font-size:18px; font-weight:700; color:var(--berry-dark);">${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}</div>
+          </div>`;
+      }
+    }
+
+    updateTimer();
+    breedTimerInterval = setInterval(updateTimer, 1000);
+  }
+
+  function claimBreedResult() {
+    if (breedTimerInterval) clearInterval(breedTimerInterval);
+
+    currentStudent.pets.forEach(p => {
+      if (p.breed) {
+        delete p.breed;
+        delete p.breedEndTime;
+      }
+      if (p.isPendingBreedResult) {
+        delete p.isPendingBreedResult;
+      }
+    });
+
+    breedSelectedPets = [null, null];
     renderPetsDOM();
     refreshHungerState();
     updateShopQuotaDisplay();
-    spawnHeartsForAll(3);
     saveWalletAndData();
-    popMessage(`🎉 ผสมพันธุ์สำเร็จ! ได้รับสมาชิกใหม่เข้าบ้านแล้ว!`);
+    closeBreedModal('breedModal');
+    spawnHeartsForAll(3);
+    popMessage("✨ รับสมาชิกใหม่เข้าบ้านสำเร็จ!");
+  }
+
+  function closeBreedModal(modalId) {
+    closeModal(modalId);
+    if (breedTimerInterval) {
+      clearInterval(breedTimerInterval);
+      breedTimerInterval = null;
+    }
   }
 
   function giveWater(e){
@@ -1141,7 +1294,6 @@ html,body{
 
   function missionReward(taskIndex){ return { coins: (taskIndex === 0) ? 500 : (20 + (taskIndex - 1) * 1), exp: 50 + (taskIndex * 5) }; }
 
-  // ── ระบบเรนเดอร์ภารกิจตามแท็บ (วิชาหลัก / วิชาเพิ่มเติม แยก ClaimedRewards กันอย่างอิสระ) ──
   function renderMissions(){
     let missions = [];
     let claimedSet = new Set();
@@ -1190,7 +1342,6 @@ html,body{
     document.getElementById("mission-list").innerHTML = html;
   }
 
-  // ── ฟังก์ชันกดรับรางวัล (แยกเก็บ ClaimedRewards ระหว่างวิชาหลักและวิชาเพิ่มเติม) ──
   function claimReward(missionId, coins, exp){
     let claimedSet;
     if (currentMissionTab === 'main') {
