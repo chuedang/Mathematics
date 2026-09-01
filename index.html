@@ -1494,6 +1494,23 @@ function closeBattleResult() {
     try { const parsed = JSON.parse(value); return parsed ?? fallback; } catch(e) { return fallback; }
   }
 
+  // ⭐ กรองรายการ ClaimedRewards ให้เหลือเฉพาะรูปแบบที่ถูกต้อง เช่น "main_quest_0", "extra_quest_3"
+  // เก็บเป็นสตริงตามที่บันทึกจริงใน Google Sheet (ห้ามแปลงเป็น Number)
+  function sanitizeClaimedRewards(list, prefix) {
+    if (!Array.isArray(list)) return [];
+    const re = new RegExp(`^${prefix}_(\\d+)$`);
+    return list
+      .map(v => String(v).trim())
+      .filter(v => re.test(v));
+  }
+
+  // ⭐ รางวัลของแต่ละภารกิจ เพิ่มขึ้นเรื่อยๆ แบบลำดับเลขคณิต 50, 60, 70, ...
+  const MISSION_REWARD_BASE = 50;
+  const MISSION_REWARD_STEP = 10;
+  function getMissionReward(idx) {
+    return MISSION_REWARD_BASE + MISSION_REWARD_STEP * idx;
+  }
+
   async function fetchWithRetry(url, options = {}, retries = 3, delay = 1500, onRetry = null) {
     for (let i = 0; i < retries; i++) {
       try {
@@ -1607,6 +1624,17 @@ function closeBattleResult() {
         parsedItems[itemId] = parseInt(parsedItems[itemId], 10) || 0;
       });
       
+let parsedClaimedRewards = safeParse(student["ClaimedRewards"]);
+
+if (!Array.isArray(parsedClaimedRewards)) {
+  parsedClaimedRewards = [];
+}
+
+// ⭐ เก็บเป็นสตริงรูปแบบ "main_quest_N" ตามที่บันทึกไว้ใน Google Sheet
+// (ห้ามแปลงเป็น Number เพราะ "main_quest_0" ไม่ใช่ตัวเลข จะกลายเป็น NaN แล้วโดนกรองทิ้งหมด
+//  ทำให้ระบบลืมว่าเคยรับรางวัลไปแล้ว และกดรับซ้ำได้เรื่อยๆ)
+parsedClaimedRewards = sanitizeClaimedRewards(parsedClaimedRewards, "main_quest");
+
       let parsedHistory = safeParse(student["history"]);
       currentStudent = {
         "รหัสนักเรียน": String(student["รหัสนักเรียน"]).trim(),
@@ -1615,7 +1643,7 @@ function closeBattleResult() {
         "coin": parseInt(student["coin"]) || 0,
         "xp": parsedXp,
         "pets": parsedPets,
-        "ClaimedRewards": safeParse(student["ClaimedRewards"]),
+        "ClaimedRewards": parsedClaimedRewards,
         "lastFed": parsedLastFed,
         "ชั้น": student["ชั้น"] || "-",
         "ภารกิจ": filteredMissions,
@@ -1624,10 +1652,30 @@ function closeBattleResult() {
       };
 
       if (extraStudentMission) {
-        extraStudentMission.ClaimedRewards = safeParse(extraStudentMission.ClaimedRewards);
-        let extraFilteredMissions = safeParse(extraStudentMission.ภารกิจ).filter(m => String(m.name || "").trim().toLowerCase() !== "xp");
-        extraStudentMission.ภารกิจ = extraFilteredMissions;
-      }
+
+  let parsedExtraClaimed =
+    safeParse(extraStudentMission.ClaimedRewards);
+
+  if (!Array.isArray(parsedExtraClaimed)) {
+    parsedExtraClaimed = [];
+  }
+
+  // ⭐ เช่นเดียวกับด้านบน ต้องเก็บเป็นสตริง "extra_quest_N" ห้ามแปลงเป็น Number
+  extraStudentMission.ClaimedRewards =
+    sanitizeClaimedRewards(parsedExtraClaimed, "extra_quest");
+
+
+  let extraFilteredMissions =
+    safeParse(extraStudentMission.ภารกิจ)
+      .filter(m =>
+        String(m.name || "")
+          .trim()
+          .toLowerCase() !== "xp"
+      );
+
+  extraStudentMission.ภารกิจ =
+    extraFilteredMissions;
+}
 
       studentKey = currentStudent["รหัสนักเรียน"];
       
@@ -1698,6 +1746,42 @@ function closeBattleResult() {
 
     updateWalletUI();
   }
+
+function isMissionDone(mission) {
+
+  // ถ้ามีฟิลด์สถานะเป็นข้อความ (เผื่ออนาคตเปลี่ยนมาใช้คำ เช่น "ส่งแล้ว")
+  const rawStatus =
+    mission?.status ??
+    mission?.Status ??
+    mission?.["สถานะ"] ??
+    mission?.missionStatus ??
+    "";
+
+  const status = String(rawStatus)
+    .trim()
+    .replace(/\s+/g, "")
+    .toLowerCase();
+
+  if ([
+    "ส่งแล้ว",
+    "ส่งงานแล้ว",
+    "submitted",
+    "done",
+    "complete",
+    "completed"
+  ].includes(status)) {
+    return true;
+  }
+
+  // ⭐ ในชีทจริงคอลัมน์ภารกิจเก็บเป็น "คะแนน" (ตัวเลข) เช่น 5, 10
+  // ถ้ามีคะแนนมากกว่า 0 แปลว่าส่งงาน/ทำภารกิจนี้เสร็จแล้ว
+  const scoreVal = parseFloat(mission?.score);
+  if (!isNaN(scoreVal) && scoreVal > 0) {
+    return true;
+  }
+
+  return false;
+}
 
   function updateLevelFromExp() {
     let exp = wallet.exp, lvl = 1, requiredExp = 300, increment = 320; 
@@ -3798,6 +3882,8 @@ let chosenFriendPetIndex =
     
     let missionDataList = [];
     let claimedList = [];
+    // ⭐ prefix ของ key ที่ใช้เก็บใน ClaimedRewards ต้องตรงกับ tab ที่กำลังแสดงอยู่
+    const keyPrefix = currentMissionTab === 'main' ? 'main_quest' : 'extra_quest';
     
     if (currentMissionTab === 'main') {
       missionDataList = currentStudent.ภารกิจ || [];
@@ -3818,8 +3904,12 @@ let chosenFriendPetIndex =
     }
 
     container.innerHTML = missionDataList.map((m, idx) => {
-      const isClaimed = claimedList.includes(idx);
-      const isDone = String(m.status || "").trim() === "ส่งแล้ว";
+      // ⭐ เช็คจาก key แบบ "main_quest_0" / "extra_quest_0" ให้ตรงกับที่เก็บใน Google Sheet จริงๆ
+      const rewardKey = `${keyPrefix}_${idx}`;
+      const isClaimed = claimedList.includes(rewardKey);
+      const isDone = isMissionDone(m);
+      // ⭐ รางวัลเพิ่มขึ้นเรื่อยๆ แบบลำดับเลขคณิต (50, 60, 70, ...) ตามลำดับภารกิจ
+      const rewardVal = getMissionReward(idx);
       
       let statusBadge = isDone 
         ? `<span class="status-badge done-bg">เสร็จสิ้น</span>` 
@@ -3829,14 +3919,14 @@ let chosenFriendPetIndex =
       if (isClaimed) {
         actionBtn = `<div class="claimed-tag">รับรางวัลแล้ว ✔️</div>`;
       } else if (isDone) {
-        actionBtn = `<button class="claim-btn" onclick="claimMissionReward(${idx})">🎁 รับรางวัล (+${m.reward || 50} Coin/XP)</button>`;
+        actionBtn = `<button class="claim-btn" onclick="claimMissionReward(${idx})">🎁 รับรางวัล (+${rewardVal} Coin/XP)</button>`;
       }
 
       return `
         <div class="mission-item" style="border-left-color: ${isDone ? 'var(--leaf)' : '#ccc'};">
           ${statusBadge}
           <div style="font-weight:600; color:var(--ink);">${m.name || 'ภารกิจ'}</div>
-          <div style="font-size:11px; color:var(--ink-soft); margin-top:3px;">รางวัล: 💰 ${m.reward || 50} เหรียญ | ⭐ ${m.reward || 50} XP</div>
+          <div style="font-size:11px; color:var(--ink-soft); margin-top:3px;">รางวัล: 💰 ${rewardVal} เหรียญ | ⭐ ${rewardVal} XP</div>
           ${actionBtn}
         </div>
       `;
@@ -3844,23 +3934,43 @@ let chosenFriendPetIndex =
   }
 
   async function claimMissionReward(missionIdx) {
-    let rewardVal = 50;
-    
+    let mission = null;
+    let claimedList = null;
+    // ⭐ ต้องใช้ key รูปแบบเดียวกับที่เก็บจริงใน Google Sheet เช่น "main_quest_0" / "extra_quest_0"
+    const keyPrefix = currentMissionTab === 'main' ? 'main_quest' : 'extra_quest';
+    const rewardKey = `${keyPrefix}_${missionIdx}`;
+
     if (currentMissionTab === 'main') {
-      if (!currentStudent.ClaimedRewards.includes(missionIdx)) {
-        currentStudent.ClaimedRewards.push(missionIdx);
-        if (currentStudent.ภารกิจ[missionIdx] && currentStudent.ภารกิจ[missionIdx].reward) {
-          rewardVal = parseInt(currentStudent.ภารกิจ[missionIdx].reward) || 50;
-        }
-      }
+      if (!Array.isArray(currentStudent.ClaimedRewards)) currentStudent.ClaimedRewards = [];
+      claimedList = currentStudent.ClaimedRewards;
+      mission = (currentStudent.ภารกิจ || [])[missionIdx];
     } else {
-      if (extraStudentMission && !extraStudentMission.ClaimedRewards.includes(missionIdx)) {
-        extraStudentMission.ClaimedRewards.push(missionIdx);
-        if (extraStudentMission.ภารกิจ[missionIdx] && extraStudentMission.ภารกิจ[missionIdx].reward) {
-          rewardVal = parseInt(extraStudentMission.ภารกิจ[missionIdx].reward) || 50;
-        }
+      if (!extraStudentMission) {
+        popMessage("ไม่มีข้อมูลวิชาเพิ่มเติม");
+        return;
       }
+      if (!Array.isArray(extraStudentMission.ClaimedRewards)) extraStudentMission.ClaimedRewards = [];
+      claimedList = extraStudentMission.ClaimedRewards;
+      mission = (extraStudentMission.ภารกิจ || [])[missionIdx];
     }
+
+    // ⭐ กันรับรางวัลซ้ำ / รับก่อนภารกิจเสร็จ / ภารกิจไม่มีอยู่จริง
+    if (!mission) {
+      popMessage("ไม่พบภารกิจนี้");
+      return;
+    }
+    if (claimedList.includes(rewardKey)) {
+      popMessage("รับรางวัลภารกิจนี้ไปแล้ว");
+      return;
+    }
+    if (!isMissionDone(mission)) {
+      popMessage("ภารกิจนี้ยังไม่เสร็จสิ้น ไม่สามารถรับรางวัลได้");
+      return;
+    }
+
+    claimedList.push(rewardKey);
+    // ⭐ รางวัลเพิ่มขึ้นเรื่อยๆ แบบลำดับเลขคณิต (50, 60, 70, ...) ตามลำดับภารกิจ
+    const rewardVal = getMissionReward(missionIdx);
 
     wallet.coins += rewardVal;
     wallet.exp += rewardVal;
