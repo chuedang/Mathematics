@@ -256,11 +256,16 @@ html,body{
 .claimed-tag{ margin-top:8px; text-align:center; font-size:11px; color:var(--leaf); font-weight:600; }
 
 .rank-item{ display:flex; align-items:center; padding:10px 12px; border-radius:12px; margin-bottom:7px; background:#fff; border:1px solid #eadecb; font-size:13px; gap:8px; }
-.rank-item.is-me{ background:#fff9db; border:2px solid var(--sun); font-weight:600; }
-.rank-num{ width:30px; font-weight:700; color:var(--ink-soft); text-align:center; }
+.rank-item.is-me{ background:#fff9db; border:2px solid var(--sun); font-weight:600; animation: rank-me-glow 1.6s ease-in-out infinite; }
+.rank-num{ width:30px; font-weight:700; color:var(--ink-soft); text-align:center; font-size:16px; }
 .rank-item.is-me .rank-num{ color:var(--sun-dark); }
 .rank-name{ flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink); }
 .rank-score{ font-weight:700; color:var(--leaf); white-space:nowrap; }
+
+@keyframes rank-me-glow {
+  0%, 100% { box-shadow: 0 0 4px 0 rgba(255,200,87,0.35); }
+  50%      { box-shadow: 0 0 14px 3px rgba(255,200,87,0.85); }
+}
 
 .toast-msg{ position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 68px); transform:translateX(-50%); background:#fff; padding:8px 16px; border-radius:14px; font-size:12px; color:#3b3a45; box-shadow:0 6px 14px rgba(0,0,0,0.25); z-index:999; font-weight:500; white-space:nowrap; display:none; }
 
@@ -1681,6 +1686,11 @@ function closeBattleResult() {
     if (inventory.potion === undefined) inventory.potion = 0;
 
     currentStudent.items = { ...inventory };
+
+    // ⭐ ซิงก์รายการที่ "ซื้อแล้ว" (เช่น ฉากหลัง) กลับมาจาก inventory ที่โหลดจาก server
+    // ถ้าไม่ทำขั้นนี้ purchasedItems จะว่างเปล่าทุกครั้งที่เข้าใหม่ ทำให้ของที่ซื้อแล้วกลายเป็นให้ซื้อซ้ำ
+    purchasedItems = Object.keys(inventory).filter(id => (parseInt(inventory[id]) || 0) > 0);
+    if (!purchasedItems.includes("BG.png")) purchasedItems.push("BG.png");
 
     updateLevelFromExp();
 
@@ -3767,13 +3777,25 @@ let chosenFriendPetIndex =
   function renderRankList(ranking) {
     const container = document.getElementById("rank-list");
     if(!container) return;
-    container.innerHTML = ranking.map((item, idx) => `
+
+    // ⭐ เรียงลำดับตามคะแนนจากมากไปน้อยเสมอ (กันกรณี backend ส่งข้อมูลมาไม่เรียง)
+    const sortedRanking = [...ranking].sort((a, b) => {
+      const scoreA = parseFloat(a["คะแนน"]) || 0;
+      const scoreB = parseFloat(b["คะแนน"]) || 0;
+      return scoreB - scoreA;
+    });
+
+    container.innerHTML = sortedRanking.map((item, idx) => {
+      const medalEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
+      const rankDisplay = medalEmoji ? medalEmoji : (idx + 1);
+      return `
       <div class="rank-item ${item["รหัสนักเรียน"] == studentKey ? 'is-me' : ''}">
-        <div class="rank-num">${idx + 1}</div>
+        <div class="rank-num">${rankDisplay}</div>
         <div class="rank-name">${item["ชื่อ"] || "-"}</div>
         <div class="rank-score">${item["คะแนน"]} คะแนน</div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   function renderMissions() {
