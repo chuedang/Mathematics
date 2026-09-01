@@ -2546,26 +2546,12 @@ function closeBattleResult() {
 
   function closeModal(id){ document.getElementById(id).style.display = "none"; }
 
-  window.addEventListener("beforeunload", () => {
-    if (studentKey) {
-      localStorage.setItem(`pet_lastSeen_${studentKey}`, new Date().toISOString());
-    }
-  });
-
   function checkAwayAttacks() {
-    const lastSeenKey = `pet_lastSeen_${studentKey}`;
-    const lastSeenRaw = localStorage.getItem(lastSeenKey);
-
-    if (!lastSeenRaw) {
-      localStorage.setItem(lastSeenKey, new Date().toISOString());
-      return;
-    }
-
-    const lastSeenTime = new Date(lastSeenRaw).getTime();
+    // ⭐ เดิมใช้ localStorage เก็บเวลาที่เข้าเล่นล่าสุด ซึ่งพัง(ไม่แจ้งเตือน) ถ้าเปลี่ยนเครื่อง/ล้าง cache
+    // เปลี่ยนมาเช็คจาก flag "notified" ที่เก็บอยู่ใน history แต่ละรายการแทน แล้วเซฟกลับขึ้น server
+    // ทำให้แจ้งเตือนถูกต้องไม่ว่าจะเข้าเล่นจากเครื่อง/เบราว์เซอร์ไหนก็ตาม
     let history = Array.isArray(currentStudent.history) ? currentStudent.history : [];
-    let awayAttacks = history.filter(h => h.type === "attacked_by" && new Date(h.timestamp).getTime() > lastSeenTime);
-
-    localStorage.setItem(lastSeenKey, new Date().toISOString());
+    let awayAttacks = history.filter(h => h.type === "attacked_by" && !h.notified);
 
     if (awayAttacks.length === 0) return;
 
@@ -2583,6 +2569,13 @@ function closeBattleResult() {
         `).join("")}
       `;
     }
+
+    // ทำเครื่องหมายว่าแจ้งเตือนแล้ว กันไม่ให้เด้งซ้ำในครั้งถัดไป แล้วเซฟกลับขึ้น server
+    history.forEach(h => {
+      if (h.type === "attacked_by" && !h.notified) h.notified = true;
+    });
+    currentStudent.history = history;
+    saveWalletAndData();
 
     setTimeout(() => {
       document.getElementById("awayReportModal").style.display = "flex";
@@ -2867,6 +2860,7 @@ async function saveFriendPetRest(stolenCoins = 0) {
     type: "attacked_by",
     result: "lose",
     coins: stealAmount,
+    notified: false,
     detail: `ถูกโจมตีโดย ${currentStudent["ชื่อ"] || "เพื่อน"} (แพ้ เสียเหรียญ ${stealAmount} 🪙)`
   });
 
