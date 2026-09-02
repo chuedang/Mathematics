@@ -1294,6 +1294,7 @@ html,body{
   let SHOP_ITEMS = [
     { id: "cat", type: "pet", name: "น้องแมวสุดน่ารัก", price: 500, img: "cat_shop.png" },
     { id: "dog", type: "pet", name: "น้องหมาแสนรู้", price: 500, img: "dog_shop.png" },
+    { id: "siberianhusky", type: "pet", name: "ไซบีเรียนฮัสกี้", price: 700, img: "SiberianHusky_shop.png"},
     { id: "vaccine", type: "medicine", name: "วัคซีนรักษาโรค", price: 150, img: "vaccine.png" },
     { id: "potion", type: "medicine", name: "ยาเร่งโตเต็มวัย", price: 200, img: "potion.png" },
     { id: "custard.png", type: "food", name: "คัสตาร์ด", price: 50, days: 1, img: "custard.png" },
@@ -1980,7 +1981,62 @@ function isMissionDone(mission) {
     if (type === 'giraffe') return isLeg ? 'giraffe_leg.png' : 'giraffe_body.png';
     if (type === 'sheep') return isLeg ? 'sheep_leg.png' : 'sheep_body.png';
     if (type === 'deer') return isLeg ? 'deer_leg.png' : 'deer_body.png';
+    if (type === 'siberianhusky') return isLeg ? 'SiberianHusky_leg.png' : 'SiberianHusky_body.png';
     return isLeg ? 'cat_leg.png' : 'cat_body.png';
+  }
+
+  // ⭐ ตั้งค่าตำแหน่ง/ขนาดขาแยกอิสระต่อสัตว์แต่ละชนิด (หน่วย px)
+  // อยากแก้ขาของสัตว์ตัวไหน แก้ตัวเลขเฉพาะชนิดนั้นได้เลย ไม่กระทบสัตว์ชนิดอื่น
+  const PET_LEG_CONFIG = {
+    default: {
+      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
+      backRight:  { left: 42, top: 65, width: 34, height: 28 },
+      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
+      frontRight: { left: 38, top: 65, width: 34, height: 28 }
+    },
+    dog: {
+      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
+      backRight:  { left: 42, top: 65, width: 34, height: 28 },
+      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
+      frontRight: { left: 38, top: 65, width: 34, height: 28 }
+    },
+    cat: {
+      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
+      backRight:  { left: 42, top: 65, width: 34, height: 28 },
+      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
+      frontRight: { left: 38, top: 65, width: 34, height: 28 }
+    },
+    giraffe: {
+      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
+      backRight:  { left: 42, top: 65, width: 34, height: 28 },
+      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
+      frontRight: { left: 38, top: 65, width: 34, height: 28 }
+    },
+    sheep: {
+      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
+      backRight:  { left: 42, top: 65, width: 34, height: 28 },
+      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
+      frontRight: { left: 38, top: 65, width: 34, height: 28 }
+    },
+    deer: {
+      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
+      backRight:  { left: 42, top: 65, width: 34, height: 28 },
+      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
+      frontRight: { left: 38, top: 65, width: 34, height: 28 }
+    },
+    // ⭐ ค่าเฉพาะของฮัสกี้ — ปรับตัวเลข 4 จุดนี้จนกว่าขาจะเข้าที่ตามรูป SiberianHusky_leg.png จริง
+    siberianhusky: {
+      backLeft:   { left: 16, top: 70, width: 34, height: 28 },
+      backRight:  { left: 44, top: 70, width: 34, height: 28 },
+      frontLeft:  { left: 10, top: 70, width: 34, height: 28 },
+      frontRight: { left: 38, top: 70, width: 34, height: 28 }
+    }
+  };
+
+  function getLegStyle(type, legKey) {
+    const cfg = PET_LEG_CONFIG[type] || PET_LEG_CONFIG.default;
+    const c = cfg[legKey] || PET_LEG_CONFIG.default[legKey];
+    return `left:${c.left}px; top:${c.top}px; width:${c.width}px; height:${c.height}px;`;
   }
 
   function renderPetsDOM(){
@@ -2012,11 +2068,11 @@ function isMissionDone(mission) {
         ${iconHTML}
         <div class="pet-flip" id="pet_flip_${index}">
           <div class="pet-assembly">
-            <img src="${legImg}" class="leg leg-back leg-back-left" alt="ขาหลังซ้าย">
-            <img src="${legImg}" class="leg leg-back leg-back-right" alt="ขาหลังขวา">
+            <img src="${legImg}" class="leg leg-back leg-back-left" style="${getLegStyle(pet.type, 'backLeft')}" alt="ขาหลังซ้าย">
+            <img src="${legImg}" class="leg leg-back leg-back-right" style="${getLegStyle(pet.type, 'backRight')}" alt="ขาหลังขวา">
             <img src="${bodyImg}" class="body-img" alt="${pet.type}">
-            <img src="${legImg}" class="leg leg-front leg-front-left" alt="ขาหน้าซ้าย">
-            <img src="${legImg}" class="leg leg-front leg-front-right" alt="ขาหน้าขวา">
+            <img src="${legImg}" class="leg leg-front leg-front-left" style="${getLegStyle(pet.type, 'frontLeft')}" alt="ขาหน้าซ้าย">
+            <img src="${legImg}" class="leg leg-front leg-front-right" style="${getLegStyle(pet.type, 'frontRight')}" alt="ขาหน้าขวา">
           </div>
         </div>
       `;
@@ -2310,7 +2366,7 @@ function isMissionDone(mission) {
     p1.breedEndTime = endTimeIso;
     p2.breedEndTime = endTimeIso;
 
-    const possibleTypes = ["dog", "cat", "giraffe", "sheep", "deer"];
+    const possibleTypes = ["dog", "cat", "giraffe", "sheep", "deer", "siberianhusky"];
     const babyType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
     
     currentStudent.pets.push({
@@ -3289,11 +3345,11 @@ let chosenFriendPetIndex =
           </div>
           <div class="fighter-assembly-container" id="myFighter">
             <div class="fighter-flip">
-              <img src="${myLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-left" alt="">
-              <img src="${myLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-right" alt="">
+              <img src="${myLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-left" style="${getLegStyle(myPet.type, 'backLeft')}" alt="">
+              <img src="${myLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-right" style="${getLegStyle(myPet.type, 'backRight')}" alt="">
               <img src="${myBodyImg}" class="fighter-body-img" alt="">
-              <img src="${myLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-left" alt="">
-              <img src="${myLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-right" alt="">
+              <img src="${myLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-left" style="${getLegStyle(myPet.type, 'frontLeft')}" alt="">
+              <img src="${myLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-right" style="${getLegStyle(myPet.type, 'frontRight')}" alt="">
             </div>
             <div class="skill-hit-effect" id="myHitEffect"></div>
           </div>
@@ -3310,11 +3366,11 @@ let chosenFriendPetIndex =
           </div>
           <div class="fighter-assembly-container" id="friendFighter">
             <div class="fighter-flip">
-              <img src="${friendLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-left" alt="">
-              <img src="${friendLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-right" alt="">
+              <img src="${friendLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-left" style="${getLegStyle(friendPet.type, 'backLeft')}" alt="">
+              <img src="${friendLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-right" style="${getLegStyle(friendPet.type, 'backRight')}" alt="">
               <img src="${friendBodyImg}" class="fighter-body-img" alt="">
-              <img src="${friendLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-left" alt="">
-              <img src="${friendLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-right" alt="">
+              <img src="${friendLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-left" style="${getLegStyle(friendPet.type, 'frontLeft')}" alt="">
+              <img src="${friendLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-right" style="${getLegStyle(friendPet.type, 'frontRight')}" alt="">
             </div>
             <div class="skill-hit-effect" id="friendHitEffect"></div>
           </div>
