@@ -1289,7 +1289,7 @@ html,body{
 </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbxjxmjlbcAyB4szZbR-v3v3H3dwsTOy3Gbj7DPo57u-Ys_dsG06CIWvMJweieTeY-jzbQ/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzTMBFqzbRJNZDIu4lJVUoxs5eTPdjx_YBMgVLxDZGO9sf0abToJgqOgyxwTsbQI0wmYQ/exec";
 
   let SHOP_ITEMS = [
     { id: "cat", type: "pet", name: "น้องแมวสุดน่ารัก", price: 500, img: "cat_shop.png" },
@@ -1323,7 +1323,7 @@ html,body{
   let inventory = {};
   let purchasedItems = []; 
   let petInstances = [];
-  let serverTimeReference = new Date();
+  let serverTimeOffsetMs = 0;
   let activeTool = null; 
   let currentShopTab = 'pet';
   let currentBackground = 'BG.png';
@@ -1548,7 +1548,7 @@ function closeBattleResult() {
         return;
       }
 
-      if (data.serverTime) serverTimeReference = new Date(data.serverTime);
+      if (data.serverTime) serverTimeOffsetMs = new Date(data.serverTime).getTime() - Date.now();
 
       const student = data.student;
       extraStudentMission = data.extraMission || null;
@@ -1583,16 +1583,27 @@ function closeBattleResult() {
         
         if (typeof pet.battle === "string" && pet.battle.startsWith("rest_")) {
           let wakeTime = parseInt(pet.battle.split("_")[1]);
+          const MAX_REST_MS = 3 * 60 * 60 * 1000;
           if (!isNaN(wakeTime) && nowTimeMs >= wakeTime) {
             pet.battle = false;
+          } else if (!isNaN(wakeTime) && (wakeTime - nowTimeMs) > MAX_REST_MS) {
+            // ค่าพักเก่าที่เกินจากบัคเวลาแช่แข็ง เกินสูงสุด 3 ชม. ให้ตัดกลับมาไม่เกิน 3 ชม.
+            pet.battle = `rest_${nowTimeMs + MAX_REST_MS}`;
           }
         }
         // สิทธิ์โจมตี แยกเก็บของแต่ละตัว
-         if (pet.atk === undefined) pet.atk = 3;
+         if (pet.atk === undefined) pet.atk = 10;
          if (pet.atkReset === undefined) pet.atkReset = 0;
          if (pet.atkReset && nowTimeMs >= pet.atkReset) {
-          pet.atk = 3;
+          pet.atk = 10;
           pet.atkReset = 0;
+        } else if (pet.atkReset) {
+          const MAX_ATK_RESET_MS = 6 * 60 * 60 * 1000;
+          if ((pet.atkReset - nowTimeMs) > MAX_ATK_RESET_MS) {
+            // ค่ารีเซ็ตสิทธิ์เก่าที่เกินจากบัคเวลาแช่แข็ง ให้รีเซ็ตสิทธิ์คืนทันที
+            pet.atk = 10;
+            pet.atkReset = 0;
+          }
         }
       });
 
@@ -1711,7 +1722,7 @@ parsedClaimedRewards = sanitizeClaimedRewards(parsedClaimedRewards, "main_quest"
     }
   }
 
-  function getReferenceDate() { return serverTimeReference; }
+  function getReferenceDate() { return new Date(Date.now() + serverTimeOffsetMs); }
   function todayStr(){ const d = getReferenceDate(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   function yesterdayStr(){ const d = new Date(getReferenceDate().getTime()); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   function calculateFutureDate(days) { const d = getReferenceDate(); d.setDate(d.getDate() + days); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -1985,60 +1996,6 @@ function isMissionDone(mission) {
     return isLeg ? 'cat_leg.png' : 'cat_body.png';
   }
 
-  // ⭐ ตั้งค่าตำแหน่ง/ขนาดขาแยกอิสระต่อสัตว์แต่ละชนิด (หน่วย px)
-  // อยากแก้ขาของสัตว์ตัวไหน แก้ตัวเลขเฉพาะชนิดนั้นได้เลย ไม่กระทบสัตว์ชนิดอื่น
-  const PET_LEG_CONFIG = {
-    default: {
-      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
-      backRight:  { left: 42, top: 65, width: 34, height: 28 },
-      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
-      frontRight: { left: 38, top: 65, width: 34, height: 28 }
-    },
-    dog: {
-      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
-      backRight:  { left: 42, top: 65, width: 34, height: 28 },
-      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
-      frontRight: { left: 38, top: 65, width: 34, height: 28 }
-    },
-    cat: {
-      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
-      backRight:  { left: 42, top: 65, width: 34, height: 28 },
-      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
-      frontRight: { left: 38, top: 65, width: 34, height: 28 }
-    },
-    giraffe: {
-      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
-      backRight:  { left: 42, top: 65, width: 34, height: 28 },
-      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
-      frontRight: { left: 38, top: 65, width: 34, height: 28 }
-    },
-    sheep: {
-      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
-      backRight:  { left: 42, top: 65, width: 34, height: 28 },
-      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
-      frontRight: { left: 38, top: 65, width: 34, height: 28 }
-    },
-    deer: {
-      backLeft:   { left: 14, top: 65, width: 34, height: 28 },
-      backRight:  { left: 42, top: 65, width: 34, height: 28 },
-      frontLeft:  { left: 10, top: 65, width: 34, height: 28 },
-      frontRight: { left: 38, top: 65, width: 34, height: 28 }
-    },
-    // ⭐ ค่าเฉพาะของฮัสกี้ — ปรับตัวเลข 4 จุดนี้จนกว่าขาจะเข้าที่ตามรูป SiberianHusky_leg.png จริง
-    siberianhusky: {
-      backLeft:   { left: 16, top: 70, width: 34, height: 28 },
-      backRight:  { left: 44, top: 70, width: 34, height: 28 },
-      frontLeft:  { left: 10, top: 70, width: 34, height: 28 },
-      frontRight: { left: 38, top: 70, width: 34, height: 28 }
-    }
-  };
-
-  function getLegStyle(type, legKey) {
-    const cfg = PET_LEG_CONFIG[type] || PET_LEG_CONFIG.default;
-    const c = cfg[legKey] || PET_LEG_CONFIG.default[legKey];
-    return `left:${c.left}px; top:${c.top}px; width:${c.width}px; height:${c.height}px;`;
-  }
-
   function renderPetsDOM(){
     const container = document.getElementById("petsContainer");
     container.innerHTML = "";
@@ -2068,11 +2025,11 @@ function isMissionDone(mission) {
         ${iconHTML}
         <div class="pet-flip" id="pet_flip_${index}">
           <div class="pet-assembly">
-            <img src="${legImg}" class="leg leg-back leg-back-left" style="${getLegStyle(pet.type, 'backLeft')}" alt="ขาหลังซ้าย">
-            <img src="${legImg}" class="leg leg-back leg-back-right" style="${getLegStyle(pet.type, 'backRight')}" alt="ขาหลังขวา">
+            <img src="${legImg}" class="leg leg-back leg-back-left" alt="ขาหลังซ้าย">
+            <img src="${legImg}" class="leg leg-back leg-back-right" alt="ขาหลังขวา">
             <img src="${bodyImg}" class="body-img" alt="${pet.type}">
-            <img src="${legImg}" class="leg leg-front leg-front-left" style="${getLegStyle(pet.type, 'frontLeft')}" alt="ขาหน้าซ้าย">
-            <img src="${legImg}" class="leg leg-front leg-front-right" style="${getLegStyle(pet.type, 'frontRight')}" alt="ขาหน้าขวา">
+            <img src="${legImg}" class="leg leg-front leg-front-left" alt="ขาหน้าซ้าย">
+            <img src="${legImg}" class="leg leg-front leg-front-right" alt="ขาหน้าขวา">
           </div>
         </div>
       `;
@@ -2797,13 +2754,20 @@ function isMissionDone(mission) {
   if (!pet) return { count: 0, resetTime: 0 };
 
   let nowMS = getReferenceDate().getTime();
-  if (pet.atk === undefined) pet.atk = 3;
+  if (pet.atk === undefined) pet.atk = 10;
   if (pet.atkReset === undefined) pet.atkReset = 0;
 
   if (pet.atkReset && nowMS >= pet.atkReset) {
-    pet.atk = 3;
+    pet.atk = 10;
     pet.atkReset = 0;
     saveWalletAndData();
+  } else if (pet.atkReset) {
+    const MAX_ATK_RESET_MS = 6 * 60 * 60 * 1000;
+    if ((pet.atkReset - nowMS) > MAX_ATK_RESET_MS) {
+      pet.atk = 10;
+      pet.atkReset = 0;
+      saveWalletAndData();
+    }
   }
 
   return { count: pet.atk, resetTime: pet.atkReset };
@@ -2833,6 +2797,11 @@ function isMissionDone(mission) {
       
       if (typeof pet.battle === "string" && pet.battle.startsWith("rest_")) {
         let wakeTime = parseInt(pet.battle.split("_")[1]);
+        const MAX_REST_MS = 3 * 60 * 60 * 1000;
+        if (!isNaN(wakeTime) && (wakeTime - nowMS) > MAX_REST_MS) {
+          wakeTime = nowMS + MAX_REST_MS;
+          pet.battle = `rest_${wakeTime}`;
+        }
         if (!isNaN(wakeTime) && nowMS < wakeTime) {
           isResting = true;
           let diffHours = Math.ceil((wakeTime - nowMS) / (1000 * 60 * 60));
@@ -2845,7 +2814,7 @@ function isMissionDone(mission) {
       let atkStatus = getPetAttackStatus(idx);
       let attackInfoText = "";
       if (atkStatus.count > 0) {
-        attackInfoText = `⚔️ โจมตีได้วันนี้: ${atkStatus.count}/3 ครั้ง`;
+        attackInfoText = `⚔️ โจมตีได้วันนี้: ${atkStatus.count}/10 ครั้ง`;
       } else {
         let waitHours = Math.ceil((atkStatus.resetTime - nowMS) / (1000 * 60 * 60));
         attackInfoText = `⏳ โจมตีครบแล้ว (รออีก ${Math.max(1, waitHours)} ชม.)`;
@@ -2972,12 +2941,12 @@ async function saveFriendPetRest(stolenCoins = 0) {
 
 
   // ==============================
-  // ให้สัตว์พัก 6 ชั่วโมง
+  // ให้สัตว์พัก 3 ชั่วโมง
   // ==============================
 
   const restWakeTime =
     getReferenceDate().getTime() +
-    6 * 60 * 60 * 1000;
+    3 * 60 * 60 * 1000;
 
 
   friendPets[targetPetIndex].battle =
@@ -3149,7 +3118,7 @@ throw new Error(
 
     if (atkStatus.count <= 0) {
     let waitHours = Math.ceil((atkStatus.resetTime - nowMS) / (1000 * 60 * 60));
-    popMessage(`สัตว์ตัวนี้ใช้สิทธิ์บุกครบ 3 ครั้งแล้ว! ต้องรออีก ${Math.max(1, waitHours)} ชม.`);
+    popMessage(`สัตว์ตัวนี้ใช้สิทธิ์บุกครบ 10 ครั้งแล้ว! ต้องรออีก ${Math.max(1, waitHours)} ชม.`);
     return;
   }
 
@@ -3320,7 +3289,7 @@ let chosenFriendPetIndex =
     let myPet = currentStudent.pets[battleLockedMyPetIndex];
     let atkStatus = getPetAttackStatus(battleLockedMyPetIndex);
 
-    document.getElementById("battleHeaderTitle").textContent = `⚔️ บุกโจมตี! (สิทธิ์เหลือ: ${atkStatus.count}/3)`;
+    document.getElementById("battleHeaderTitle").textContent = `⚔️ บุกโจมตี! (สิทธิ์เหลือ: ${atkStatus.count}/10)`;
     const area = document.getElementById("battleContentArea");
 
     let friendPet = battleTargetFriend.selectedPet;
@@ -3345,11 +3314,11 @@ let chosenFriendPetIndex =
           </div>
           <div class="fighter-assembly-container" id="myFighter">
             <div class="fighter-flip">
-              <img src="${myLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-left" style="${getLegStyle(myPet.type, 'backLeft')}" alt="">
-              <img src="${myLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-right" style="${getLegStyle(myPet.type, 'backRight')}" alt="">
+              <img src="${myLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-left" alt="">
+              <img src="${myLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-right" alt="">
               <img src="${myBodyImg}" class="fighter-body-img" alt="">
-              <img src="${myLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-left" style="${getLegStyle(myPet.type, 'frontLeft')}" alt="">
-              <img src="${myLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-right" style="${getLegStyle(myPet.type, 'frontRight')}" alt="">
+              <img src="${myLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-left" alt="">
+              <img src="${myLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-right" alt="">
             </div>
             <div class="skill-hit-effect" id="myHitEffect"></div>
           </div>
@@ -3366,11 +3335,11 @@ let chosenFriendPetIndex =
           </div>
           <div class="fighter-assembly-container" id="friendFighter">
             <div class="fighter-flip">
-              <img src="${friendLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-left" style="${getLegStyle(friendPet.type, 'backLeft')}" alt="">
-              <img src="${friendLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-right" style="${getLegStyle(friendPet.type, 'backRight')}" alt="">
+              <img src="${friendLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-left" alt="">
+              <img src="${friendLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-right" alt="">
               <img src="${friendBodyImg}" class="fighter-body-img" alt="">
-              <img src="${friendLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-left" style="${getLegStyle(friendPet.type, 'frontLeft')}" alt="">
-              <img src="${friendLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-right" style="${getLegStyle(friendPet.type, 'frontRight')}" alt="">
+              <img src="${friendLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-left" alt="">
+              <img src="${friendLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-right" alt="">
             </div>
             <div class="skill-hit-effect" id="friendHitEffect"></div>
           </div>
@@ -3378,7 +3347,7 @@ let chosenFriendPetIndex =
       </div>
 
       <div class="battle-skills-footer">
-        <div style="font-size:11px; color:#fff; font-weight:600; text-shadow:0 1px 3px rgba(0,0,0,0.8);">สิทธิ์โจมตีวันนี้: <span id="remainingAttackDisplay">${atkStatus.count}</span>/3 ครั้ง</div>
+        <div style="font-size:11px; color:#fff; font-weight:600; text-shadow:0 1px 3px rgba(0,0,0,0.8);">สิทธิ์โจมตีวันนี้: <span id="remainingAttackDisplay">${atkStatus.count}</span>/10 ครั้ง</div>
         <div class="skill-buttons-row">
           <button class="skill-btn" id="skillBtn1" onclick="useBattleSkill(1)">
             <img src="${myPet.type}_skill1.png" alt="Skill 1" onerror="this.src='cat_skill1.png'">
@@ -3523,12 +3492,12 @@ let chosenFriendPetIndex =
 
 
       // ==========================================
-      // 5. ให้สัตว์เพื่อนพัก 6 ชั่วโมง
+      // 5. ให้สัตว์เพื่อนพัก 3 ชั่วโมง
       // ==========================================
 
       const restWakeTime =
         getReferenceDate().getTime() +
-        6 * 60 * 60 * 1000;
+        3 * 60 * 60 * 1000;
 
       friendPets[targetPetIndex].battle =
         `rest_${restWakeTime}`;
