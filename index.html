@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Pet House Sanctuary</title>
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+  <div id="loginPage">
+    <h2>🏠 Pet Sanctuary</h2>
+    <p class="sub">บ้านสัตว์เลี้ยงประจำตัวของคุณ</p>
+    <input type="text" id="username" class="login-input" placeholder="รหัสนักเรียน (ID)">
+    <input type="password" id="password" class="login-input" placeholder="รหัสผ่าน">
+    <button id="loginBtn" onclick="handleLogin()">เข้าบ้านสัตว์เลี้ยง</button>
+  </div>
+
+  <div id="dashboard">
+    <div class="scene" id="scene">
+      <div id="petsContainer"></div>
+
+      <div class="pet-props">
+        <button class="bowl-btn" onclick="openFoodModal(event)" aria-label="ให้อาหาร">
+          <img src="Icon/bowl_feed.png" alt="ชามอาหาร">
+        </button>
+        <button class="bowl-btn" onclick="giveWater(event)" aria-label="เติมน้ำ">
+          <img src="Icon/bowl_water.png" alt="ชามน้ำ">
+        </button>
+      </div>
+
+      <div class="top-overlay">
+        <div class="left-user-info">
+          <div class="name-block">
+            <div class="user-name" id="displayName">-</div>
+            <div class="user-class">🏫 <span id="displaySheet">-</span></div>
+            <div class="xp-bar-container">
+              <div class="xp-info-row">
+                <span>⭐ Lv.<span id="displayLevel" class="num">1</span></span>
+                <span><span id="currentLevelExp" class="num">0</span>/<span id="nextLevelExp" class="num">300</span> XP</span>
+              </div>
+              <div class="xp-track">
+                <div class="xp-fill" id="xpFillBar"></div>
+              </div>
+            </div>
+          </div>
+          <div class="sub-stats-row">
+            <span class="stat-badge">📊 <span class="num" id="displayScore">0</span></span>
+            <div class="streak-chip">🔥 <span class="num" id="displayStreak">0</span> วัน</div>
+          </div>
+
+          <div id="holdingStatusBadge" class="holding-status-badge">
+            <img id="holdingIconImg" src="" alt="icon">
+            <span id="holdingText">กำลังถือ...</span>
+            <button class="cancel-hold-btn" onclick="cancelHoldingTool(event)" title="ยกเลิก">✕</button>
+          </div>
+        </div>
+
+        <div class="center-stats">
+          <div class="coin-badge-premium">
+            <span>💰</span> <span class="num" id="displayCoins">0</span>
+          </div>
+        </div>
+
+        <div class="right-nav">
+          <button class="icon-btn" onclick="openBattleScreen()" aria-label="การต่อสู้">
+            <img src="Icon/battle.png" alt="การต่อสู้">
+          </button>
+          <button class="icon-btn" onclick="openMinigame()" aria-label="มินิเกม">
+            <img src="Icon/Minigame.png" alt="มินิเกม">
+          </button>
+          <button class="icon-btn" onclick="openBreedModal()" aria-label="ผสมพันธุ์">
+            <img src="Icon/breed.png" alt="ผสมพันธุ์">
+          </button>
+          <button class="icon-btn" onclick="openBagModal()" aria-label="กระเป๋า">
+            <img src="Icon/bag.png" alt="กระเป๋า">
+          </button>
+          <button class="icon-btn" onclick="openShopModal()" aria-label="ร้านค้า">
+            <img src="Icon/shop.png" alt="ร้านค้า">
+          </button>
+          <button class="icon-btn" onclick="openRankModal()" aria-label="อันดับ">
+            <img src="Icon/rank.png" alt="อันดับ">
+          </button>
+          <button class="icon-btn" onclick="openMissionModal()" aria-label="ภารกิจ">
+            <img src="Icon/quest.png" alt="ภารกิจ">
+          </button>
+          <button class="icon-btn" onclick="location.reload()" aria-label="ออก">
+            <img src="Icon/exit.png" alt="ออก">
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- หน้าจอการต่อสู้ (Battle Screen) -->
+    <div id="battleScreen">
+      <!-- วิดีโอเล่นวนลูปเป็นภาพพื้นหลัง -->
+      <video id="battleBgVideo" autoplay loop muted playsinline poster="Background/BG_battle.png">
+        <source src="Background/BG_battle.mp4" type="video/mp4">
+      </video>
+
+      <div class="battle-top-bar">
+        <button class="back-btn" onclick="closeBattleScreen()" aria-label="ย้อนกลับ">
+          <img src="Icon/back.png" alt="ย้อนกลับ">
+        </button>
+        <div id="battleHeaderTitle" style="color: #fff; font-weight: 600; font-size: 15px; text-shadow: 0 1px 3px rgba(0,0,0,0.8);"> ⚔️การต่อสู้เริ่มขึ้นแล้ว </div>
+        <button class="back-btn" onclick="openBattleHistoryModal()" aria-label="ประวัติการต่อสู้">
+          <img src="Icon/history_atk.png" alt="ประวัติการต่อสู้">
+        </button>
+      </div>
+
+      <div class="battle-content-area" id="battleContentArea"></div>
+      <div id="battleResultOverlay" class="battle-result-overlay">
+
+    <div id="battleResultCard" class="battle-result-card">
+
+      <div id="battleResultIcon" class="battle-result-icon">
+        🏆
+      </div>
+
+      <h2 id="battleResultTitle">
+        ชนะการต่อสู้!
+      </h2>
+
+      <p id="battleResultMessage">
+        คุณเอาชนะคู่ต่อสู้ได้สำเร็จ
+      </p>
+
+      <div id="battleRewardBox" class="battle-reward-box">
+        <!-- รางวัลจะถูกใส่จาก JavaScript -->
+      </div>
+
+      <button
+        id="battleResultConfirmBtn"
+        class="battle-result-confirm-btn"
+        onclick="closeBattleResult()"
+      >
+        ตกลง
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+    </div>
+
+    <div class="toast-msg" id="toastMsg"></div>
+    <!-- Modal เลือกอาหาร -->
+    <div class="modal-overlay" id="foodModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">🍲 เลือกเมนูอาหารให้น้อง</h3>
+          <button class="close-btn" onclick="closeModal('foodModal')">✕</button>
+        </div>
+        <div class="food-grid" id="foodGridContainer"></div>
+      </div>
+    </div>
+
+    <!-- Modal ร้านค้า -->
+    <div class="modal-overlay" id="shopModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">🛒 ร้านค้าสัตว์เลี้ยง</h3>
+          <button class="close-btn" onclick="closeModal('shopModal')">✕</button>
+        </div>
+        <div id="shopQuotaBox" style="text-align:center; font-size:12px; color:var(--ink-soft); margin-bottom:10px; background:#fff3e6; padding:6px; border-radius:10px;">
+          โควตาสัตว์เลี้ยงปัจจุบัน: <b id="shopPetQuotaText" style="color:var(--berry-dark);">1/1 ตัว</b> (Lv.<span id="shopCurrentLevel">1</span>)
+        </div>
+        <div class="shop-tabs">
+          <button class="shop-tab-btn active" onclick="switchShopTab('pet', this)">🐾 สัตว์</button>
+          <button class="shop-tab-btn" onclick="switchShopTab('medicine', this)">💊 ยา</button>
+          <button class="shop-tab-btn" onclick="switchShopTab('food', this)">🍲 อาหาร</button>
+          <button class="shop-tab-btn" onclick="switchShopTab('bg', this)">🏡 บ้านแมว</button>
+        </div>
+        <div id="shopListContainer"></div>
+      </div>
+    </div>
+
+    <!-- Modal กระเป๋าเก็บของ -->
+    <div class="modal-overlay" id="bagModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">🎒 กระเป๋าไอเทม</h3>
+          <button class="close-btn" onclick="closeModal('bagModal')">✕</button>
+        </div>
+        <div class="shop-item">
+          <img src="Shop/vaccine.png" class="shop-img" alt="วัคซีน">
+          <div class="shop-info">
+            <div class="shop-name">วัคซีนรักษาโรค</div>
+            <div class="shop-price">มีอยู่: <span id="bagVaccineCount" class="num">0</span> อัน</div>
+          </div>
+          <button class="buy-btn" onclick="useItemFromBag('vaccine')">ใช้</button>
+        </div>
+        <div class="shop-item">
+          <img src="Shop/potion.png" class="shop-img" alt="ยาเร่งโต">
+          <div class="shop-info">
+            <div class="shop-name">ยาเร่งโตเต็มวัย</div>
+            <div class="shop-price">มีอยู่: <span id="bagPotionCount" class="num">0</span> อัน</div>
+          </div>
+          <button class="buy-btn" onclick="useItemFromBag('potion')">ใช้</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal ผสมพันธุ์สัตว์ -->
+    <div class="modal-overlay" id="breedModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">💖 ศูนย์ผสมพันธุ์สัตว์</h3>
+          <button class="close-btn" onclick="closeBreedModal('breedModal')">✕</button>
+        </div>
+        <p id="breedDescText" style="font-size:12px; color:var(--ink-soft); text-align:center; margin:0 0 10px;">เลือกสัตว์ 2 ตัวมาผสมพันธุ์เพื่อสุ่มรับสมาชิกใหม่!</p>
+        
+        <div class="breed-slots-area">
+          <div class="breed-slot" id="breedSlot1" onclick="openBreedSelector(0)"><span class="breed-plus">+</span></div>
+          <div style="font-size:24px; color:var(--berry);">+</div>
+          <div class="breed-slot" id="breedSlot2" onclick="openBreedSelector(1)"><span class="breed-plus">+</span></div>
+        </div>
+
+        <div id="breedActionArea">
+          <button id="startBreedBtn" onclick="executeBreed()" class="buy-btn" style="width:100%; padding:12px; font-size:14px; background:var(--berry); color:#fff; box-shadow:0 3px 0 var(--berry-dark); margin-top:5px;" disabled>เริ่มผสมพันธุ์ (6 ชม.)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal เลือกสัตว์ใส่ช่องผสมพันธุ์ -->
+    <div class="modal-overlay" id="breedSelectorModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">🐾 เลือกสัตว์เลี้ยง</h3>
+          <button class="close-btn" onclick="closeModal('breedSelectorModal')">✕</button>
+        </div>
+        <div class="breed-select-list" id="breedSelectorList"></div>
+      </div>
+    </div>
+
+    <!-- Modal ภารกิจ -->
+    <div class="modal-overlay" id="missionModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">📜 รายการภารกิจ</h3>
+          <button class="close-btn" onclick="closeModal('missionModal')">✕</button>
+        </div>
+        <div class="shop-tabs">
+          <button class="shop-tab-btn active" onclick="switchMissionTab('main', this)">📚 วิชาหลัก</button>
+          <button class="shop-tab-btn" onclick="switchMissionTab('extra', this)">📖 วิชาเพิ่มเติม</button>
+        </div>
+        <div id="mission-list"></div>
+      </div>
+    </div>
+
+    <!-- Modal จัดอันดับ -->
+    <div class="modal-overlay" id="rankModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">🏆 จัดอันดับคะแนน</h3>
+          <button class="close-btn" onclick="closeModal('rankModal')">✕</button>
+        </div>
+        <div id="rank-list"></div>
+      </div>
+    </div>
+
+    <!-- Modal ประวัติการต่อสู้ -->
+    <div class="modal-overlay" id="battleHistoryModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">⚔️ ประวัติการต่อสู้</h3>
+          <button class="close-btn" onclick="closeModal('battleHistoryModal')">✕</button>
+        </div>
+        <div id="battle-history-list" style="max-height:60vh; overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- Modal สรุปตอนกลับเข้ามา -->
+    <div class="modal-overlay" id="awayReportModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">📢 ระหว่างที่คุณไม่อยู่</h3>
+          <button class="close-btn" onclick="closeModal('awayReportModal')">✕</button>
+        </div>
+        <div id="away-report-list" style="max-height:55vh; overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- Modal โจทย์คณิตก่อนใช้สกิล -->
+    <div class="modal-overlay" id="mathChallengeModal">
+      <div class="modal-card" style="max-width:280px;">
+        <div class="modal-header">
+          <h3 class="modal-title">🧮 ตอบให้ถูกก่อนใช้ท่านี้!</h3>
+        </div>
+        <div style="height:7px; background:#f2e6cf; border-radius:4px; overflow:hidden; margin-top:4px;">
+          <div id="mathTimerFill" style="height:100%; width:100%; background:linear-gradient(90deg, #2ecc71, #e74f66); transition:width 1s linear;"></div>
+        </div>
+        <div id="mathTimerText" style="text-align:center; font-size:11px; font-weight:600; color:var(--berry-dark); margin-top:4px;">เหลือเวลา 10 วินาที</div>
+        <div id="mathEquationDisplay" style="text-align:center; font-size:22px; font-weight:700; color:var(--ink); margin:14px 0;"></div>
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px;">
+          <span style="font-size:13px; color:var(--ink-soft);">คำตอบ</span>
+          <div id="mathAnswerDisplay" style="min-width:70px; padding:6px 10px; background:#fff9db; border:2px solid var(--sun-dark); border-radius:8px; font-size:16px; font-weight:700; text-align:center;">&nbsp;</div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+          <button class="buy-btn" style="font-size:16px; padding:10px 0;" onclick="mathKeypadPress('7')">7</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0;" onclick="mathKeypadPress('8')">8</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0;" onclick="mathKeypadPress('9')">9</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0;" onclick="mathKeypadPress('4')">4</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0;" onclick="mathKeypadPress('5')">5</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0;" onclick="mathKeypadPress('6')">6</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0;" onclick="mathKeypadPress('1')">1</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0;" onclick="mathKeypadPress('2')">2</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0;" onclick="mathKeypadPress('3')">3</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0; background:#e8e0d0;" onclick="mathKeypadBackspace()">⌫</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0;" onclick="mathKeypadPress('0')">0</button>
+          <button class="buy-btn" style="font-size:16px; padding:10px 0; background:var(--leaf); color:#fff;" onclick="mathKeypadSubmit()">✓</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- 🎮 Minigame -->
+    <div class="minigame-screen" id="minigameScreen">
+      <div class="mg-top-bar">
+        <button class="back-btn" onclick="closeMinigame()" aria-label="ย้อนกลับ">
+          <img src="Icon/back.png" alt="ย้อนกลับ">
+        </button>
+        <div class="mg-title">🎮 มินิเกม</div>
+        <div class="mg-coin-chip">💰 <span id="mgCoins" class="num">0</span></div>
+      </div>
+
+      <div class="mg-tabs">
+        <button class="mg-tab active" id="mgTabMath" onclick="switchMinigameTab('math')">🧮 ตอบโจทย์เลข</button>
+        <button class="mg-tab" id="mgTabRoulette" onclick="switchMinigameTab('roulette')">🎰 วงล้อสุ่มไอเทม</button>
+      </div>
+
+      <!-- โหมดตอบโจทย์เลข -->
+      <div class="mg-pane active" id="mgMathPane">
+        <div class="mg-card">
+          <div class="mg-reward-line">ตอบถูกข้อละ <b>+1 💰 เหรียญ</b> และ <b>+1 ⭐ EXP</b></div>
+          <div class="mg-timer-track"><div class="mg-timer-fill" id="mgTimerFill"></div></div>
+          <div class="mg-timer-text" id="mgTimerText">เหลือเวลา 10 วินาที</div>
+          <div class="mg-equation" id="mgEquation">-</div>
+          <div class="mg-answer-row">
+            <span>คำตอบ</span>
+            <div class="mg-answer-box" id="mgAnswerBox">&nbsp;</div>
+          </div>
+          <div class="mg-feedback" id="mgFeedback"></div>
+          <div class="mg-keypad">
+            <button class="mg-key" onclick="mgPress('7')">7</button>
+            <button class="mg-key" onclick="mgPress('8')">8</button>
+            <button class="mg-key" onclick="mgPress('9')">9</button>
+            <button class="mg-key" onclick="mgPress('4')">4</button>
+            <button class="mg-key" onclick="mgPress('5')">5</button>
+            <button class="mg-key" onclick="mgPress('6')">6</button>
+            <button class="mg-key" onclick="mgPress('1')">1</button>
+            <button class="mg-key" onclick="mgPress('2')">2</button>
+            <button class="mg-key" onclick="mgPress('3')">3</button>
+            <button class="mg-key back" onclick="mgBackspace()">⌫</button>
+            <button class="mg-key" onclick="mgPress('0')">0</button>
+            <button class="mg-key ok" onclick="mgSubmit()">✓</button>
+          </div>
+        </div>
+        <div class="mg-session" id="mgSessionStats"></div>
+      </div>
+
+      <!-- โหมดวงล้อสุ่มไอเทม -->
+      <div class="mg-pane" id="mgRoulettePane">
+        <div class="rl-hint">หมุนวงล้อครั้งละ <b>200 💰</b> ลุ้นอาหาร วัคซีน และ <b>ช้าง</b>!</div>
+        <div class="rl-stage" id="rlStage">
+          <div class="rl-window" id="rlWindow">
+            <div class="rl-track" id="rlTrack"></div>
+            <div class="rl-fade left"></div>
+            <div class="rl-fade right"></div>
+            <div class="rl-marker" id="rlMarker"></div>
+          </div>
+        </div>
+        <button class="rl-spin-btn" id="rlSpinBtn" onclick="spinRoulette()">🎰 หมุนเลย! (200 💰)</button>
+        <div class="rl-prize-title" style="margin-top:14px;">ของรางวัลที่ลุ้นได้</div>
+        <div class="rl-prize-list" id="rlPrizeList"></div>
+      </div>
+
+      <!-- ผลรางวัล -->
+      <div class="mg-result-overlay" id="mgResultOverlay">
+        <div class="mg-result-card" id="mgResultCard">
+          <img id="mgResultImg" src="" alt="รางวัล">
+          <h3 id="mgResultTitle"></h3>
+          <p id="mgResultDesc"></p>
+          <button class="claim-btn" onclick="closeMgResult()">เยี่ยมเลย!</button>
+        </div>
+      </div>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
