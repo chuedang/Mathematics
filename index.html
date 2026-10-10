@@ -66,29 +66,8 @@
         </div>
 
         <div class="right-nav">
-          <button class="icon-btn" onclick="openBattleScreen()" aria-label="การต่อสู้">
-            <img src="Icon/battle.png" alt="การต่อสู้">
-          </button>
-          <button class="icon-btn" onclick="openMinigame()" aria-label="มินิเกม">
-            <img src="Icon/Minigame.png" alt="มินิเกม">
-          </button>
-          <button class="icon-btn" onclick="openBreedModal()" aria-label="ผสมพันธุ์">
-            <img src="Icon/breed.png" alt="ผสมพันธุ์">
-          </button>
           <button class="icon-btn" onclick="openBagModal()" aria-label="กระเป๋า">
             <img src="Icon/bag.png" alt="กระเป๋า">
-          </button>
-          <button class="icon-btn" onclick="openShopModal()" aria-label="ร้านค้า">
-            <img src="Icon/shop.png" alt="ร้านค้า">
-          </button>
-          <button class="icon-btn" onclick="openRankModal()" aria-label="อันดับ">
-            <img src="Icon/rank.png" alt="อันดับ">
-          </button>
-          <button class="icon-btn" onclick="openMissionModal()" aria-label="ภารกิจ">
-            <img src="Icon/quest.png" alt="ภารกิจ">
-          </button>
-          <button class="icon-btn" onclick="location.reload()" aria-label="ออก">
-            <img src="Icon/exit.png" alt="ออก">
           </button>
         </div>
       </div>
@@ -180,29 +159,49 @@
       </div>
     </div>
 
-    <!-- Modal กระเป๋าเก็บของ -->
+    <!-- Modal กระเป๋า + เมนูหลัก -->
     <div class="modal-overlay" id="bagModal">
       <div class="modal-card">
         <div class="modal-header">
-          <h3 class="modal-title">🎒 กระเป๋าไอเทม</h3>
+          <h3 class="modal-title">🎒 กระเป๋า</h3>
           <button class="close-btn" onclick="closeModal('bagModal')">✕</button>
         </div>
-        <div class="shop-item">
-          <img src="Shop/vaccine.png" class="shop-img" alt="วัคซีน">
-          <div class="shop-info">
-            <div class="shop-name">วัคซีนรักษาโรค</div>
-            <div class="shop-price">มีอยู่: <span id="bagVaccineCount" class="num">0</span> อัน</div>
-          </div>
-          <button class="buy-btn" onclick="useItemFromBag('vaccine')">ใช้</button>
+
+        <div class="menu-grid">
+          <button class="menu-cell" onclick="menuGo('battle')">
+            <img src="Icon/battle.png" alt=""><span>ต่อสู้</span>
+          </button>
+          <button class="menu-cell" onclick="menuGo('math')">
+            <img src="Icon/cal.png" alt=""><span>คิดเลข</span>
+          </button>
+          <button class="menu-cell" onclick="menuGo('roulette')">
+            <img src="Icon/random.png" alt=""><span>สุ่มของ</span>
+          </button>
+          <button class="menu-cell" onclick="menuGo('equation')">
+            <img src="Icon/equation.png" alt=""><span>แก้สมการ</span>
+          </button>
+          <button class="menu-cell" onclick="menuGo('factor')">
+            <img src="Icon/factor.png" alt=""><span>แยกตัวประกอบ</span>
+          </button>
+          <button class="menu-cell" onclick="menuGo('breed')">
+            <img src="Icon/breed.png" alt=""><span>ผสมพันธุ์</span>
+          </button>
+          <button class="menu-cell" onclick="menuGo('shop')">
+            <img src="Icon/shop.png" alt=""><span>ร้านค้า</span>
+          </button>
+          <button class="menu-cell" onclick="menuGo('rank')">
+            <img src="Icon/rank.png" alt=""><span>อันดับ</span>
+          </button>
+          <button class="menu-cell" onclick="menuGo('mission')">
+            <img src="Icon/quest.png" alt=""><span>ภารกิจ</span>
+          </button>
+          <button class="menu-cell" onclick="menuGo('exit')">
+            <img src="Icon/exit.png" alt=""><span>ออก</span>
+          </button>
         </div>
-        <div class="shop-item">
-          <img src="Shop/potion.png" class="shop-img" alt="ยาเร่งโต">
-          <div class="shop-info">
-            <div class="shop-name">ยาเร่งโตเต็มวัย</div>
-            <div class="shop-price">มีอยู่: <span id="bagPotionCount" class="num">0</span> อัน</div>
-          </div>
-          <button class="buy-btn" onclick="useItemFromBag('potion')">ใช้</button>
-        </div>
+
+        <div class="bag-section-title">🎒 ของในกระเป๋า</div>
+        <div id="bagInventoryList" class="bag-inv-grid"></div>
       </div>
     </div>
 
@@ -322,20 +321,15 @@
     <!-- 🎮 Minigame -->
     <div class="minigame-screen" id="minigameScreen">
       <div class="mg-top-bar">
-        <button class="back-btn" onclick="closeMinigame()" aria-label="ย้อนกลับ">
+        <button class="back-btn" onclick="mgBack()" aria-label="ย้อนกลับ">
           <img src="Icon/back.png" alt="ย้อนกลับ">
         </button>
-        <div class="mg-title">🎮 มินิเกม</div>
+        <div class="mg-title" id="mgTitle">🎮 มินิเกม</div>
         <div class="mg-coin-chip">💰 <span id="mgCoins" class="num">0</span></div>
       </div>
 
-      <div class="mg-tabs">
-        <button class="mg-tab active" id="mgTabMath" onclick="switchMinigameTab('math')">🧮 ตอบโจทย์เลข</button>
-        <button class="mg-tab" id="mgTabRoulette" onclick="switchMinigameTab('roulette')">🎰 วงล้อสุ่มไอเทม</button>
-      </div>
-
       <!-- โหมดตอบโจทย์เลข -->
-      <div class="mg-pane active" id="mgMathPane">
+      <div class="mg-pane" id="mgMathPane">
         <div class="mg-card">
           <div class="mg-reward-line">ตอบถูกข้อละ <b>+1 💰 เหรียญ</b> และ <b>+1 ⭐ EXP</b></div>
           <div class="mg-timer-track"><div class="mg-timer-fill" id="mgTimerFill"></div></div>
@@ -364,9 +358,67 @@
         <div class="mg-session" id="mgSessionStats"></div>
       </div>
 
+      <!-- โหมดแยกตัวประกอบ -->
+      <div class="mg-pane" id="mgFactorPane">
+        <div class="mg-card">
+          <div class="mg-reward-line">ลากกล่องไปวางให้ครบ 6 ช่อง แล้วกด <b>ตอบ</b> · ถูกข้อละ <b>+3 💰</b> และ <b>+3 ⭐ EXP</b></div>
+          <div id="fcPlay">
+            <div class="mg-timer-track"><div class="mg-timer-fill" id="fcTimerFill"></div></div>
+            <div class="mg-timer-text" id="fcTimerText">เหลือเวลา 3:00</div>
+            <div class="mg-equation fc-equation" id="fcEquation">-</div>
+            <div class="fc-slots" id="fcSlots"></div>
+            <div class="mg-feedback" id="fcFeedback"></div>
+            <div class="fc-palette">
+              <div class="fc-ops" id="fcOps"></div>
+              <div class="fc-nums" id="fcNums"></div>
+            </div>
+            <div class="fc-actions">
+              <button class="fc-clear-btn" onclick="fcClear()">🗑 ล้าง</button>
+              <button class="fc-submit-btn" id="fcSubmitBtn" onclick="fcSubmit()" disabled>✓ ตอบ</button>
+            </div>
+            <div class="mg-session" id="fcScore"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- โหมดแก้สมการ (จับเวลา 3 นาที/ข้อ) -->
+      <div class="mg-pane" id="mgEquationPane">
+        <div class="mg-card">
+          <div class="mg-reward-line">ถูกข้อละ <b>+5 💰</b> <b>+5 ⭐</b> · แบบ 2 ตัวแปร <b>+6 💰</b> <b>+6 ⭐</b> · ข้อละ 10 นาที</div>
+          <div class="mg-timer-track"><div class="mg-timer-fill" id="eqTimerFill"></div></div>
+          <div class="mg-timer-text" id="eqTimerText">เหลือเวลา 3:00</div>
+          <div class="mg-equation" id="eqEquation">-</div>
+          <div class="mg-answer-row">
+            <span class="eq-var">x =</span>
+            <div class="mg-answer-box" id="eqAnswerBox" onclick="eqSelect('x')">&nbsp;</div>
+          </div>
+          <div class="mg-answer-row" id="eqRowY" style="display:none;">
+            <span class="eq-var">y =</span>
+            <div class="mg-answer-box" id="eqAnswerBoxY" onclick="eqSelect('y')">&nbsp;</div>
+          </div>
+          <div class="mg-feedback" id="eqFeedback"></div>
+          <div class="mg-keypad">
+            <button class="mg-key" onclick="eqPress('7')">7</button>
+            <button class="mg-key" onclick="eqPress('8')">8</button>
+            <button class="mg-key" onclick="eqPress('9')">9</button>
+            <button class="mg-key" onclick="eqPress('4')">4</button>
+            <button class="mg-key" onclick="eqPress('5')">5</button>
+            <button class="mg-key" onclick="eqPress('6')">6</button>
+            <button class="mg-key" onclick="eqPress('1')">1</button>
+            <button class="mg-key" onclick="eqPress('2')">2</button>
+            <button class="mg-key" onclick="eqPress('3')">3</button>
+            <button class="mg-key back" onclick="eqBackspace()">⌫</button>
+            <button class="mg-key" onclick="eqPress('0')">0</button>
+            <button class="mg-key" onclick="eqToggleSign()">+/−</button>
+          </div>
+          <button class="fc-submit-btn" style="width:100%; margin-top:10px;" onclick="eqSubmit()">✓ ตอบ</button>
+        </div>
+        <div class="mg-session" id="eqSessionStats"></div>
+      </div>
+
       <!-- โหมดวงล้อสุ่มไอเทม -->
       <div class="mg-pane" id="mgRoulettePane">
-        <div class="rl-hint">หมุนวงล้อครั้งละ <b>200 💰</b> ลุ้นอาหาร วัคซีน และ <b>ช้าง</b>!</div>
+        <div class="rl-hint">หมุนวงล้อครั้งละ <b>200 💰</b> ลุ้นอาหาร วัคซีน และ <b>มังกรไฟ</b>!</div>
         <div class="rl-stage" id="rlStage">
           <div class="rl-window" id="rlWindow">
             <div class="rl-track" id="rlTrack"></div>
