@@ -47,7 +47,11 @@ html,body{
   position:absolute; width:100px; height:90px; z-index:5; cursor:pointer; 
   transition: left 2.5s ease-in-out, top 2.5s ease-in-out, transform 0.3s;
 }
-.avatar-container.baby { transform: scale(0.7); }
+.avatar-container{ transform: scale(var(--pet-scale, 1)); }
+.avatar-container.baby { transform: scale(calc(var(--pet-scale, 1) * 0.7)); }
+
+/* ⭐ ขนาด/ตำแหน่งขาแยกรายตัว ตั้งที่ PET_LAYOUT ใน script.js (ตัวแปร --pet-scale, --bl-x ฯลฯ ถูกใส่ให้อัตโนมัติ) */
+
 .pet-flip{ width:100%; height:100%; transition:transform 0.25s; transform:scaleX(1); position:relative; }
 .avatar-container.facing-left .pet-flip{ transform:scaleX(-1); }
 
@@ -61,15 +65,15 @@ html,body{
 }
 
 .leg{ 
-  position:absolute; width:34px; height:28px; object-fit:contain; 
+  position:absolute; width:var(--leg-w, 34px); height:var(--leg-h, 28px); object-fit:contain; 
   transform-origin: top center; 
 }
 .leg-back{ z-index:1; filter:brightness(0.75); }
-.leg-back-left{ left:14px; top:65px; }
-.leg-back-right{ left:42px; top:65px; }
+.leg-back-left{ left:var(--bl-x, 14px); top:var(--bl-y, 65px); }
+.leg-back-right{ left:var(--br-x, 42px); top:var(--br-y, 65px); }
 .leg-front{ z-index:3; }
-.leg-front-left{ left:10px; top:65px; }
-.leg-front-right{ left:38px; top:65px; }
+.leg-front-left{ left:var(--fl-x, 10px); top:var(--fl-y, 65px); }
+.leg-front-right{ left:var(--fr-x, 38px); top:var(--fr-y, 65px); }
 
 .avatar-container.walking .leg-back-left{ animation:leg-swing 0.8s ease-in-out infinite alternate; }
 .avatar-container.walking .leg-front-left{ animation:leg-swing 0.8s ease-in-out infinite alternate-reverse; }
@@ -186,16 +190,27 @@ html,body{
 .stat-badge{ background:rgba(254,244,220,0.95); border:1px solid var(--sun-dark); padding:3px 8px; border-radius:10px; font-size:11px; font-weight:600; color:#a05a12; display:flex; align-items:center; gap:3px; white-space:nowrap; box-shadow:0 3px 8px rgba(0,0,0,0.15); }
 
 .right-nav{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; margin-top:4px; }
-.icon-btn{ 
-  width:38px; height:38px; border-radius:50%; 
-  background:rgba(255, 255, 255, 0.3); border:2px solid #ffffff; 
-  cursor:pointer; display:flex; align-items:center; justify-content:center; 
-  box-shadow:0 0 10px rgba(255, 255, 255, 0.8), 0 3px 6px rgba(0,0,0,0.25); 
+.icon-btn{
+  width:42px; height:42px; border-radius:50%;
+  background:radial-gradient(circle at 35% 28%, #fffef6 0%, #ffeaa6 52%, #ffc857 100%);
+  border:2.5px solid #ffffff;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  box-shadow:
+    0 0 0 2px rgba(231,169,46,0.55),
+    0 0 14px 3px rgba(255,214,102,0.85),
+    0 4px 8px rgba(0,0,0,0.3),
+    inset 0 -3px 6px rgba(231,169,46,0.35);
   padding:0; overflow:visible; position:relative;
   transition: transform 0.15s ease;
+  animation: icon-btn-glow 2.2s ease-in-out infinite alternate;
 }
-.icon-btn img{ width:140%; height:140%; object-fit:contain; position:absolute; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35)); }
+.icon-btn img{ width:130%; height:130%; object-fit:contain; position:absolute; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.35)); }
 .icon-btn:active{ transform:scale(0.9); }
+@keyframes icon-btn-glow {
+  from { box-shadow: 0 0 0 2px rgba(231,169,46,0.55), 0 0 10px 2px rgba(255,214,102,0.65), 0 4px 8px rgba(0,0,0,0.3), inset 0 -3px 6px rgba(231,169,46,0.35); }
+  to   { box-shadow: 0 0 0 2px rgba(231,169,46,0.75), 0 0 20px 6px rgba(255,214,102,0.95), 0 4px 8px rgba(0,0,0,0.3), inset 0 -3px 6px rgba(231,169,46,0.35); }
+}
+@media (prefers-reduced-motion: reduce) { .icon-btn { animation:none; } }
 
 .modal-overlay{ display:none; position:absolute; inset:0; background:rgba(20,20,30,0.55); z-index:100; justify-content:center; align-items:center; padding:20px; }
 .modal-card{ background:var(--cream); border-radius:24px; padding:18px; width:100%; max-width:360px; max-height:80%; overflow-y:auto; box-shadow:0 14px 30px rgba(0,0,0,0.35); }
@@ -491,14 +506,19 @@ html,body{
   width: 100px;
   height: 90px;
   filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+  /* ⭐ เผื่อที่ด้านบนตาม scale (PET_LAYOUT) ไม่ให้ตัวที่ขยายทับกล่องชื่อ/HP */
+  margin-top: calc(90px * (var(--pet-scale, 1) - 1));
 }
 .fighter-flip {
   width: 100%;
   height: 100%;
   position: relative;
+  /* ⭐ สเกลตาม PET_LAYOUT (ขยายขึ้นด้านบน เท้าอยู่พื้นเดิม) ใช้ที่ชั้นนี้เพราะแอนิเมชันโจมตีใช้ transform ของ container */
+  transform: scale(var(--pet-scale, 1));
+  transform-origin: 50% 100%;
 }
 .fighter-side.right .fighter-flip {
-  transform: scaleX(-1);
+  transform: scaleX(-1) scale(var(--pet-scale, 1));
 }
 .fighter-body-img {
   width: 100%;
@@ -509,17 +529,17 @@ html,body{
 }
 .fighter-leg {
   position: absolute;
-  width: 34px;
-  height: 28px;
+  width: var(--leg-w, 34px);
+  height: var(--leg-h, 28px);
   object-fit: contain;
   transform-origin: top center;
 }
 .fighter-leg-back { z-index: 1; filter: brightness(0.75); }
-.fighter-leg-back-left { left: 14px; top: 65px; z-index: 1; filter: brightness(0.75); }
-.fighter-leg-back-right { left: 42px; top: 65px; z-index: 1; filter: brightness(0.75); }
+.fighter-leg-back-left { left: var(--bl-x, 14px); top: var(--bl-y, 65px); z-index: 1; filter: brightness(0.75); }
+.fighter-leg-back-right { left: var(--br-x, 42px); top: var(--br-y, 65px); z-index: 1; filter: brightness(0.75); }
 .fighter-leg-front { z-index: 3; }
-.fighter-leg-front-left { left: 10px; top: 65px; z-index: 3; }
-.fighter-leg-front-right { left: 38px; top: 65px; z-index: 3; }
+.fighter-leg-front-left { left: var(--fl-x, 10px); top: var(--fl-y, 65px); z-index: 3; }
+.fighter-leg-front-right { left: var(--fr-x, 38px); top: var(--fr-y, 65px); z-index: 3; }
 /* ── Battle Attack Animation ── */
 
 .fighter-assembly-container {
@@ -1160,3 +1180,136 @@ html,body{
 .mg-result-card p { margin:0 0 14px; font-size:13px; color:var(--ink-soft); }
 .mg-result-card p b { color:var(--berry-dark); }
 @keyframes mg-pop { 0% { transform:scale(0.6); opacity:0; } 100% { transform:scale(1); opacity:1; } }
+
+/* =========================================
+   🎒 เมนูหลักในกระเป๋า (กริด 3 คอลัมน์) + ของในกระเป๋า
+========================================= */
+.menu-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;
+}
+.menu-cell{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  background:#fff; border:2px solid #e2d7c3; border-radius:16px; padding:10px 4px 8px;
+  cursor:pointer; font-family:'Mitr',sans-serif; box-shadow:0 3px 0 #e2d7c3;
+  transition:transform .1s;
+}
+.menu-cell:active{ transform:translateY(3px); box-shadow:none; background:#fff4e6; }
+.menu-cell img{ width:46px; height:46px; object-fit:contain; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.25)); }
+.menu-cell span{ font-size:11px; font-weight:600; color:var(--ink); white-space:nowrap; }
+
+.bag-section-title{
+  font-size:13px; font-weight:600; color:var(--ink);
+  border-top:2px solid var(--cream-dark); padding-top:10px; margin-bottom:8px;
+}
+.bag-inv-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.bag-inv-item{
+  position:relative; background:#fff; border:1px solid #e2d7c3; border-radius:14px;
+  padding:8px 4px; text-align:center;
+}
+.bag-inv-item img{ width:40px; height:40px; object-fit:contain; }
+.bag-inv-item.empty{ opacity:.5; }
+.bag-inv-item.usable{ border:2px solid var(--sun-dark); background:#fff9db; cursor:pointer; }
+.bag-inv-item.usable:active{ transform:scale(0.95); }
+.bag-inv-name{ font-size:10px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bag-inv-count{ font-size:12px; font-weight:700; color:var(--berry-dark); }
+.bag-inv-use{ font-size:9px; color:var(--leaf); font-weight:600; }
+
+/* =========================================
+   🎮 Minigame — เมนูเลือกเกม
+========================================= */
+.mg-hub-hint { text-align:center; font-size:13px; color:var(--ink-soft); margin:6px 0 14px; width:100%; }
+.mg-hub-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; width:100%; }
+.mg-hub-cell {
+  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  background:var(--cream); border:3px solid var(--sun); border-radius:22px; padding:16px 6px 12px;
+  font-family:'Mitr',sans-serif; cursor:pointer; box-shadow:0 5px 0 var(--sun-dark), 0 10px 18px rgba(0,0,0,0.12);
+  transition:transform .1s;
+}
+.mg-hub-cell:active { transform:translateY(4px); box-shadow:0 1px 0 var(--sun-dark); }
+.mg-hub-cell img { width:76px; height:76px; object-fit:contain; filter:drop-shadow(0 3px 4px rgba(0,0,0,0.28)); }
+.mg-hub-cell b { font-size:15px; font-weight:600; color:var(--ink); }
+.mg-hub-cell small { font-size:10px; color:var(--ink-soft); }
+.mg-hub-cell.coming { border-color:#d9cfbb; box-shadow:0 5px 0 #cfc3aa, 0 10px 18px rgba(0,0,0,0.08); }
+.mg-hub-cell.coming img { filter:grayscale(0.55) opacity(0.8) drop-shadow(0 3px 4px rgba(0,0,0,0.2)); }
+.mg-soon-tag {
+  position:absolute; top:8px; right:8px; background:var(--berry); color:#fff;
+  font-size:10px; font-weight:600; padding:2px 8px; border-radius:10px; box-shadow:0 2px 0 var(--berry-dark);
+}
+
+/* =========================================
+   🧩 Minigame — แยกตัวประกอบ
+========================================= */
+.fc-intro { text-align:center; }
+.fc-intro-title { font-size:18px; font-weight:600; color:var(--ink); margin-bottom:6px; }
+.fc-intro-eg {
+  font-family:'Baloo 2',sans-serif; font-size:20px; font-weight:800; color:var(--berry-dark);
+  background:#fff9db; border:2px dashed var(--sun-dark); border-radius:12px; padding:8px 4px; margin:8px 0 10px;
+}
+.fc-intro-list { text-align:left; margin:0 0 14px; padding-left:20px; font-size:12.5px; color:var(--ink-soft); line-height:1.8; }
+.fc-intro-list b { color:var(--berry-dark); }
+.fc-start-btn {
+  width:100%; border:none; border-radius:18px; padding:13px; cursor:pointer;
+  font-family:'Mitr'; font-size:17px; font-weight:600; color:#fff;
+  background:linear-gradient(180deg,#58c586,var(--leaf)); box-shadow:0 5px 0 #2c7048, 0 10px 18px rgba(63,148,99,0.3);
+}
+.fc-start-btn:active { transform:translateY(4px); box-shadow:0 1px 0 #2c7048; }
+
+.fc-equation { font-size:28px; margin:12px 0 4px; }
+.fc-slots { display:flex; align-items:center; justify-content:center; gap:3px; margin:6px 0 4px; }
+.fc-group { display:flex; gap:4px; }
+.fc-paren { font-family:'Baloo 2',sans-serif; font-size:46px; font-weight:400; line-height:1; color:var(--ink-soft); transform:translateY(-3px); }
+
+.fc-slot, .fc-tile, .fc-ghost {
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Baloo 2',sans-serif; font-weight:800; user-select:none; -webkit-user-select:none;
+  -webkit-touch-callout:none; touch-action:none;
+}
+.fc-slot {
+  width:36px; height:46px; border:2px dashed var(--sun-dark); border-radius:10px;
+  background:#fff9db; font-size:20px; color:var(--ink); transition:transform .08s, background .08s;
+}
+.fc-slot.filled { border-style:solid; cursor:grab; }
+.fc-slot.over { background:#ffe9a8; border-color:var(--berry); transform:scale(1.1); }
+.fc-slot.dragging { opacity:0.3; }
+
+.fc-palette { margin-top:6px; }
+.fc-ops { display:flex; justify-content:center; gap:10px; margin-bottom:8px; }
+.fc-nums { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.fc-tile {
+  height:38px; border-radius:11px; font-size:18px; cursor:grab;
+  background:#fff; color:var(--ink); border:2px solid #e2d7c3; box-shadow:0 3px 0 #e2d7c3;
+}
+.fc-ops .fc-tile { width:64px; height:44px; font-size:22px; }
+.fc-tile:active { transform:translateY(2px); box-shadow:0 1px 0 #e2d7c3; }
+.fc-tile.selected { outline:3px solid var(--berry); outline-offset:1px; }
+
+/* สีตามชนิดกล่อง (ใช้ทั้งกล่อง ช่อง และตัวที่กำลังลาก) */
+.t-x    { background:#efe6ff !important; color:#6b4bb8 !important; border-color:#cdb9f5 !important; }
+.t-sign { background:#ffe3e8 !important; color:var(--berry-dark) !important; border-color:#ffb3c0 !important; }
+.t-num.filled, .fc-ghost.t-num { background:#fff; color:var(--ink); border-color:#e2d7c3; }
+.fc-slot.filled.t-x    { box-shadow:0 2px 0 #cdb9f5; }
+.fc-slot.filled.t-sign { box-shadow:0 2px 0 #ffb3c0; }
+.fc-slot.filled.t-num  { box-shadow:0 2px 0 #e2d7c3; }
+
+.fc-ghost {
+  position:fixed; z-index:10000; pointer-events:none; width:46px; height:46px; font-size:22px;
+  border-radius:12px; border:2px solid var(--sun-dark); transform:translate(-50%,-50%) scale(1.15);
+  box-shadow:0 10px 18px rgba(0,0,0,0.3);
+}
+
+.fc-actions { display:flex; gap:10px; margin-top:12px; }
+.fc-clear-btn, .fc-submit-btn {
+  border:none; border-radius:14px; padding:11px; cursor:pointer;
+  font-family:'Mitr'; font-size:15px; font-weight:600;
+}
+.fc-clear-btn { flex:0 0 30%; background:#e8e0d0; color:var(--ink); box-shadow:0 3px 0 #cfc3aa; }
+.fc-submit-btn { flex:1; background:var(--leaf); color:#fff; box-shadow:0 3px 0 #2c7048; }
+.fc-clear-btn:active, .fc-submit-btn:active { transform:translateY(3px); box-shadow:none; }
+.fc-submit-btn:disabled { background:#c7c4b8; color:#8a887c; box-shadow:0 3px 0 #a9a698; cursor:not-allowed; }
+.fc-alt-btn { background:#fff; color:var(--ink); box-shadow:0 3px 0 #e2d7c3; }
+/* 📐 แก้สมการ: ป้าย "x =" หน้าช่องตอบ */
+.eq-var { font-family:'Baloo 2',sans-serif; font-size:22px !important; font-weight:800; color:var(--ink) !important; }
+/* 📐 แก้สมการแบบ 2 ตัวแปร: โจทย์ 2 บรรทัด + ช่องที่เลือกอยู่ */
+.mg-equation.multi { white-space:pre-line; font-size:24px; line-height:1.35; }
+.mg-answer-box { cursor:pointer; }
+.mg-answer-box.active { border-color:var(--berry-dark); box-shadow:0 0 0 3px rgba(231,79,102,0.25); }
