@@ -1,7 +1,16 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzTMBFqzbRJNZDIu4lJVUoxs5eTPdjx_YBMgVLxDZGO9sf0abToJgqOgyxwTsbQI0wmYQ/exec";
 
-  // ⭐ สัตว์จะตาย (dead:true) เมื่อเลยวันที่อิ่มสุดท้าย (validUntil) มาแล้วครบกี่วัน
+  // ⭐ สัตว์จะตาย (dead:true) เมื่อไม่ได้กินอาหารเกินกี่วัน (นับจากวันที่หมดอิ่ม = validUntil)
+  //    ถ้ายังไม่เคยให้อาหารเลย จะนับจากวันที่สัตว์ตัวนั้นเกิด/ซื้อมาแทน
   const PET_DEAD_AFTER_DAYS = 10;
+
+  // ⭐ การสุ่มป่วย: สัตว์จะเริ่มเสี่ยงป่วยเมื่อไม่ได้ให้น้ำครบ PET_SICK_NEGLECT_DAYS วัน
+  //    สุ่มแยกทีละตัว วันละ 1 ครั้ง/ตัว (โอกาส PET_SICK_CHANCE_PER_DAY ต่อวันที่ละเลย) จึงไม่ป่วยพร้อมกันหมด
+  const PET_SICK_NEGLECT_DAYS = 3;
+  const PET_SICK_CHANCE_PER_DAY = 0.25;
+
+  // ⭐ น้ำหนักการสุ่มชนิดสัตว์ตอนผสมพันธุ์ (ไม่ใส่ = 1) ตอนนี้ทุกชนิดมีโอกาสเท่ากัน
+  const BREED_WEIGHTS = {};
 
   // ⭐ ข้อมูลสัตว์แต่ละชนิด: ชื่อ, ไฟล์ภาพ (โฟลเดอร์ Animals/), ชื่อไฟล์สกิล (โฟลเดอร์ Skills/)
   const PET_INFO = {
@@ -11,14 +20,51 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzTMBFqzbRJNZDIu4lJVUox
     sheep:         { name: "แกะ",              body: "sheep_body.png",         leg: "sheep_leg.png",         skill: "sheep" },
     deer:          { name: "กวาง",             body: "deer_body.png",          leg: "deer_leg.png",          skill: "deer" },
     siberianhusky: { name: "ไซบีเรียนฮัสกี้",  body: "SiberianHusky_body.png", leg: "SiberianHusky_leg.png", skill: "siberianhusky" },
-    elepant:       { name: "ช้าง",             body: "Elepant_body.png",       leg: "Elepant_leg.png",       skill: "Elepant" }
+    elepant:       { name: "ช้าง",             body: "Elepant_body.png",       leg: "Elepant_leg.png",       skill: "Elepant" },
+    bear:          { name: "หมี",              body: "bear_body.png",          leg: "bear_leg.png",          skill: "bear" },
+    shiba:         { name: "ชิบะ",             body: "shiba_body.png",         leg: "shiba_leg.png",         skill: "shiba" },
+    littledragon:  { name: "มังกรน้อย",        body: "littledragon_body.png",  leg: "littledragon_leg.png",  skill: "littledragon" },
+    firedragon:    { name: "มังกรไฟ",          body: "firedragon_body.png",    leg: "firedragon_leg.png",    skill: "firedragon" }
   };
+
+  // ⭐ ปรับขนาด/ตำแหน่งขา "แยกรายตัว" (ใช้ได้ทั้งในบ้านและหน้าต่อสู้)
+  //    ค่าที่ไม่ใส่ = ค่าเริ่มต้นด้านล่าง   bl/br/fl/fr = ขาหลังซ้าย/หลังขวา/หน้าซ้าย/หน้าขวา เป็น [left, top] (px)
+  //    scale = ขยายทั้งตัว (เฉพาะในบ้าน) legSize = [กว้าง, สูง] ของขา   ลองปรับด้วย pet-leg-editor.html แล้วก๊อปบรรทัดมาวางแทนได้เลย
+  const PET_LAYOUT_DEFAULT = { scale: 1, legSize: [34, 28], bl: [14, 65], br: [42, 65], fl: [10, 65], fr: [38, 65] };
+  const PET_LAYOUT = {
+    cat:           {},
+    dog:           {},
+    giraffe:       {legSize: [46,43], bl: [14,70], br: [42,70], fl: [10,70], fr: [38,70]},
+    sheep:         {},
+    deer:          {},
+    siberianhusky: {legSize: [39,27], bl: [14,75], br: [42,75], fl: [10,75], fr: [38,75]},
+    elepant:       {},
+    bear:          {legSize: [33,41], bl: [9,50], br: [46,50], fl: [2,50], fr: [41,50]},
+    shiba:         {},
+    littledragon:  {legSize: [76,34], bl: [15,59], br: [39,59], fl: [10,59], fr: [35,59]},
+    firedragon:    {scale: 2.2, legSize: [64,37], bl: [14,59], br: [42,59], fl: [10,59], fr: [38,59]}
+  };
+  function applyPetLayout(el, type) {
+    if (!el) return;
+    const L = Object.assign({}, PET_LAYOUT_DEFAULT, PET_LAYOUT[type] || {});
+    const set = (k, v) => el.style.setProperty(k, v + "px");
+    set("--leg-w", L.legSize[0]); set("--leg-h", L.legSize[1]);
+    set("--bl-x", L.bl[0]); set("--bl-y", L.bl[1]);
+    set("--br-x", L.br[0]); set("--br-y", L.br[1]);
+    set("--fl-x", L.fl[0]); set("--fl-y", L.fl[1]);
+    set("--fr-x", L.fr[0]); set("--fr-y", L.fr[1]);
+    if (L.scale !== 1) { el.style.setProperty("--pet-scale", L.scale); el.style.transformOrigin = "50% 100%"; }
+  }
 
   let SHOP_ITEMS = [
     { id: "cat", type: "pet", name: "น้องแมวสุดน่ารัก", price: 500, img: "Shop/cat_shop.png" },
     { id: "dog", type: "pet", name: "น้องหมาแสนรู้", price: 500, img: "Shop/dog_shop.png" },
     { id: "siberianhusky", type: "pet", name: "ไซบีเรียนฮัสกี้", price: 700, img: "Shop/SiberianHusky_shop.png" },
-    // ช้าง (elepant) ไม่ขายในร้าน ได้จากการสุ่มผสมพันธุ์ / วงล้อมินิเกมเท่านั้น
+    { id: "shiba", type: "pet", name: "ชิบะอินุจอมซน", price: 700, img: "Shop/shiba_shop.png" },
+    { id: "bear", type: "pet", name: "น้องหมีใจดี", price: 800, img: "Shop/bear_shop.png" },
+    { id: "littledragon", type: "pet", name: "มังกรน้อยจอมพลัง", price: 900, img: "Shop/littledragon_shop.png" },
+    // ช้าง (elepant) ไม่ขายในร้าน ได้จากการสุ่มผสมพันธุ์เท่านั้น
+    // มังกรไฟ (firedragon) ไม่ขายในร้าน และผสมพันธุ์ไม่ได้ ได้จากวงล้อมินิเกมเท่านั้น
     { id: "vaccine", type: "medicine", name: "วัคซีนรักษาโรค", price: 150, img: "Shop/vaccine.png" },
     { id: "potion", type: "medicine", name: "ยาเร่งโตเต็มวัย", price: 200, img: "Shop/potion.png" },
     { id: "custard.png", type: "food", name: "คัสตาร์ด", price: 50, days: 1, img: "Foods/custard.png" },
@@ -447,6 +493,7 @@ parsedClaimedRewards = sanitizeClaimedRewards(parsedClaimedRewards, "main_quest"
       renderShopList('pet');
       renderFoodGrid();
       startWanderLoop();
+      startPetDepthLoop();
       startDayWatcher();
       checkAwayAttacks();
 
@@ -726,8 +773,7 @@ function isMissionDone(mission) {
 
   function updateWalletUI(){
     document.getElementById("displayCoins").textContent = wallet.coins;
-    document.getElementById("bagVaccineCount").textContent = inventory.vaccine || 0;
-    document.getElementById("bagPotionCount").textContent = inventory.potion || 0;
+    renderBagInventory();
     updateLevelFromExp();
   }
 
@@ -743,14 +789,33 @@ function isMissionDone(mission) {
       if(pet.power === undefined) pet.power = 10;
       if(pet.battle === undefined) pet.battle = false;
       if(!pet.born) pet.born = nowStr; 
-      if (lastWater && !pet.dead && diffDays(nowStr, lastWater) >= 3) pet.sick = true;
-      if (validUntil && !pet.dead && diffDays(nowStr, validUntil) >= PET_DEAD_AFTER_DAYS) pet.dead = true;
+
+      // 🤒 สุ่มป่วยแยกรายตัว (วันละครั้ง/ตัว) เมื่อละเลยการให้น้ำ
+      const waterGap = lastWater ? diffDays(nowStr, lastWater) : 0;
+      const neglectDays = waterGap - (PET_SICK_NEGLECT_DAYS - 1);   // จำนวนวันที่เลยเกณฑ์มา
+      if (!pet.dead && !pet.sick && neglectDays > 0 && pet.sickRoll !== nowStr) {
+        // ถ้าไม่ได้เปิดเกมหลายวัน ให้สุ่มรวมเฉพาะวันที่ยังไม่เคยสุ่ม
+        const rollDays = pet.sickRoll ? Math.min(neglectDays, Math.max(1, diffDays(nowStr, pet.sickRoll))) : neglectDays;
+        const chance = 1 - Math.pow(1 - PET_SICK_CHANCE_PER_DAY, rollDays);
+        pet.sickRoll = nowStr;
+        if (Math.random() < chance) pet.sick = true;
+      }
+
+      // 💀 ตายเมื่อไม่ได้กินอาหารเกิน PET_DEAD_AFTER_DAYS วัน (นับจากหมดอิ่ม หรือวันเกิดของตัวนั้น ถ้าใหม่กว่า)
+      const hungerStart = (validUntil && validUntil > pet.born) ? validUntil : pet.born;
+      if (!pet.dead && diffDays(nowStr, hungerStart) > PET_DEAD_AFTER_DAYS) pet.dead = true;
     });
   }
 
   function getPetImage(type, isLeg = false) {
     const info = PET_INFO[type] || PET_INFO.cat;
     return "Animals/" + (isLeg ? info.leg : info.body);
+  }
+
+  // ⭐ ภาพไอคอนสัตว์สำหรับหน้าเลือกสัตว์ต่อสู้ = Shop/ชื่อสัตว์_shop.png (ชื่อไฟล์อิงจาก body ใน PET_INFO)
+  function getPetShopImage(type) {
+    const info = PET_INFO[type] || PET_INFO.cat;
+    return "Shop/" + info.body.replace("_body.png", "_shop.png");
   }
 
   function getPetSkillPrefix(type) {
@@ -779,11 +844,12 @@ function isMissionDone(mission) {
       petInstances[index] = ({ index: index, type: pet.type, born: pet.born, sick: pet.sick, dead: pet.dead, x: x, y: y, targetX: x, targetY: y, isWalking: false });
 
       const el = document.createElement("div");
-      el.className = `avatar-container ${isBaby ? 'baby' : ''} ${pet.dead ? 'dead' : ''}`;
+      el.className = `avatar-container pet-${pet.type} ${isBaby ? 'baby' : ''} ${pet.dead ? 'dead' : ''}`;
       el.id = `pet_el_${index}`;
       el.style.left = x + "px";
       el.style.top = y + "%";
       el.onclick = (e) => tapPet(e, index);
+      applyPetLayout(el, pet.type);
 
       let bodyImg = getPetImage(pet.type, false), legImg = getPetImage(pet.type, true);
       let iconHTML = pet.dead ? `<img src="Icon/ghost.png" class="pet-icon-status" alt="วิญญาณ">` : (pet.sick ? `<img src="Icon/sick.png" class="pet-icon-status" alt="ป่วย">` : (isBaby ? `<img src="Icon/baby.png" class="pet-icon-status" alt="เด็ก">` : ''));
@@ -802,6 +868,27 @@ function isMissionDone(mission) {
       `;
       container.appendChild(el);
     });
+    updatePetDepth();
+  }
+
+  // ⭐ เรียงชั้นภาพ (z-index) ตามตำแหน่งแนวตั้ง: ตัวที่อยู่ต่ำกว่า (ใกล้คนดูกว่า) จะอยู่ข้างหน้าเสมอ
+  //    ใช้ offsetTop ซึ่งเปลี่ยนตามตำแหน่งจริงระหว่างเดิน (ไม่รวม scale/baby) จึงสลับชั้นกลางทางได้
+  //    ช่วง z-index ที่ใช้ = PET_Z_MIN ถึง PET_Z_MAX (ต้องต่ำกว่าปุ่มชามน้ำ/แถบด้านบน) ถ้ามีสัตว์มากกว่าช่วงนี้ ตัวที่ใกล้กันจะเรียงตามลำดับเดิม
+  const PET_Z_MIN = 5, PET_Z_MAX = 9;
+  function updatePetDepth() {
+    const els = Array.from(document.querySelectorAll("#petsContainer .avatar-container"));
+    if (els.length === 0) return;
+    els.sort((a, b) => a.offsetTop - b.offsetTop);
+    const span = PET_Z_MAX - PET_Z_MIN;
+    els.forEach((el, i) => {
+      const z = els.length > 1 ? PET_Z_MIN + Math.round(i * span / (els.length - 1)) : PET_Z_MIN;
+      if (el.style.zIndex !== String(z)) el.style.zIndex = z;
+    });
+  }
+  let _petDepthTimer = null;
+  function startPetDepthLoop() {
+    if (_petDepthTimer) return;
+    _petDepthTimer = setInterval(updatePetDepth, 120);
   }
 
   function isPetBaby(bornDateStr){
@@ -963,6 +1050,55 @@ function isMissionDone(mission) {
 
   function openBagModal(){ updateWalletUI(); document.getElementById("bagModal").style.display = "flex"; }
 
+  // เมนูหลักในกระเป๋า: ปิดกระเป๋าก่อน แล้วเปิดหน้าที่เลือก
+  function menuGo(target){
+    if (target === 'exit') { location.reload(); return; }
+    closeModal('bagModal');
+    activeTool = null; updateHoldingUI();
+    const actions = {
+      battle: openBattleScreen,
+      math:     () => openMinigame('math'),
+      roulette: () => openMinigame('roulette'),
+      equation: () => openMinigame('equation'),
+      factor:   () => openMinigame('factor'),
+      breed: openBreedModal,
+      shop: openShopModal,
+      rank: openRankModal,
+      mission: openMissionModal
+    };
+    if (actions[target]) actions[target]();
+  }
+
+  // แสดงของในกระเป๋า: ยา (กดใช้ได้) + อาหารที่มี
+  function renderBagInventory(){
+    const el = document.getElementById("bagInventoryList");
+    if (!el) return;
+    const cards = [];
+    const meds = [
+      { id: 'vaccine', name: 'วัคซีนรักษาโรค', img: 'Shop/vaccine.png' },
+      { id: 'potion',  name: 'ยาเร่งโต',       img: 'Shop/potion.png' }
+    ];
+    meds.forEach(m => {
+      const n = parseInt(inventory[m.id]) || 0;
+      cards.push(`
+        <div class="bag-inv-item ${n > 0 ? 'usable' : 'empty'}" ${n > 0 ? `onclick="useItemFromBag('${m.id}')"` : ''}>
+          <img src="${m.img}" alt="${m.name}">
+          <div class="bag-inv-name">${m.name}</div>
+          <div class="bag-inv-count num">x${n}</div>
+          ${n > 0 ? '<div class="bag-inv-use">แตะเพื่อใช้</div>' : ''}
+        </div>`);
+    });
+    SHOP_ITEMS.filter(i => i.type === 'food' && (parseInt(inventory[i.id]) || 0) > 0).forEach(f => {
+      cards.push(`
+        <div class="bag-inv-item">
+          <img src="${f.img}" alt="${f.name}">
+          <div class="bag-inv-name">${f.name}</div>
+          <div class="bag-inv-count num">x${inventory[f.id]}</div>
+        </div>`);
+    });
+    el.innerHTML = cards.join('');
+  }
+
   function useItemFromBag(itemType){
     if(inventory[itemType] <= 0){ popMessage("ไอเทมในกระเป๋าหมดแล้ว!"); return; }
     activeTool = itemType;
@@ -1092,8 +1228,14 @@ function isMissionDone(mission) {
     p1.breedEndTime = endTimeIso;
     p2.breedEndTime = endTimeIso;
 
-    const possibleTypes = ["dog", "cat", "giraffe", "sheep", "deer", "siberianhusky", "elepant"];
-    const babyType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
+    const possibleTypes = ["dog", "cat", "giraffe", "sheep", "deer", "siberianhusky", "elepant", "bear", "shiba", "littledragon"];   // ไม่มี firedragon (ได้จากวงล้อมินิเกมเท่านั้น)
+    const totalWeight = possibleTypes.reduce((sum, t) => sum + (BREED_WEIGHTS[t] ?? 1), 0);
+    let breedRoll = Math.random() * totalWeight;
+    let babyType = possibleTypes[possibleTypes.length - 1];
+    for (const t of possibleTypes) {
+      breedRoll -= (BREED_WEIGHTS[t] ?? 1);
+      if (breedRoll < 0) { babyType = t; break; }
+    }
     
     currentStudent.pets.push({
       type: babyType,
@@ -1595,7 +1737,7 @@ function isMissionDone(mission) {
 
       petsHtml += `
         <div class="friend-battle-card ${isSelected ? 'selected-pet-highlight' : ''}" style="${isResting ? 'opacity:0.6; background:#f5f5f5;' : ''}" onclick="${isResting ? `popMessage('สัตว์ตัวนี้กำลังพักฟื้นอยู่!')` : `lockMyBattlePet(${idx})`}">
-          <img src="${getPetImage(pet.type, false)}" style="width:45px; height:45px; object-fit:contain;" alt="">
+          <img src="${getPetShopImage(pet.type)}" style="width:45px; height:45px; object-fit:contain;" alt="" onerror="this.onerror=null;this.src='${getPetImage(pet.type, false)}'">
           <div style="flex:1; text-align:left; margin-left:10px;">
             <div style="font-weight:600; font-size:13px; color:var(--ink);">${namePet} ${isSelected ? '✨ (เลือกแล้ว)' : ''}</div>
             <div style="font-size:10px; color:var(--ink-soft);">Power: ${pet.power || 10} | ${attackInfoText}</div>
@@ -2174,6 +2316,8 @@ let chosenFriendPetIndex =
         </div>
       </div>
     `;
+    applyPetLayout(document.getElementById("myFighter"), myPet.type);
+    applyPetLayout(document.getElementById("friendFighter"), friendPet.type);
   }
 
   function useBattleSkill(skillNum) {
@@ -2858,21 +3002,25 @@ let chosenFriendPetIndex =
 
 
 /* =====================================================================
-   🎮 MINIGAME  (ไอคอน Icon/Minigame.png)
-   1) 🧮 ตอบโจทย์บวก ลบ คูณ หารเลข (ใช้ generateMathChallenge ตัวเดียวกับตอนต่อสู้)
+   🎮 MINIGAME  (ไอคอน Icon/Minigame.png) → เกม 4 ช่องอยู่ในเมนูกระเป๋าเลย กดแล้วเข้าเกมตรงๆ
+   1) 🧮 คิดเลข (Icon/cal.png)  บวก ลบ คูณ หาร (ใช้ generateMathChallenge ตัวเดียวกับตอนต่อสู้)
         ตอบถูกข้อละ +1 เหรียญ +1 EXP
-   2) 🎰 วงล้อสุ่มไอเทม ราคา 200 เหรียญ / ครั้ง
-        รางวัล: อาหาร, วัคซีน, ช้าง (ถ้าสัตว์เต็มคอก → แปลงเป็นเงิน 1,000 เหรียญแทน)
+   2) 🎰 สุ่มของ (Icon/random.png)  วงล้อสุ่มไอเทม ราคา 200 เหรียญ / ครั้ง
+        รางวัล: อาหาร, วัคซีน, มังกรไฟ (ถ้าสัตว์เต็มคอก → แปลงเป็นเงิน 1,000 เหรียญแทน)
+   3) 📐 แก้สมการ (Icon/equation.png)  แบบ 1) ax + b = c  2) a + bx = c  3) ระบบสมการ 2 ตัวแปร  จับเวลา 3 นาที/ข้อ
+        แบบ 1,2 ตอบถูก +5 เหรียญ +5 EXP / แบบ 3 ตอบถูก +6 เหรียญ +6 EXP  (โอกาสออก 1:1:3)
+   4) 🧩 แยกตัวประกอบ (Icon/factor.png)  x² ± ax ± b ลากกล่องใส่ช่อง ( )( ) จับเวลา 3 นาที/ข้อ (ตอบถูก=นับใหม่, หมดเวลา=เปลี่ยนโจทย์)
+        ตอบถูกข้อละ +3 เหรียญ +3 EXP
 ===================================================================== */
 
 const MG_REWARD_COIN = 1;          // เหรียญต่อ 1 ข้อที่ตอบถูก
 const MG_REWARD_EXP  = 1;          // EXP ต่อ 1 ข้อที่ตอบถูก
 const MG_MATH_NUM_COUNT = 3;       // จำนวนตัวเลขในโจทย์ (3 ตัว เท่ากับสกิล 2 ตอนต่อสู้)
 const ROULETTE_COST = 200;         // ราคาต่อการหมุน 1 ครั้ง
-const ROULETTE_FULL_COINS = 1000;  // เงินที่ได้แทนช้าง เมื่อสัตว์เต็มคอก
+const ROULETTE_FULL_COINS = 1000;  // เงินที่ได้แทนมังกรไฟ เมื่อสัตว์เต็มคอก
 
 // น้ำหนักโอกาสสุ่ม (รวม = 100 → เท่ากับ % พอดี)
-const ROULETTE_WEIGHT_ELEPANT   = 2;     // ช้าง 2%
+const ROULETTE_WEIGHT_FIREDRAGON = 2;   // มังกรไฟ 2%
 const ROULETTE_WEIGHT_VACCINE   = 14;    // วัคซีน 14%
 const ROULETTE_WEIGHT_SHOP_FOOD = 3.5;   // อาหารทั่วไป 12 เมนู × 3.5 = 42%
 const ROULETTE_WEIGHT_THAI_FOOD = 4.2;   // อาหารไทย 10 เมนู × 4.2 = 42%
@@ -2896,14 +3044,20 @@ let rlRafId = null;
 
 /* ---------- เปิด / ปิด ---------- */
 
-function openMinigame() {
+const MG_TITLES = { math: '🧮 คิดเลข', roulette: '🎰 สุ่มของ', equation: '📐 แก้สมการ', factor: '🧩 แยกตัวประกอบ' };
+const MG_PANES  = { math: 'mgMathPane', roulette: 'mgRoulettePane', equation: 'mgEquationPane', factor: 'mgFactorPane' };
+
+function openMinigame(game) {
   mgCorrectCount = 0;
+  eqCorrectCount = 0;
+  eqTotalCoin = 0;
+  eqTotalExp = 0;
   document.getElementById("minigameScreen").style.display = "flex";
   mgRefreshCoins();
   mgUpdateSessionStats();
   renderRoulettePrizeList();
   rlPrepareIdleTrack();
-  switchMinigameTab('math');
+  switchMinigameTab(game || 'math');
   document.addEventListener("keydown", mgKeyHandler);
 }
 
@@ -2911,27 +3065,35 @@ function closeMinigame() {
   if (rlSpinning) { popMessage("รอวงล้อหยุดก่อนนะ! 🎰"); return; }
   mgStopTimer();
   clearTimeout(mgNextTimeout);
+  eqStop();
+  fcStop();
   document.getElementById("minigameScreen").style.display = "none";
   document.getElementById("mgResultOverlay").style.display = "none";
   document.removeEventListener("keydown", mgKeyHandler);
   updateWalletUI();
 }
 
+// ปุ่มย้อนกลับ: ออกจากเกมกลับหน้าหลักเลย (เลือกเกมจากเมนูในกระเป๋าแล้ว)
+function mgBack() {
+  closeMinigame();
+}
+
 function switchMinigameTab(tab) {
   if (rlSpinning) { popMessage("รอวงล้อหยุดก่อนนะ! 🎰"); return; }
+  mgStopTimer();
+  clearTimeout(mgNextTimeout);
+  eqStop();
+  fcStop();
   mgActiveTab = tab;
-  document.getElementById("mgTabMath").classList.toggle("active", tab === 'math');
-  document.getElementById("mgTabRoulette").classList.toggle("active", tab === 'roulette');
-  document.getElementById("mgMathPane").classList.toggle("active", tab === 'math');
-  document.getElementById("mgRoulettePane").classList.toggle("active", tab === 'roulette');
+  Object.keys(MG_PANES).forEach(k => {
+    document.getElementById(MG_PANES[k]).classList.toggle('active', k === tab);
+  });
+  document.getElementById("mgTitle").textContent = MG_TITLES[tab] || '🎮 มินิเกม';
 
-  if (tab === 'math') {
-    mgNewQuestion();
-  } else {
-    mgStopTimer();
-    clearTimeout(mgNextTimeout);
-    rlUpdateSpinBtn();
-  }
+  if (tab === 'math') mgNewQuestion();
+  else if (tab === 'roulette') rlUpdateSpinBtn();
+  else if (tab === 'equation') { eqUpdateSessionStats(); eqNewQuestion(); }
+  else if (tab === 'factor') fcStart();
 }
 
 function mgRefreshCoins() {
@@ -3052,10 +3214,586 @@ function mgSubmit() {
 
 function mgKeyHandler(e) {
   const screen = document.getElementById("minigameScreen");
-  if (!screen || screen.style.display !== "flex" || mgActiveTab !== 'math') return;
-  if (e.key >= '0' && e.key <= '9') mgPress(e.key);
-  else if (e.key === 'Backspace') mgBackspace();
-  else if (e.key === 'Enter') mgSubmit();
+  if (!screen || screen.style.display !== "flex") return;
+  if (mgActiveTab === 'math') {
+    if (e.key >= '0' && e.key <= '9') mgPress(e.key);
+    else if (e.key === 'Backspace') mgBackspace();
+    else if (e.key === 'Enter') mgSubmit();
+  } else if (mgActiveTab === 'equation') {
+    if (e.key >= '0' && e.key <= '9') eqPress(e.key);
+    else if (e.key === '-' || e.key === '+') eqToggleSign();
+    else if (e.key === 'Backspace') eqBackspace();
+    else if (e.key === 'Tab' && eqForm === 3) { e.preventDefault(); eqSelect(eqActive === 'x' ? 'y' : 'x'); }
+    else if (e.key === 'Enter') eqSubmit();
+  }
+}
+
+/* ---------- 📐 โหมดแก้สมการ (จับเวลา 3 นาที/ข้อ) ---------- */
+/*  โอกาสออกแบบที่ 1 : 2 : 3 = 1 : 1 : 3  (20% / 20% / 60%)
+    แบบที่ 1)  ax + b = c      สุ่ม x ∈ [-10, 10], a ∈ [-5, 5] (ไม่เอา 0), b ∈ [-20, 20]
+    แบบที่ 2)  a + bx = c      สุ่ม x ∈ [-10, 10], b ∈ [-5, 5] (ไม่เอา 0), a ∈ [-20, 20] (ไม่เอา 0)
+    แบบที่ 3)  ax + by = c  /  ix + jy = k
+               สุ่ม x, y ∈ [-9, 9]  → สุ่ม a, i ∈ [1, 5]  → สุ่ม b, j ∈ [-9, 9]
+               → คำนวณ c = ax + by,  k = ix + jy   (สุ่มใหม่ถ้า a·j − b·i = 0 เพราะจะหาคำตอบเดียวไม่ได้)
+    รางวัล: แบบ 1, 2 → +5 เหรียญ +5 EXP    แบบ 3 → +6 เหรียญ +6 EXP
+    เวลา: 3 นาทีต่อข้อ (ตอบถูก/ตอบผิด = ขึ้นข้อใหม่แล้วนับใหม่, หมดเวลา = เฉลยแล้วเปลี่ยนโจทย์) */
+
+const EQ_TIME_LIMIT   = 600;   // วินาที ต่อ 1 โจทย์
+const EQ_REWARD_COIN  = 5;     // แบบที่ 1, 2
+const EQ_REWARD_EXP   = 5;
+const EQ3_REWARD_COIN = 6;     // แบบที่ 3 (2 ตัวแปร)
+const EQ3_REWARD_EXP  = 6;
+const EQ_FORM_WEIGHTS = [1, 1, 3];   // แบบที่ 1 : 2 : 3
+
+let eqForm = 1;
+let eqX = 0, eqY = 0;
+let eqVals = { x: "", y: "" };
+let eqActive = 'x';
+let eqLocked = false;
+let eqRunning = false;
+let eqNextTimeout = null;
+let eqTimerInterval = null;
+let eqTimeLeft = EQ_TIME_LIMIT;
+let eqCorrectCount = 0;
+let eqTotalCoin = 0;
+let eqTotalExp = 0;
+
+function eqRand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function eqPickForm() {
+  const total = EQ_FORM_WEIGHTS.reduce((p, w) => p + w, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < EQ_FORM_WEIGHTS.length; i++) {
+    if (r < EQ_FORM_WEIGHTS[i]) return i + 1;
+    r -= EQ_FORM_WEIGHTS[i];
+  }
+  return 3;
+}
+
+// ข้อความพจน์ตัวแปร เช่น 1 → "x", -1 → "-x", 3 → "3x"
+function eqTerm(coef, v) {
+  return coef === 1 ? v : (coef === -1 ? '-' + v : coef + v);
+}
+// พจน์ตัวแปรตัวที่สอง (ต่อท้าย) เช่น " + 3y", " - y"  (ค่า 0 ไม่แสดง)
+function eqTail(coef, v) {
+  if (coef === 0) return '';
+  const abs = Math.abs(coef) === 1 ? '' : Math.abs(coef);
+  return (coef < 0 ? ' - ' : ' + ') + abs + v;
+}
+// สมการ 2 ตัวแปร  p x + q y = r
+function eqLine(p, q, r) { return `${eqTerm(p, 'x')}${eqTail(q, 'y')} = ${r}`; }
+
+function eqGenerate() {
+  const form = eqPickForm();
+
+  if (form === 1) {
+    const x = eqRand(-10, 10);
+    let a;
+    do { a = eqRand(-5, 5); } while (a === 0);       // สัมประสิทธิ์หน้า x
+    const b = eqRand(-20, 20);
+    const c = a * x + b;
+    const bText = b < 0 ? ` - ${Math.abs(b)}` : (b > 0 ? ` + ${b}` : '');
+    return { form, x, y: 0, text: `${eqTerm(a, 'x')}${bText} = ${c}` };
+  }
+
+  if (form === 2) {
+    const x = eqRand(-10, 10);
+    let a, b;
+    do { a = eqRand(-20, 20); } while (a === 0);     // ค่าคงที่นำหน้า
+    do { b = eqRand(-5, 5); } while (b === 0);       // สัมประสิทธิ์หน้า x
+    const c = a + b * x;
+    return { form, x, y: 0, text: `${a}${eqTail(b, 'x')} = ${c}` };
+  }
+
+  // แบบที่ 3: ax + by = c , ix + jy = k
+  const x = eqRand(-9, 9), y = eqRand(-9, 9);
+  let a, b, i, j;
+  do {
+    a = eqRand(1, 5);  i = eqRand(1, 5);
+    b = eqRand(-9, 9); j = eqRand(-9, 9);
+  } while (a * j - b * i === 0);
+  const c = a * x + b * y;
+  const k = i * x + j * y;
+  return { form, x, y, text: `${eqLine(a, b, c)}\n${eqLine(i, j, k)}` };
+}
+
+function eqFmt(v) { return String(v).replace('-', '−'); }
+
+function eqSetFeedback(text, kind) {
+  const el = document.getElementById("eqFeedback");
+  el.textContent = text;
+  el.className = "mg-feedback" + (kind ? " " + kind : "");
+}
+
+function eqUpdateSessionStats() {
+  const el = document.getElementById("eqSessionStats");
+  if (el) el.innerHTML = `รอบนี้ตอบถูก <b class="num">${eqCorrectCount}</b> ข้อ → 💰 +${eqTotalCoin} | ⭐ +${eqTotalExp}`;
+}
+
+function eqShowInput() {
+  ['x', 'y'].forEach(k => {
+    const box = document.getElementById(k === 'x' ? "eqAnswerBox" : "eqAnswerBoxY");
+    if (!box) return;
+    box.innerHTML = eqVals[k] === "" ? "&nbsp;" : eqFmt(eqVals[k]);
+    box.classList.toggle("active", eqForm === 3 && eqActive === k);
+  });
+}
+
+function eqSelect(k) {
+  if (eqLocked || eqForm !== 3) return;
+  eqActive = k;
+  eqShowInput();
+}
+
+function eqStartTimer() {
+  if (eqTimerInterval) { clearInterval(eqTimerInterval); eqTimerInterval = null; }
+  eqTimeLeft = EQ_TIME_LIMIT;
+  eqUpdateTimerUI(true);
+  eqTimerInterval = setInterval(() => {
+    eqTimeLeft -= 1;
+    eqUpdateTimerUI(false);
+    if (eqTimeLeft <= 0) eqHandleTimeout();
+  }, 1000);
+}
+
+function eqStopTimer() {
+  if (eqTimerInterval) { clearInterval(eqTimerInterval); eqTimerInterval = null; }
+}
+
+function eqStop() {
+  eqStopTimer();
+  clearTimeout(eqNextTimeout);
+  eqRunning = false;
+}
+
+function eqUpdateTimerUI(isReset) {
+  const fill = document.getElementById("eqTimerFill");
+  const text = document.getElementById("eqTimerText");
+  const shown = Math.max(0, eqTimeLeft);
+  const mm = Math.floor(shown / 60), ss = String(shown % 60).padStart(2, '0');
+  if (fill) {
+    if (isReset) {
+      fill.style.transition = "none";
+      fill.style.width = "100%";
+      void fill.offsetWidth;
+      fill.style.transition = "width 1s linear";
+    } else {
+      fill.style.width = (shown / EQ_TIME_LIMIT * 100) + "%";
+    }
+    fill.style.background = shown <= 30
+      ? "linear-gradient(90deg, #e74f66, #c0392b)"
+      : "linear-gradient(90deg, #2ecc71, #e74f66)";
+  }
+  if (text) text.textContent = `เหลือเวลา ${mm}:${ss}`;
+}
+
+function eqAnswerText() {
+  return eqForm === 3 ? `x = ${eqFmt(eqX)}, y = ${eqFmt(eqY)}` : `x = ${eqFmt(eqX)}`;
+}
+
+// หมดเวลา = เฉลยแล้วเปลี่ยนโจทย์
+function eqHandleTimeout() {
+  if (!eqRunning || eqLocked) return;
+  eqStopTimer();
+  eqLocked = true;
+  eqSetFeedback(`⏰ หมดเวลา! เฉลย: ${eqAnswerText()}`, "bad");
+  eqNextTimeout = setTimeout(eqNewQuestion, 1800);
+}
+
+function eqNewQuestion() {
+  clearTimeout(eqNextTimeout);
+  const q = eqGenerate();
+  eqForm = q.form;
+  eqX = q.x; eqY = q.y;
+  eqVals = { x: "", y: "" };
+  eqActive = 'x';
+  eqLocked = false;
+  eqRunning = true;
+
+  const eqEl = document.getElementById("eqEquation");
+  eqEl.textContent = q.text;
+  eqEl.classList.toggle("multi", q.form === 3);
+  document.getElementById("eqRowY").style.display = q.form === 3 ? "flex" : "none";
+
+  eqShowInput();
+  eqSetFeedback("", "");
+  eqStartTimer();
+}
+
+function eqPress(d) {
+  if (eqLocked || !eqRunning) return;
+  if (eqVals[eqActive].replace('-', '').length >= 3) return;
+  eqVals[eqActive] += d;
+  eqShowInput();
+}
+
+function eqToggleSign() {
+  if (eqLocked || !eqRunning) return;
+  const cur = eqVals[eqActive];
+  eqVals[eqActive] = cur.startsWith('-') ? cur.slice(1) : '-' + cur;
+  eqShowInput();
+}
+
+function eqBackspace() {
+  if (eqLocked || !eqRunning) return;
+  eqVals[eqActive] = eqVals[eqActive].slice(0, -1);
+  eqShowInput();
+}
+
+function eqValid(str) {
+  return str !== "" && str !== "-" && !isNaN(parseInt(str, 10));
+}
+
+function eqSubmit() {
+  if (eqLocked || !eqRunning) return;
+  if (!eqValid(eqVals.x)) { if (eqForm === 3) eqSelect('x'); return; }
+  if (eqForm === 3 && !eqValid(eqVals.y)) { eqSelect('y'); return; }
+  eqLocked = true;
+  eqStopTimer();
+
+  const vx = parseInt(eqVals.x, 10);
+  const vy = eqForm === 3 ? parseInt(eqVals.y, 10) : 0;
+  const ok = vx === eqX && (eqForm !== 3 || vy === eqY);
+
+  if (ok) {
+    const coin = eqForm === 3 ? EQ3_REWARD_COIN : EQ_REWARD_COIN;
+    const exp  = eqForm === 3 ? EQ3_REWARD_EXP  : EQ_REWARD_EXP;
+    const levelBefore = wallet.level;
+    wallet.coins += coin;
+    wallet.exp += exp;
+    eqCorrectCount++;
+    eqTotalCoin += coin;
+    eqTotalExp += exp;
+
+    updateWalletUI();
+    mgRefreshCoins();
+    eqUpdateSessionStats();
+    eqSetFeedback(`✅ ถูกต้อง! +${coin} 💰  +${exp} ⭐`, "good");
+    if (wallet.level > levelBefore) popMessage(`🎉 เลเวลอัป! ตอนนี้ Lv.${wallet.level}`);
+
+    saveWalletAndData().catch(() => {});
+    eqNextTimeout = setTimeout(eqNewQuestion, 900);
+  } else {
+    eqSetFeedback(`❌ ผิด! เฉลย: ${eqAnswerText()}`, "bad");
+    eqNextTimeout = setTimeout(eqNewQuestion, 1800);
+  }
+}
+
+/* ---------- 🧩 โหมดแยกตัวประกอบ ---------- */
+/*  โจทย์ x² ± ax ± b  (สัมประสิทธิ์หน้า x² = 1)
+    สุ่ม m, n ∈ [-13, 13] แล้ว a = m + n, b = m × n  → เฉลย (x + m)(x + n)
+    ตัด 0 ออก เพราะไม่มีกล่องเลข 0 ให้ลาก และตัดกรณี a = 0 เพื่อให้โจทย์อยู่ในรูป x² ± ax ± b เสมอ */
+
+const FC_TIME_LIMIT  = 180;   // วินาที ต่อ 1 โจทย์ (ตอบถูก/หมดเวลา → เริ่มนับใหม่ที่โจทย์ถัดไป)
+const FC_REWARD_COIN = 3;     // เหรียญต่อข้อที่ถูก
+const FC_REWARD_EXP  = 3;     // EXP ต่อข้อที่ถูก
+const FC_MAX_NUM     = 13;    // กล่องเลข 1 – 13
+const FC_SLOT_COUNT  = 6;     // ( x ± n )( x ± n )
+
+let fcRunning = false;
+let fcLocked = false;
+let fcTimeLeft = FC_TIME_LIMIT;
+let fcTimerInterval = null;
+let fcNextTimeout = null;
+let fcM = 0, fcN = 0;
+let fcSlots = new Array(FC_SLOT_COUNT).fill(null);   // แต่ละช่อง: {t:'x'|'sign'|'num', v}
+let fcDrag = null;
+let fcSelected = null;          // แตะกล่องแล้วแตะช่อง (เผื่อลากไม่ถนัด)
+let fcCorrect = 0;
+let fcBound = false;
+let fcPaletteBuilt = false;
+
+function fcRand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function fcLabel(item) {
+  if (item.t === 'sign') return item.v === '-' ? '−' : '+';
+  return String(item.v);
+}
+
+function fcSignedText(v) { return (v < 0 ? '−' : '+') + ' ' + Math.abs(v); }
+
+function fcSolutionText() { return `(x ${fcSignedText(fcM)})(x ${fcSignedText(fcN)})`; }
+
+function fcGenerate() {
+  let m, n;
+  do {
+    m = fcRand(-FC_MAX_NUM, FC_MAX_NUM);
+    n = fcRand(-FC_MAX_NUM, FC_MAX_NUM);
+  } while (m === 0 || n === 0 || m + n === 0);
+  const a = m + n, b = m * n;
+  const aText = (a < 0 ? '−' : '+') + ' ' + (Math.abs(a) === 1 ? '' : Math.abs(a)) + 'x';
+  const bText = (b < 0 ? '−' : '+') + ' ' + Math.abs(b);
+  return { m, n, text: `x² ${aText} ${bText} = 0` };
+}
+
+function fcBuildPalette() {
+  if (fcPaletteBuilt) return;
+  fcPaletteBuilt = true;
+  const mk = (t, v, label) => `<div class="fc-tile t-${t}" data-t="${t}" data-v="${v}">${label}</div>`;
+  document.getElementById("fcOps").innerHTML = mk('x', 'x', 'x') + mk('sign', '+', '+') + mk('sign', '-', '−');
+  let nums = '';
+  for (let i = 1; i <= FC_MAX_NUM; i++) nums += mk('num', i, i);
+  document.getElementById("fcNums").innerHTML = nums;
+}
+
+function fcStart() {
+  fcBuildPalette();
+  fcBindDnD();
+  fcStop();
+  fcCorrect = 0;
+  fcRunning = true;
+  fcUpdateScore();
+  fcNewQuestion();
+}
+
+// เริ่มจับเวลาใหม่ทุกครั้งที่ขึ้นโจทย์ใหม่
+function fcStartTimer() {
+  if (fcTimerInterval) { clearInterval(fcTimerInterval); fcTimerInterval = null; }
+  fcTimeLeft = FC_TIME_LIMIT;
+  fcUpdateTimerUI(true);
+  fcTimerInterval = setInterval(() => {
+    fcTimeLeft -= 1;
+    fcUpdateTimerUI(false);
+    if (fcTimeLeft <= 0) fcHandleTimeout();
+  }, 1000);
+}
+
+function fcStopTimer() {
+  if (fcTimerInterval) { clearInterval(fcTimerInterval); fcTimerInterval = null; }
+}
+
+// หมดเวลา = เปลี่ยนโจทย์
+function fcHandleTimeout() {
+  if (!fcRunning || fcLocked) return;
+  fcStopTimer();
+  fcLocked = true;
+  fcCancelDrag();
+  fcRender();
+  fcSetFeedback(`⏰ หมดเวลา! เฉลย: ${fcSolutionText()}`, "bad");
+  fcNextTimeout = setTimeout(fcNewQuestion, 1800);
+}
+
+function fcStop() {
+  if (fcTimerInterval) { clearInterval(fcTimerInterval); fcTimerInterval = null; }
+  clearTimeout(fcNextTimeout);
+  fcRunning = false;
+  fcCancelDrag();
+}
+
+function fcUpdateTimerUI(isReset) {
+  const fill = document.getElementById("fcTimerFill");
+  const text = document.getElementById("fcTimerText");
+  const shown = Math.max(0, fcTimeLeft);
+  const mm = Math.floor(shown / 60), ss = String(shown % 60).padStart(2, '0');
+  if (fill) {
+    if (isReset) {
+      fill.style.transition = "none";
+      fill.style.width = "100%";
+      void fill.offsetWidth;
+      fill.style.transition = "width 1s linear";
+    } else {
+      fill.style.width = (shown / FC_TIME_LIMIT * 100) + "%";
+    }
+    fill.style.background = shown <= 30
+      ? "linear-gradient(90deg, #e74f66, #c0392b)"
+      : "linear-gradient(90deg, #2ecc71, #e74f66)";
+  }
+  if (text) text.textContent = `เหลือเวลา ${mm}:${ss}`;
+}
+
+function fcUpdateScore() {
+  const el = document.getElementById("fcScore");
+  if (el) el.innerHTML = `รอบนี้ตอบถูก <b class="num">${fcCorrect}</b> ข้อ → 💰 +${fcCorrect * FC_REWARD_COIN} | ⭐ +${fcCorrect * FC_REWARD_EXP}`;
+}
+
+function fcSetFeedback(text, kind) {
+  const el = document.getElementById("fcFeedback");
+  el.textContent = text;
+  el.className = "mg-feedback" + (kind ? " " + kind : "");
+}
+
+function fcNewQuestion() {
+  clearTimeout(fcNextTimeout);
+  const q = fcGenerate();
+  fcM = q.m; fcN = q.n;
+  fcSlots = new Array(FC_SLOT_COUNT).fill(null);
+  fcSelected = null;
+  fcLocked = false;
+  document.getElementById("fcEquation").textContent = q.text;
+  fcSetFeedback("", "");
+  fcRender();
+  fcStartTimer();
+}
+
+function fcRender() {
+  const host = document.getElementById("fcSlots");
+  const slotHTML = i => {
+    const s = fcSlots[i];
+    return `<div class="fc-slot ${s ? 'filled t-' + s.t : ''}" data-i="${i}">${s ? fcLabel(s) : ''}</div>`;
+  };
+  host.innerHTML =
+    `<span class="fc-paren">(</span><div class="fc-group">${[0, 1, 2].map(slotHTML).join('')}</div><span class="fc-paren">)</span>` +
+    `<span class="fc-paren">(</span><div class="fc-group">${[3, 4, 5].map(slotHTML).join('')}</div><span class="fc-paren">)</span>`;
+
+  document.querySelectorAll("#fcPlay .fc-tile").forEach(t => {
+    const on = fcSelected && t.dataset.t === fcSelected.t && String(t.dataset.v) === String(fcSelected.v);
+    t.classList.toggle("selected", !!on);
+  });
+
+  const btn = document.getElementById("fcSubmitBtn");
+  if (btn) btn.disabled = !fcRunning || fcLocked || fcSlots.some(s => !s);
+}
+
+function fcClear() {
+  if (!fcRunning || fcLocked) return;
+  fcSlots = new Array(FC_SLOT_COUNT).fill(null);
+  fcSelected = null;
+  fcRender();
+}
+
+// อ่านตัวประกอบ (x ± n) จากช่อง start..start+2 → คืนค่า ±n หรือ null ถ้าเรียงผิดรูปแบบ
+function fcParseFactor(start) {
+  const [a, b, c] = [fcSlots[start], fcSlots[start + 1], fcSlots[start + 2]];
+  if (!a || !b || !c) return null;
+  if (a.t !== 'x' || b.t !== 'sign' || c.t !== 'num') return null;
+  return (b.v === '-' ? -1 : 1) * Number(c.v);
+}
+
+function fcSubmit() {
+  if (!fcRunning || fcLocked || fcSlots.some(s => !s)) return;
+  fcLocked = true;
+  fcStopTimer();
+  fcRender();
+
+  const p = fcParseFactor(0), q = fcParseFactor(3);
+  const ok = p !== null && q !== null && ((p === fcM && q === fcN) || (p === fcN && q === fcM));
+
+  if (ok) {
+    const levelBefore = wallet.level;
+    wallet.coins += FC_REWARD_COIN;
+    wallet.exp += FC_REWARD_EXP;
+    fcCorrect++;
+
+    updateWalletUI();
+    mgRefreshCoins();
+    fcUpdateScore();
+    fcSetFeedback(`✅ ถูกต้อง! +${FC_REWARD_COIN} 💰  +${FC_REWARD_EXP} ⭐`, "good");
+    if (wallet.level > levelBefore) popMessage(`🎉 เลเวลอัป! ตอนนี้ Lv.${wallet.level}`);
+
+    saveWalletAndData().catch(() => {});
+    fcNextTimeout = setTimeout(fcNewQuestion, 700);
+  } else {
+    fcSetFeedback(`❌ ผิด! เฉลย: ${fcSolutionText()}`, "bad");
+    fcNextTimeout = setTimeout(fcNewQuestion, 1800);
+  }
+}
+
+/* ---- ลากวาง (Pointer Events: ใช้ได้ทั้งนิ้วและเมาส์) ---- */
+
+function fcBindDnD() {
+  if (fcBound) return;
+  fcBound = true;
+  const play = document.getElementById("fcPlay");
+  play.addEventListener("pointerdown", fcPointerDown);
+  play.addEventListener("contextmenu", e => e.preventDefault());
+  window.addEventListener("pointermove", fcPointerMove, { passive: false });
+  window.addEventListener("pointerup", fcPointerUp);
+  window.addEventListener("pointercancel", fcPointerUp);
+}
+
+function fcPointerDown(e) {
+  if (!fcRunning || fcLocked || fcDrag) return;
+  const slotEl = e.target.closest(".fc-slot");
+  const tileEl = e.target.closest(".fc-tile");
+
+  // แตะกล่องค้างไว้ แล้วแตะช่อง → วางเลย
+  if (slotEl && fcSelected) {
+    e.preventDefault();
+    fcSlots[Number(slotEl.dataset.i)] = { ...fcSelected };
+    fcSelected = null;
+    fcRender();
+    return;
+  }
+
+  let item = null, fromSlot = -1;
+  if (tileEl) item = { t: tileEl.dataset.t, v: tileEl.dataset.v };
+  else if (slotEl && fcSlots[Number(slotEl.dataset.i)]) {
+    fromSlot = Number(slotEl.dataset.i);
+    item = fcSlots[fromSlot];
+  }
+  if (!item) return;
+
+  e.preventDefault();
+  fcDrag = { item, fromSlot, id: e.pointerId, sx: e.clientX, sy: e.clientY, moved: false, ghost: null };
+}
+
+function fcPointerMove(e) {
+  if (!fcDrag || e.pointerId !== fcDrag.id) return;
+  if (!fcDrag.moved) {
+    if (Math.hypot(e.clientX - fcDrag.sx, e.clientY - fcDrag.sy) < 6) return;
+    fcDrag.moved = true;
+    const g = document.createElement("div");
+    g.className = "fc-ghost t-" + fcDrag.item.t;
+    g.textContent = fcLabel(fcDrag.item);
+    document.body.appendChild(g);
+    fcDrag.ghost = g;
+    if (fcDrag.fromSlot >= 0) {
+      const src = document.querySelector(`#fcSlots .fc-slot[data-i="${fcDrag.fromSlot}"]`);
+      if (src) src.classList.add("dragging");
+    }
+  }
+  e.preventDefault();
+  fcDrag.ghost.style.left = e.clientX + "px";
+  fcDrag.ghost.style.top = e.clientY + "px";
+
+  document.querySelectorAll("#fcSlots .fc-slot.over").forEach(s => s.classList.remove("over"));
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const slot = el && el.closest ? el.closest(".fc-slot") : null;
+  if (slot) slot.classList.add("over");
+}
+
+function fcPointerUp(e) {
+  if (!fcDrag || e.pointerId !== fcDrag.id) return;
+  const d = fcDrag;
+  fcDrag = null;
+  if (d.ghost) d.ghost.remove();
+
+  if (!d.moved) {
+    // แค่แตะ: กล่อง → เลือก/ยกเลิกเลือก, ช่องที่มีของ → เอาออก
+    if (d.fromSlot >= 0) fcSlots[d.fromSlot] = null;
+    else {
+      const same = fcSelected && fcSelected.t === d.item.t && String(fcSelected.v) === String(d.item.v);
+      fcSelected = same ? null : d.item;
+    }
+    fcRender();
+    return;
+  }
+
+  let target = -1;
+  if (e.type === "pointerup") {
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const slot = el && el.closest ? el.closest(".fc-slot") : null;
+    if (slot) target = Number(slot.dataset.i);
+  }
+
+  if (target >= 0) {
+    if (d.fromSlot >= 0) {                       // ลากสลับช่อง
+      const tmp = fcSlots[target];
+      fcSlots[target] = d.item;
+      fcSlots[d.fromSlot] = tmp;
+    } else {
+      fcSlots[target] = d.item;
+    }
+    fcSelected = null;
+  } else if (d.fromSlot >= 0 && e.type === "pointerup") {
+    fcSlots[d.fromSlot] = null;                  // ลากออกนอกช่อง = เอาออก
+  }
+  fcRender();
+}
+
+function fcCancelDrag() {
+  if (fcDrag && fcDrag.ghost) fcDrag.ghost.remove();
+  fcDrag = null;
 }
 
 /* ---------- 🎰 วงล้อสุ่มไอเทม ---------- */
@@ -3071,7 +3809,7 @@ function getRoulettePool() {
     });
   });
   pool.push({ kind: 'vaccine', id: 'vaccine', name: 'วัคซีนรักษาโรค', img: 'Shop/vaccine.png', weight: ROULETTE_WEIGHT_VACCINE, rarity: 'uncommon' });
-  pool.push({ kind: 'elepant', id: 'elepant', name: 'ช้าง', img: 'Shop/Elepant_shop.png', weight: ROULETTE_WEIGHT_ELEPANT, rarity: 'legend' });
+  pool.push({ kind: 'firedragon', id: 'firedragon', name: 'มังกรไฟ', img: 'Shop/firedragon_shop.png', weight: ROULETTE_WEIGHT_FIREDRAGON, rarity: 'legend' });
   rlPoolCache = pool;
   return pool;
 }
@@ -3128,14 +3866,14 @@ function rlUpdateSpinBtn() {
 function rlApplyPrize(prize) {
   const info = { converted: false, coinsGained: 0, countAfter: 0 };
 
-  if (prize.kind === 'elepant') {
+  if (prize.kind === 'firedragon') {
     if (currentStudent.pets.length >= getMaxAllowedPets()) {
       wallet.coins += ROULETTE_FULL_COINS;
       info.converted = true;
       info.coinsGained = ROULETTE_FULL_COINS;
     } else {
       currentStudent.pets.push({
-        type: 'elepant',
+        type: 'firedragon',
         born: todayStr(),
         sick: false,
         dead: false,
@@ -3262,14 +4000,14 @@ function rlShowResult(prize, info) {
   img.src = prize.img;
   card.className = "mg-result-card r-" + prize.rarity;
 
-  if (prize.kind === 'elepant') {
+  if (prize.kind === 'firedragon') {
     if (info.converted) {
-      title.textContent = "🐘 ได้ช้าง! แต่สัตว์เต็มคอก";
+      title.textContent = "🐉 ได้มังกรไฟ! แต่สัตว์เต็มคอก";
       desc.innerHTML = `สัตว์เต็มคุณได้เงินแทน <b>${ROULETTE_FULL_COINS.toLocaleString()} เหรียญ</b> 💰`;
       popMessage(`สัตว์เต็มคุณได้เงินแทน ${ROULETTE_FULL_COINS.toLocaleString()} เหรียญ 💰`);
     } else {
-      title.textContent = "🎉 ยินดีด้วย! ได้ช้าง";
-      desc.textContent = "ช้างน้อยเข้ามาอยู่ในบ้านของคุณแล้ว 🐘";
+      title.textContent = "🎉 ยินดีด้วย! ได้มังกรไฟ";
+      desc.textContent = "มังกรไฟเข้ามาอยู่ในบ้านของคุณแล้ว 🐉";
     }
   } else if (prize.kind === 'vaccine') {
     title.textContent = "💉 ได้วัคซีนรักษาโรค";
