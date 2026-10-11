@@ -1,0 +1,82 @@
+/* 🌱 แปลงผัก (2.5D) — ทั้งหน้าจอคือแปลง แตะจุดที่เสียแล้วโจทย์เลื่อนขึ้นมาบัง */
+.plant-screen{
+  display:none; position:fixed; top:0; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px; height:100dvh; z-index:112;
+  background:#cfeccb; box-shadow:0 0 30px rgba(0,0,0,.5); overflow:hidden;
+}
+#plIso{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:manipulation; }
+.pl-top{
+  position:absolute; top:0; left:0; right:0; z-index:3; display:flex; align-items:center; justify-content:space-between;
+  padding:calc(env(safe-area-inset-top) + 8px) 12px 10px; pointer-events:none;
+}
+.pl-top > *{ pointer-events:auto; }
+.pl-title{ font-weight:800; font-size:17px; color:#24502f; padding:4px 14px; border-radius:16px; background:rgba(255,255,255,.72); box-shadow:0 2px 8px rgba(0,0,0,.12); }
+.pl-foot{
+  position:absolute; left:14px; right:14px; bottom:calc(env(safe-area-inset-bottom) + 16px); z-index:2; text-align:center;
+  padding:10px 14px; border-radius:18px; font-size:14px; color:#7a2a1c; background:rgba(255,246,240,.93);
+  border:2px solid #f0b4a6; box-shadow:0 4px 14px rgba(0,0,0,.18); pointer-events:none;
+}
+.pl-foot.ok{ color:#24502f; background:rgba(240,255,240,.94); border-color:#9bd48a; }
+
+/* แผ่นโจทย์เลื่อนขึ้นจากด้านล่าง */
+.pl-sheet{ display:none; position:absolute; inset:0; z-index:5; align-items:flex-end; }
+.pl-sheet.open{ display:flex; }
+.pl-dim{ position:absolute; inset:0; background:rgba(20,45,28,.42); animation:plFade .2s ease-out; }
+.pl-panel{
+  position:relative; width:100%; max-height:92%; overflow-y:auto; background:#fbfffa;
+  border-radius:24px 24px 0 0; padding:8px 14px calc(env(safe-area-inset-bottom) + 16px);
+  box-shadow:0 -6px 24px rgba(0,0,0,.28); animation:plUp .25s ease-out;
+}
+.pl-grab{ width:42px; height:5px; border-radius:3px; background:#cfe0c8; margin:2px auto 8px; }
+.pl-headr{ display:flex; align-items:center; gap:8px; }
+.pl-close{ width:30px; height:30px; border:0; border-radius:50%; background:#e7f3df; color:#2d5a3a; font-size:15px; font-weight:700; cursor:pointer; }
+.pl-close:active{ transform:scale(.92); }
+.pl-diff{ font-size:12px; font-weight:700; padding:3px 10px; border-radius:12px; background:#e7f3df; color:#2d5a3a; }
+.pl-diff.d2{ background:#fff3d6; color:#8a5a00; } .pl-diff.d3{ background:#ffe3df; color:#a8321f; }
+@keyframes plUp{ from{ transform:translateY(40px); opacity:.4; } to{ transform:none; opacity:1; } }
+@keyframes plFade{ from{ opacity:0; } to{ opacity:1; } }
+
+.pl-head{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.pl-name{ font-weight:700; color:#2d5a3a; font-size:15px; }
+.pl-topic{ font-size:11px; color:#7c7a8a; }
+.pl-water{ font-size:15px; letter-spacing:1px; white-space:nowrap; }
+.pl-lvls{ display:flex; gap:6px; margin:8px 0 6px; align-items:center; }
+.pl-badge{ margin-left:auto; font-size:11px; color:#7c7a8a; }
+#plGraph{ width:100%; height:176px; background:#fbfffa; border:2px solid #cfe6c4; border-radius:12px; display:block; }
+.pl-help{ margin:6px 0; font-size:12px; color:#4b5a50; }
+.pl-help summary{ cursor:pointer; color:#3f9463; font-weight:700; }
+.pl-help div{ background:#f3fbef; border-radius:10px; padding:6px 10px; margin-top:4px; line-height:1.7; }
+.pl-eq{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px; margin:8px 0; font-size:16px; color:#2d4a37; font-weight:600; }
+.pl-field{
+  min-width:52px; height:36px; line-height:32px; text-align:center; border-radius:10px; background:#fff;
+  border:2px solid #cfd8cc; font-size:18px; font-weight:700; cursor:pointer; padding:0 6px;
+}
+.pl-field.on{ border-color:#f0a020; box-shadow:0 0 0 3px rgba(240,160,32,.25); }
+.pl-msg{ white-space:pre-line; min-height:34px; text-align:center; font-size:13px; font-weight:600; margin:2px 0 6px; line-height:1.5; }
+.pl-msg.good{ color:#2a8a4a; } .pl-msg.bad{ color:#c4493a; } .pl-msg.info{ color:#5b7a63; }
+.pl-keys{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; max-width:260px; margin:0 auto; }
+.pl-key{ border:0; border-radius:12px; padding:9px 0; font-size:18px; font-weight:700; background:#e7f3df; color:#2d5a3a; cursor:pointer; }
+.pl-key:active{ transform:scale(.95); background:#d4eac6; }
+.pl-actions{ display:flex; gap:8px; max-width:260px; margin:8px auto 0; }
+.pl-run{ flex:1; border:0; border-radius:14px; padding:11px 0; font-size:15px; font-weight:700; color:#fff; background:linear-gradient(180deg,#4fb878,#3f9463); cursor:pointer; box-shadow:0 3px 0 #2d7248; }
+.pl-run[disabled]{ opacity:.5; }
+.pl-new{ border:0; border-radius:14px; padding:11px 14px; font-size:14px; font-weight:700; color:#fff; background:linear-gradient(180deg,#f0a020,#d98910); cursor:pointer; box-shadow:0 3px 0 #a9680a; }
+.pl-lock{ text-align:center; padding:18px 6px; color:#5b7a63; line-height:1.8; }
+.pl-lock b{ color:#2d5a3a; font-size:16px; }
+
+/* ---- จุด 3-6 ---- */
+.pl-key.alt{ font-size:12px; background:#fff3d6; color:#8a5a00; }
+.pl-key.alt:active{ background:#ffe6a8; }
+.pl-info{ margin:8px 0 2px; padding:7px 10px; background:#fff9e8; border:2px solid #f3dca0; border-radius:12px; font-size:12px; line-height:1.7; color:#5a4a1e; }
+.pl-tbl{ width:100%; border-collapse:collapse; font-size:12px; text-align:center; }
+.pl-tbl th,.pl-tbl td{ padding:3px 4px; border-bottom:1px solid #f0e2b8; }
+.pl-tbl th{ color:#8a6a1e; font-weight:700; }
+.pl-tbl td:first-child{ text-align:left; font-weight:600; }
+.pl-tbl tr.tg td{ background:#fff0c4; font-weight:700; color:#8a4a00; border-bottom:0; }
+.pl-extras{ display:flex; gap:8px; justify-content:center; max-width:260px; margin:8px auto 0; }
+.pl-extra{ flex:1; border:2px solid #f0a020; background:#fff; color:#a9680a; border-radius:12px; padding:8px 6px; font-size:13px; font-weight:700; cursor:pointer; }
+.pl-extra:active{ background:#fff0d0; }
+.pl-extra[disabled]{ opacity:.45; }
+/* ไอคอนเครื่องจักร (สไปรต์) ที่หัวแผ่นโจทย์ */
+.pl-ico{ display:inline-block; width:40px; height:40px; flex:none; vertical-align:middle; filter:drop-shadow(0 2px 2px rgba(0,0,0,.2)); }
+.pl-id{ display:flex; align-items:center; gap:8px; } .pl-id .pl-ico{ margin-right:0; font-size:28px; text-align:center; line-height:40px; }
