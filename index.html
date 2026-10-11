@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="plant.css">
 </head>
 <body>
 
@@ -195,6 +196,12 @@
           <button class="menu-cell" onclick="menuGo('mission')">
             <img src="Icon/quest.png" alt=""><span>ภารกิจ</span>
           </button>
+          <button class="menu-cell" onclick="menuGo('fairy')">
+            <img src="Icon/fairy_btn.png" alt=""><span>ภูติ</span>
+          </button>
+          <button class="menu-cell" onclick="menuGo('plant')">
+            <img src="Icon/Plant.png" alt=""><span>แปลงผัก</span>
+          </button>
           <button class="menu-cell" onclick="menuGo('exit')">
             <img src="Icon/exit.png" alt=""><span>ออก</span>
           </button>
@@ -260,6 +267,28 @@
           <button class="close-btn" onclick="closeModal('rankModal')">✕</button>
         </div>
         <div id="rank-list"></div>
+      </div>
+    </div>
+
+    <!-- Modal สมุดสะสมภูติ -->
+    <div class="modal-overlay" id="fairyModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">🧚 สมุดสะสมภูติ</h3>
+          <button class="close-btn" onclick="closeModal('fairyModal')">✕</button>
+        </div>
+        <div class="fairy-progress" id="fairyProgress">สะสมแล้ว 0/0</div>
+        <div class="fairy-gacha-bar" id="fairyGachaBar"></div>
+        <div class="fairy-filter-row" id="fairyFilterRow"></div>
+        <div class="fairy-book-grid" id="fairyBookGrid"></div>
+      </div>
+    </div>
+
+    <!-- ผลการสุ่มภูติ -->
+    <div class="modal-overlay" id="fairyRollModal">
+      <div class="fairy-roll-card" id="fairyRollCard">
+        <div id="fairyRollBody"></div>
+        <button class="claim-btn" id="fairyRollOk" onclick="closeFairyRoll()">เยี่ยมเลย!</button>
       </div>
     </div>
 
@@ -445,6 +474,7 @@
 
 </div>
 
+<script src="plant.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
