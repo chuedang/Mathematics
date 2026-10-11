@@ -1313,3 +1313,211 @@ html,body{
 .mg-equation.multi { white-space:pre-line; font-size:24px; line-height:1.35; }
 .mg-answer-box { cursor:pointer; }
 .mg-answer-box.active { border-color:var(--berry-dark); box-shadow:0 0 0 3px rgba(231,79,102,0.25); }
+
+/* =====================================================================
+   🧚 FAIRY (ภูติ) — สมุดสะสม + ภูติลอยเหนือหัวสัตว์ในสนามต่อสู้
+===================================================================== */
+
+/* ---------- สมุดสะสม ---------- */
+.fairy-progress{
+  text-align:center; font-size:12px; font-weight:600; color:var(--berry-dark);
+  background:#fff3e6; border-radius:10px; padding:6px; margin-bottom:10px;
+}
+.fairy-book-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.fairy-card{
+  position:relative; background:#fff; border:2px solid #e2d7c3; border-radius:16px;
+  padding:10px 8px 8px; text-align:center; box-shadow:0 3px 0 #e2d7c3;
+  display:flex; flex-direction:column; align-items:center; gap:4px; min-height:150px;
+}
+.fairy-card.owned{ border-color:var(--sun-dark); background:#fffdf3; box-shadow:0 3px 0 var(--sun-dark); }
+.fairy-card.locked{ background:#f1ece0; }
+.fairy-card-img{
+  position:relative; width:76px; height:76px; display:flex; align-items:center; justify-content:center;
+}
+.fairy-card-img img{
+  width:100%; height:100%; object-fit:contain; position:relative; z-index:1;
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,0.25));
+}
+.fairy-card.locked .fairy-card-img img{ filter:brightness(0); opacity:.85; }
+.fairy-card-img .fairy-fallback{ position:absolute; font-size:40px; z-index:0; }
+.fairy-card.locked .fairy-fallback{ filter:brightness(0); opacity:.85; }
+.fairy-card-q{
+  position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center;
+  font-family:'Baloo 2',sans-serif; font-weight:800; font-size:34px; color:#fff;
+  text-shadow:0 0 6px rgba(0,0,0,.6), 0 2px 0 rgba(0,0,0,.35);
+}
+.fairy-card-name{ font-size:12px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+.fairy-card.locked .fairy-card-name{ color:var(--ink-soft); }
+.fairy-card-skills{ display:flex; flex-direction:column; gap:2px; width:100%; }
+.fairy-skill-chip{
+  font-size:9.5px; line-height:1.25; color:#7a4a06; background:#fff1c9; border-radius:8px;
+  padding:2px 5px; text-align:left;
+}
+.fairy-empty{ grid-column:1 / -1; text-align:center; font-size:12px; color:var(--ink-soft); padding:20px; }
+
+/* ---------- ภูติลอยในสนามต่อสู้ ---------- */
+.fairy-lane{
+  display:flex; justify-content:center; align-items:flex-end; gap:2px;
+  width:100%; height:44px; margin-bottom:-12px; position:relative; z-index:6; pointer-events:none;
+}
+.fairy-unit{ position:relative; width:var(--fairy-size,40px); height:var(--fairy-size,40px); flex:0 0 auto; }
+/* 🧚 ตำแหน่งภูติตาม PET_LAYOUT (fairy / fairySize) — วางเทียบกรอบ 100x90 ของสัตว์ ฝั่งเพื่อน (.right) ใช้ x ที่สะท้อนแล้ว */
+.fighter-assembly-container > .fairy-unit{
+  position:absolute; left:var(--fairy-x,30px); top:var(--fairy-y,-28px);
+  width:var(--fairy-size,40px); height:var(--fairy-size,40px); z-index:6; pointer-events:none;
+}
+.fighter-side.right .fighter-assembly-container > .fairy-unit{ left:var(--fairy-xm,30px); }
+.fairy-unit img{
+  width:100%; height:100%; object-fit:contain; display:block; transform-origin:50% 100%;
+  animation:fairy-float 2.4s ease-in-out infinite; animation-delay:var(--fairy-delay,0s);
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,0.35));
+}
+/* ขึ้นลงเล็กน้อย + บีบภาพนิดหน่อย เหมือนกำลังกระพือบิน */
+@keyframes fairy-float{
+  0%,100%{ transform:translateY(0)    scale(1.05,0.94); }
+  50%    { transform:translateY(-6px) scale(0.95,1.06); }
+}
+.fairy-unit.fairy-fire img{
+  animation:fairy-fire .7s ease-out 1;
+  filter:drop-shadow(0 0 6px var(--fx-color,#ffd34d)) drop-shadow(0 0 12px var(--fx-color,#ffd34d));
+}
+@keyframes fairy-fire{
+  0%  { transform:translateY(0)    scale(1); }
+  30% { transform:translateY(-8px) scale(1.35); }
+  100%{ transform:translateY(0)    scale(1); }
+}
+.fairy-fx-label{
+  position:absolute; left:50%; bottom:100%; white-space:nowrap; pointer-events:none;
+  font-size:11px; font-weight:700; color:#fff; background:var(--fx-color,#ff7a45);
+  padding:1px 7px; border-radius:9px; box-shadow:0 2px 6px rgba(0,0,0,.35);
+  text-shadow:0 1px 1px rgba(0,0,0,.35); z-index:30;
+  animation:fairy-label 1.2s ease-out forwards;
+}
+@keyframes fairy-label{
+  0%  { opacity:0; transform:translate(-50%,4px)   scale(.7); }
+  20% { opacity:1; transform:translate(-50%,-4px)  scale(1.05); }
+  80% { opacity:1; transform:translate(-50%,-14px) scale(1); }
+  100%{ opacity:0; transform:translate(-50%,-24px) scale(1); }
+}
+
+
+/* ---------- เลือกภูติ / ตัวอธิบาย ---------- */
+.fairy-card.equipped{ border-color:var(--leaf); background:#f0f9f4; box-shadow:0 3px 0 #2c7048; }
+.fairy-describe{ font-size:10px; line-height:1.35; color:#7a4a06; background:#fff1c9; border-radius:8px; padding:4px 6px; text-align:left; white-space:pre-line; }
+.fairy-equip-btn{
+  margin-top:auto; width:100%; border:none; border-radius:10px; padding:6px 4px; cursor:pointer;
+  font-family:'Mitr',sans-serif; font-size:10.5px; font-weight:600; color:#7a4a06;
+  background:var(--sun); box-shadow:0 2px 0 var(--sun-dark);
+}
+.fairy-equip-btn.on{ background:var(--leaf); color:#fff; box-shadow:0 2px 0 #2c7048; }
+.fairy-equip-btn:active{ transform:translateY(2px); box-shadow:none; }
+
+.fairy-pick-bar{
+  display:flex; align-items:center; gap:10px; margin-top:10px; padding:8px 10px;
+  background:rgba(255,249,238,0.95); border:2px solid var(--sun-dark); border-radius:14px;
+  box-shadow:0 3px 8px rgba(0,0,0,0.25);
+}
+.fairy-pick-img{ width:40px; height:40px; flex:0 0 40px; display:flex; align-items:center; justify-content:center; font-size:26px; }
+.fairy-pick-img img{ width:100%; height:100%; object-fit:contain; }
+.fairy-pick-text{ flex:1; text-align:left; display:flex; flex-direction:column; font-size:13px; color:var(--ink); min-width:0; }
+.fairy-pick-text b{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fairy-pick-sub{ font-size:10px; color:var(--ink-soft); }
+
+/* =====================================================================
+   🎲 สุ่มภูติ + ป้ายแรงค์ (Tier badge)
+===================================================================== */
+.fairy-tier{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:50%; flex:0 0 auto;
+  font-family:'Baloo 2',sans-serif; font-weight:800; font-size:13px; line-height:1; color:#fff;
+  border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,.3);
+  text-shadow:0 1px 2px rgba(0,0,0,.45);
+}
+.fairy-tier.tier-D{ background:linear-gradient(145deg,#b7c0c9,#7d8892); }
+.fairy-tier.tier-C{ background:linear-gradient(145deg,#6fd08c,#2f9e57); }
+.fairy-tier.tier-B{ background:linear-gradient(145deg,#6db3ff,#2f6fd6); }
+.fairy-tier.tier-A{ background:linear-gradient(145deg,#c58bff,#8a3fd1); }
+.fairy-tier.tier-S{
+  background:conic-gradient(from 0deg,#ff4d4d,#ffb347,#fff35c,#5cff7a,#4dd2ff,#6d6dff,#d46bff,#ff4d4d);
+  animation:tier-rainbow 3s linear infinite;
+  box-shadow:0 0 8px rgba(255,255,255,.9), 0 2px 4px rgba(0,0,0,.3);
+}
+@keyframes tier-rainbow{ to{ filter:hue-rotate(360deg); } }
+.fairy-tier.mini{ width:17px; height:17px; font-size:10px; border-width:1.5px; margin-right:3px; }
+.fairy-tier.on-card{ position:absolute; top:6px; left:6px; z-index:3; }
+.fairy-tier.on-result{ position:absolute; top:-4px; left:-4px; width:34px; height:34px; font-size:20px; z-index:3; }
+
+/* แถบสุ่ม */
+.fairy-gacha-bar{
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  background:#fffaf0; border:2px dashed var(--sun-dark); border-radius:14px;
+  padding:10px; margin-bottom:12px;
+}
+/* ใส่เศษภูติเพิ่มโอกาส */
+.fairy-bet-box{ width:100%; background:#fff; border:1.5px solid #e2d7c3; border-radius:12px; padding:8px 8px 6px; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.fairy-bet-title{ display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:var(--ink); text-align:center; }
+.fairy-bet-row{ display:flex; align-items:center; justify-content:center; gap:5px; flex-wrap:wrap; }
+.fairy-bet-btn{
+  border:none; border-radius:9px; padding:5px 8px; min-width:34px; cursor:pointer;
+  font-family:inherit; font-size:12px; font-weight:600; color:#7a4a06; background:var(--sun); box-shadow:0 2px 0 var(--sun-dark);
+}
+.fairy-bet-btn.max{ background:#e8d9ff; color:#5e2a96; box-shadow:0 2px 0 #b9a0e0; }
+.fairy-bet-btn:active{ transform:translateY(2px); box-shadow:none; }
+.fairy-bet-btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+.fairy-bet-val{ min-width:44px; padding:3px 6px; text-align:center; font-size:18px; font-weight:800; color:#5e2a96; background:#f6efff; border:2px solid #b98ae8; border-radius:9px; }
+.fairy-bet-note{ font-size:10px; color:var(--ink-soft); text-align:center; }
+
+/* ตัวกรอง: แสดงเฉพาะที่ครอบครอง */
+.fairy-filter-row{ display:flex; justify-content:flex-end; margin:-4px 0 10px; }
+.fairy-filter-btn{
+  display:inline-flex; align-items:center; gap:6px; border:none; background:transparent; cursor:pointer;
+  font-family:inherit; font-size:12px; font-weight:600; color:var(--ink); padding:2px 2px;
+}
+.fairy-filter-box{
+  width:18px; height:18px; border-radius:5px; border:2px solid var(--sun-dark); background:#fff;
+  display:inline-flex; align-items:center; justify-content:center; font-size:12px; line-height:1; color:#fff;
+}
+.fairy-filter-btn.on .fairy-filter-box{ background:var(--leaf); border-color:var(--leaf); }
+.fairy-roll-btn{
+  width:100%; padding:11px; border:none; border-radius:14px; cursor:pointer;
+  font-family:inherit; font-size:15px; font-weight:600; color:#fff;
+  background:linear-gradient(180deg,#b86bff,#8a3fd1); box-shadow:0 4px 0 #5e2a96;
+}
+.fairy-roll-btn:active{ transform:translateY(3px); box-shadow:0 1px 0 #5e2a96; }
+.fairy-roll-btn:disabled{ opacity:.55; cursor:not-allowed; }
+.fairy-roll-hint{ font-size:11px; color:var(--berry-dark); }
+.fairy-shard-chip{
+  display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:var(--ink);
+  background:#fff; border-radius:999px; padding:3px 10px; border:1.5px solid #e2d7c3;
+}
+.shard-ico{ width:18px; height:18px; object-fit:contain; vertical-align:middle; }
+.shard-ico.big{ width:34px; height:34px; }
+
+/* หน้าต่างผลสุ่ม */
+.fairy-roll-card{
+  width:min(300px,86vw); background:#fffdf3; border:3px solid var(--sun-dark); border-radius:22px;
+  padding:22px 16px 16px; text-align:center; box-shadow:0 6px 0 var(--sun-dark), 0 12px 30px rgba(0,0,0,.35);
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.fairy-orb{ font-size:64px; animation:orb-shake .45s ease-in-out infinite; filter:drop-shadow(0 0 12px #c58bff); }
+@keyframes orb-shake{
+  0%,100%{ transform:rotate(-10deg) scale(1); } 50%{ transform:rotate(10deg) scale(1.15); }
+}
+.fairy-roll-title{ font-size:15px; font-weight:600; color:var(--ink); }
+.fairy-roll-name{ font-size:18px; font-weight:700; color:var(--berry-dark); }
+.fairy-roll-img{
+  position:relative; width:110px; height:110px; display:flex; align-items:center; justify-content:center; font-size:64px;
+  margin:0 auto; animation:fairy-pop .6s cubic-bezier(.2,1.4,.4,1) 1;
+}
+.fairy-roll-img img{ width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 4px 6px rgba(0,0,0,.3)); }
+.fairy-roll-img.dup img{ opacity:.85; }
+@keyframes fairy-pop{ from{ transform:scale(.2) rotate(-20deg); opacity:0; } to{ transform:scale(1) rotate(0); opacity:1; } }
+.fairy-roll-shard{ display:flex; align-items:center; justify-content:center; gap:6px; font-size:18px; font-weight:700; color:#7a4a06; }
+.fairy-roll-shard .sub{ font-size:11px; font-weight:500; color:var(--ink-soft); }
+.fairy-roll-card.result.tier-C{ border-color:#2f9e57; box-shadow:0 6px 0 #2f9e57, 0 12px 30px rgba(0,0,0,.35); }
+.fairy-roll-card.result.tier-B{ border-color:#2f6fd6; box-shadow:0 6px 0 #2f6fd6, 0 12px 30px rgba(0,0,0,.35); }
+.fairy-roll-card.result.tier-A{ border-color:#8a3fd1; box-shadow:0 6px 0 #8a3fd1, 0 0 26px rgba(138,63,209,.6); }
+.fairy-roll-card.result.tier-S{
+  border-color:#ffd54a; background:linear-gradient(160deg,#fff7d6,#ffe4f5,#e0f4ff);
+  box-shadow:0 6px 0 #d9a400, 0 0 34px rgba(255,200,80,.9);
+}
