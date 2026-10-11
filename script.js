@@ -30,20 +30,23 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzTMBFqzbRJNZDIu4lJVUox
   // ⭐ ปรับขนาด/ตำแหน่งขา "แยกรายตัว" (ใช้ได้ทั้งในบ้านและหน้าต่อสู้)
   //    ค่าที่ไม่ใส่ = ค่าเริ่มต้นด้านล่าง   bl/br/fl/fr = ขาหลังซ้าย/หลังขวา/หน้าซ้าย/หน้าขวา เป็น [left, top] (px)
   //    scale = ขยายทั้งตัว (เฉพาะในบ้าน) legSize = [กว้าง, สูง] ของขา   ลองปรับด้วย pet-leg-editor.html แล้วก๊อปบรรทัดมาวางแทนได้เลย
-  const PET_LAYOUT_DEFAULT = { scale: 1, legSize: [34, 28], bl: [14, 65], br: [42, 65], fl: [10, 65], fr: [38, 65] };
+  //    🧚 fairy = [x, y] ตำแหน่งมุมบนซ้ายของภูติในกรอบ 100x90 ของสัตว์ (สัตว์หันขวา) / fairySize = ขนาดภูติ (px)
+  //       ใช้ในหน้าต่อสู้ — ฝั่งเพื่อน (กลับด้าน) จะสะท้อนตำแหน่ง x ให้อัตโนมัติ   ปรับด้วย pet-leg-editor.html
+  const PET_LAYOUT_DEFAULT = { scale: 1, legSize: [34, 28], bl: [14, 65], br: [42, 65], fl: [10, 65], fr: [38, 65], fairy: [30, -28], fairySize: 40 };
   const PET_LAYOUT = {
-    cat:           {},
-    dog:           {},
-    giraffe:       {legSize: [46,43], bl: [14,70], br: [42,70], fl: [10,70], fr: [38,70]},
-    sheep:         {},
-    deer:          {},
-    siberianhusky: {legSize: [39,27], bl: [14,75], br: [42,75], fl: [10,75], fr: [38,75]},
-    elepant:       {},
-    bear:          {legSize: [33,41], bl: [9,50], br: [46,50], fl: [2,50], fr: [41,50]},
-    shiba:         {},
-    littledragon:  {legSize: [76,34], bl: [15,59], br: [39,59], fl: [10,59], fr: [35,59]},
-    firedragon:    {scale: 2.2, legSize: [64,37], bl: [14,59], br: [42,59], fl: [10,59], fr: [38,59]}
+    cat:           {fairy: [-33,-43], fairySize: 66},
+    dog:           {fairy: [-33,-43], fairySize: 66},
+    giraffe:       {legSize: [46,43], bl: [14,70], br: [42,70], fl: [10,70], fr: [38,70], fairy: [-33,-43], fairySize: 66},
+    sheep:         {fairy: [-33,-43], fairySize: 66},
+    deer:          {fairy: [-33,-43], fairySize: 66},
+    siberianhusky: {legSize: [39,27], bl: [14,75], br: [42,75], fl: [10,75], fr: [38,75],fairy: [-33,-43], fairySize: 66},
+    elepant:       {fairy: [-33,-43], fairySize: 66},
+    bear:          {legSize: [33,41], bl: [9,50], br: [46,50], fl: [2,50], fr: [41,50],fairy: [-33,-43], fairySize: 66},
+    shiba:         {fairy: [-33,-43], fairySize: 66},
+    littledragon:  {legSize: [76,34], bl: [15,59], br: [39,59], fl: [10,59], fr: [35,59],fairy: [-33,-43], fairySize: 66},
+    firedragon:    {scale: 2.2, legSize: [64,37], bl: [14,59], br: [42,59], fl: [10,59], fr: [38,59],fairy: [-33,-43], fairySize: 66}
   };
+
   function applyPetLayout(el, type) {
     if (!el) return;
     const L = Object.assign({}, PET_LAYOUT_DEFAULT, PET_LAYOUT[type] || {});
@@ -53,6 +56,9 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzTMBFqzbRJNZDIu4lJVUox
     set("--br-x", L.br[0]); set("--br-y", L.br[1]);
     set("--fl-x", L.fl[0]); set("--fl-y", L.fl[1]);
     set("--fr-x", L.fr[0]); set("--fr-y", L.fr[1]);
+    set("--fairy-size", L.fairySize);
+    set("--fairy-x", L.fairy[0]); set("--fairy-y", L.fairy[1]);
+    set("--fairy-xm", 100 - L.fairy[0] - L.fairySize);   // ตำแหน่ง x เมื่อกลับด้าน (ฝั่งเพื่อน)
     if (L.scale !== 1) { el.style.setProperty("--pet-scale", L.scale); el.style.transformOrigin = "50% 100%"; }
   }
 
@@ -270,6 +276,588 @@ function closeBattleResult() {
 
 }
 
+  /* =====================================================================
+     🧚 FAIRY (ภูติ) — ภูติตัวช่วยต่อสู้ + สมุดสะสม
+     ข้อมูลมาจาก Google Sheet:
+       • ชีท "Fairy" (ID, Name, JSON, Describe) → fairyCatalog  (ภาพ = Fairy/<Name>.png)
+       • คอลัมน์ "Fairy" ของนักเรียน เช่น {S001, S002:true, S003}
+           → ownedFairyIds = ภูติที่มี, equippedFairyId = ตัวที่ต่อท้าย :true
+     เข้าต่อสู้ได้ครั้งละ 1 ตัว (ตัวที่ตั้งไว้ ล็อกไว้จนกว่าจะเปลี่ยน)
+     ฝั่งเพื่อนใช้ภูติที่เพื่อนตั้งไว้ (ไม่สุ่ม)
+     ทอยโอกาสใหม่ทุกครั้งที่โจมตี (Cri/Steal/Heal) และทุกครั้งที่ถูกโจมตี (Dodge/Protect)
+     ค่า chance / reduction / healPercent / stealPercent = 0–100 (เปอร์เซ็นต์)
+     ค่า multiplier = ตัวคูณ (2 = สองเท่า, 1.5 = หนึ่งเท่าครึ่ง)
+  ===================================================================== */
+  let fairyCatalog = [];       // [{ id, name, skills, describe, tier }]
+  let ownedFairyIds = [];      // ["S001", ...]
+  let equippedFairyId = "";    // ภูติที่ตั้งไว้ใช้ต่อสู้ ("" = ไม่ได้ตั้ง)
+  let battleFairy = null;      // ภูติฝั่งเรา ในการต่อสู้รอบนี้
+  let battleFoeFairy = null;   // ภูติฝั่งเพื่อน ในการต่อสู้รอบนี้
+
+  // params = ค่าเสริมของแต่ละสกิล (def = ค่าเริ่มต้นถ้าในชีทไม่ได้ใส่, min/max = ช่วงที่ยอมรับ)
+  const FAIRY_SKILL_META = {
+    cri:     { icon: "💥", color: "#ff7a45", label: "คริติคอล",   fx: "คริติคอล!",
+               params: { multiplier: { def: 2, min: 1 } },
+               desc: s => `${fairyFmt(s.chance)}% ดาเมจ ×${fairyFmt(s.multiplier)}` },
+    protect: { icon: "🛡️", color: "#4a90e2", label: "ป้องกัน",    fx: "ป้องกัน!",
+               params: { reduction: { def: 0, min: 0, max: 100 } },
+               desc: s => `${fairyFmt(s.chance)}% ลดดาเมจ ${fairyFmt(s.reduction)}%` },
+    dodge:   { icon: "🌀", color: "#8e6bd8", label: "หลบหลีก",    fx: "หลบ!",
+               params: {},
+               desc: s => `${fairyFmt(s.chance)}% หลบการโจมตีทั้งหมด` },
+    heal:    { icon: "💚", color: "#2fb36d", label: "ฟื้นฟู",      fx: "ฟื้นฟู!",
+               params: { healPercent: { def: 0, min: 0, max: 100 } },
+               desc: s => `${fairyFmt(s.chance)}% ฟื้น HP ${fairyFmt(s.healPercent)}% ของ HP สูงสุด` },
+    luck:    { icon: "🍀", color: "#e7a92e", label: "โชคลาภ",     fx: "โชคดี!",
+               params: { multiplier: { def: 1.5, min: 1 } },
+               desc: s => `${fairyFmt(s.chance)}% เหรียญรางวัล ×${fairyFmt(s.multiplier)}` },
+    xp:      { icon: "✨", color: "#d86bb8", label: "โบนัส EXP",  fx: "EXP+!",
+               params: { multiplier: { def: 1.5, min: 1 } },
+               desc: s => `${fairyFmt(s.chance)}% EXP ×${fairyFmt(s.multiplier)}` },
+    steal:   { icon: "🧛", color: "#c0392b", label: "ดูดเลือด",   fx: "ดูดเลือด!",
+               params: { stealPercent: { def: 0, min: 0, max: 100 } },
+               desc: s => `${fairyFmt(s.chance)}% ดูด HP ${fairyFmt(s.stealPercent)}% ของ HP สูงสุดคู่ต่อสู้` }
+  };
+
+  function fairyFmt(n) { return String(Math.round((Number(n) || 0) * 100) / 100); }
+  function fairyEsc(t) { return String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+  function fairyImg(f) { return "Fairy/" + encodeURIComponent(f.name) + ".png"; }
+  function fairyImgError(img) {
+    const span = document.createElement("span");
+    span.textContent = "🧚";
+    span.style.fontSize = "calc(var(--fairy-size, 40px) * 0.8)";
+    if (img.parentNode) img.parentNode.replaceChild(span, img);
+  }
+
+  // รับ {"Cri": {...}} (object หรือข้อความ JSON) แล้วคืนสกิลที่ตรวจสอบค่าแล้ว คีย์เป็นตัวพิมพ์เล็ก
+  function normalizeFairySkills(raw) {
+    if (typeof raw === "string") {
+      try { raw = JSON.parse(raw); } catch (e) { raw = null; }
+    }
+    const out = {};
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
+
+    Object.keys(raw).forEach(k => {
+      const key = String(k).trim().toLowerCase();
+      const meta = FAIRY_SKILL_META[key];
+      const v = raw[k];
+      if (!meta || !v || typeof v !== "object") return;
+
+      const num = (x, def) => { const n = parseFloat(x); return isNaN(n) ? def : n; };
+      const sk = { chance: Math.min(100, Math.max(0, num(v.chance, 0))) };
+
+      Object.keys(meta.params).forEach(pName => {
+        const spec = meta.params[pName];
+        let val = num(v[pName], spec.def);
+        if (spec.min !== undefined) val = Math.max(spec.min, val);
+        if (spec.max !== undefined) val = Math.min(spec.max, val);
+        sk[pName] = val;
+      });
+      out[key] = sk;
+    });
+    return out;
+  }
+
+  const FAIRY_TIERS = ["D", "C", "B", "A", "S"];
+  const FAIRY_ROLL_COST = 1000;
+  const FAIRY_SHARD_BET_MAX = 50;                                  // ใส่เศษเพิ่มโอกาสได้สูงสุดกี่ชิ้นต่อครั้ง (ต้องตรงกับ FAIRY_SHARD_BOOST_MAX ใน Apps Script) — ไม่แสดงโอกาสให้ผู้เล่นเห็น
+  const SHARD_IMG = "Icon/shard.png";                              // ถ้าเก็บรูปไว้ที่อื่น แก้ path ตรงนี้
+
+  function normalizeFairyTier(t) {
+    const c = String(t ?? "").trim().toUpperCase().charAt(0);
+    return FAIRY_TIERS.includes(c) ? c : "D";
+  }
+
+  // ป้ายแรงค์วงกลม มีตัวอักษรตรงกลาง (S = สีรุ้ง)
+  function fairyTierBadge(tier, extraClass = "") {
+    const t = normalizeFairyTier(tier);
+    return `<span class="fairy-tier tier-${t} ${extraClass}" title="แรงค์ ${t}">${t}</span>`;
+  }
+
+  function parseFairyIdList(value) {
+    let items = [];
+    if (Array.isArray(value)) items = value;
+    else if (typeof value === "string") items = value.replace(/[\[\]{}"'“”‘’]/g, "").replace(/\s*:\s*/g, ":").split(/[,;\s]+/);
+    const seen = new Set(), out = [];
+    items.forEach(i => {
+      const id = String(i).split(":")[0].trim();
+      if (id && !seen.has(id.toLowerCase())) { seen.add(id.toLowerCase()); out.push(id); }
+    });
+    return out;
+  }
+
+  function loadFairyData(catalog, ownedRaw, equippedRaw) {
+    fairyCatalog = (Array.isArray(catalog) ? catalog : [])
+      .map(f => ({
+        id: String((f && f.id) ?? "").trim(),
+        name: String((f && f.name) ?? "").trim(),
+        skills: normalizeFairySkills(f && f.skills),
+        describe: String((f && f.describe) ?? "").trim(),
+        tier: normalizeFairyTier(f && f.tier)
+      }))
+      .filter(f => f.id && f.name);
+    ownedFairyIds = parseFairyIdList(ownedRaw);
+
+    const eq = String(equippedRaw || "").trim().toLowerCase();
+    const ownedEq = ownedFairyIds.find(id => id.toLowerCase() === eq);
+    equippedFairyId = eq && ownedEq ? ownedEq : "";
+  }
+
+  function getFairyById(id) {
+    const key = String(id || "").trim().toLowerCase();
+    if (!key) return null;
+    return fairyCatalog.find(f => f.id.toLowerCase() === key) || null;
+  }
+
+  function isFairyOwned(f) {
+    return ownedFairyIds.some(id => id.toLowerCase() === f.id.toLowerCase());
+  }
+
+  function isFairyEquipped(f) {
+    return !!equippedFairyId && equippedFairyId.toLowerCase() === f.id.toLowerCase();
+  }
+
+  function getOwnedFairies() { return fairyCatalog.filter(isFairyOwned); }
+
+  // ภูติที่ตั้งไว้ใช้ต่อสู้ (ต้องมีอยู่ในแคตตาล็อกและเป็นของเรา)
+  function getEquippedFairy() {
+    const f = getFairyById(equippedFairyId);
+    return f && isFairyOwned(f) ? f : null;
+  }
+
+  // ---------- สมุดสะสม ----------
+  function openFairyBook() {
+    renderFairyBook();
+    document.getElementById("fairyModal").style.display = "flex";
+  }
+
+  function renderFairyBook() {
+    const grid = document.getElementById("fairyBookGrid");
+    const prog = document.getElementById("fairyProgress");
+    if (!grid || !prog) return;
+
+    const total = fairyCatalog.length;
+    const have = fairyCatalog.filter(isFairyOwned).length;
+    const eqF = getEquippedFairy();
+    prog.innerHTML = `🧚 สะสมแล้ว ${have}/${total} ตัว` +
+      (have > 0 ? `<br><span style="font-weight:500;">⚔️ ภูติที่ใช้ต่อสู้: ${eqF ? `<b>${fairyEsc(eqF.name)}</b>` : "ยังไม่ได้เลือก (แตะการ์ดภูติเพื่อเลือก)"}</span>` : "");
+
+    renderFairyGachaBar();
+    renderFairyFilterRow();
+
+    if (total === 0) {
+      grid.innerHTML = `<div class="fairy-empty">ยังไม่มีภูติในระบบ</div>`;
+      return;
+    }
+
+    const shown = isFairyOwnedOnly() ? fairyCatalog.filter(isFairyOwned) : fairyCatalog;
+    if (shown.length === 0) {
+      grid.innerHTML = `<div class="fairy-empty">ยังไม่มีภูติที่ครอบครอง ลองสุ่มดูสิ! 🎲</div>`;
+      return;
+    }
+
+    grid.innerHTML = shown.map(f => {
+      const src = fairyImg(f);
+
+      if (!isFairyOwned(f)) {
+        return `
+          <div class="fairy-card locked">
+            <div class="fairy-card-img">
+              <span class="fairy-fallback">🧚</span>
+              <img src="${src}" alt="" onerror="this.style.display='none'">
+              <div class="fairy-card-q">?</div>
+            </div>
+            <div class="fairy-card-name">???</div>
+          </div>`;
+      }
+
+      // ใช้ข้อความจากคอลัมน์ Describe ถ้ามี ไม่งั้นสรุปจาก JSON ให้อัตโนมัติ
+      let info;
+      if (f.describe) {
+        info = `<div class="fairy-describe">${fairyEsc(f.describe)}</div>`;
+      } else {
+        info = Object.keys(f.skills).map(key => {
+          const meta = FAIRY_SKILL_META[key];
+          return `<div class="fairy-skill-chip">${meta.icon} <b>${meta.label}</b> ${meta.desc(f.skills[key])}</div>`;
+        }).join("");
+      }
+
+      const eq = isFairyEquipped(f);
+      return `
+        <div class="fairy-card owned ${eq ? "equipped" : ""}">
+          ${fairyTierBadge(f.tier, "on-card")}
+          <div class="fairy-card-img">
+            <span class="fairy-fallback">🧚</span>
+            <img src="${src}" alt="${fairyEsc(f.name)}" onerror="this.style.display='none'">
+          </div>
+          <div class="fairy-card-name">${fairyEsc(f.name)}</div>
+          <div class="fairy-card-skills">${info}</div>
+          <button class="fairy-equip-btn ${eq ? "on" : ""}" data-fid="${fairyEsc(f.id)}" onclick="equipFairy(this.dataset.fid)">
+            ${eq ? "✅ ใช้อยู่ (แตะเพื่อถอด)" : "⚔️ ใช้ต่อสู้"}
+          </button>
+        </div>`;
+    }).join("");
+  }
+
+  // ---------- ตัวกรอง: แสดงเฉพาะภูติที่ครอบครอง ----------
+  function isFairyOwnedOnly() {
+    try { return localStorage.getItem(`pet_fairy_owned_only_${studentKey}`) === "1"; } catch (e) { return false; }
+  }
+
+  function toggleFairyOwnedOnly() {
+    try { localStorage.setItem(`pet_fairy_owned_only_${studentKey}`, isFairyOwnedOnly() ? "0" : "1"); } catch (e) {}
+    renderFairyBook();
+  }
+
+  function renderFairyFilterRow() {
+    const el = document.getElementById("fairyFilterRow");
+    if (!el) return;
+    const on = isFairyOwnedOnly();
+    el.innerHTML = `
+      <button type="button" class="fairy-filter-btn ${on ? "on" : ""}" onclick="toggleFairyOwnedOnly()">
+        <span class="fairy-filter-box">${on ? "✓" : ""}</span> แสดงเฉพาะที่ครอบครอง
+      </button>`;
+  }
+
+  // ---------- สุ่มภูติ ----------
+  let _fairyRolling = false;
+  let fairyShardBet = 0;   // จำนวนเศษภูติที่ใส่เพิ่มโอกาสในการสุ่มครั้งถัดไป (ผลต่อโอกาสคำนวณที่ Apps Script ไม่บอกผู้เล่น)
+
+  function fairyBetLimit() {
+    return Math.max(0, Math.min(FAIRY_SHARD_BET_MAX, parseInt(inventory.shard) || 0));
+  }
+
+  function fairyBetAdjust(delta) {
+    if (_fairyRolling) return;
+    fairyShardBet = Math.max(0, Math.min(fairyBetLimit(), fairyShardBet + delta));
+    renderFairyGachaBar();
+  }
+
+  function fairyBetMax() {
+    if (_fairyRolling) return;
+    fairyShardBet = fairyBetLimit();
+    renderFairyGachaBar();
+  }
+
+  function shardImgHTML(cls = "shard-ico") {
+    return `<img class="${cls}" src="${SHARD_IMG}" alt="เศษภูติ" onerror="this.replaceWith(document.createTextNode('💎'))">`;
+  }
+
+  function renderFairyGachaBar() {
+    const el = document.getElementById("fairyGachaBar");
+    if (!el) return;
+    const shards = parseInt(inventory.shard) || 0;
+    const canPay = wallet.coins >= FAIRY_ROLL_COST;
+    const limit = fairyBetLimit();
+    if (fairyShardBet > limit) fairyShardBet = limit;
+    const lock = _fairyRolling ? "disabled" : "";
+
+    el.innerHTML = `
+      <div class="fairy-bet-box">
+        <div class="fairy-bet-title">${shardImgHTML()} ใส่เศษภูติเพื่อเพิ่มโอกาสได้แรงค์สูง</div>
+        <div class="fairy-bet-row">
+          <button type="button" class="fairy-bet-btn" onclick="fairyBetAdjust(-10)" ${lock || (fairyShardBet <= 0 ? "disabled" : "")}>−10</button>
+          <button type="button" class="fairy-bet-btn" onclick="fairyBetAdjust(-1)" ${lock || (fairyShardBet <= 0 ? "disabled" : "")}>−</button>
+          <div class="fairy-bet-val num">${fairyShardBet}</div>
+          <button type="button" class="fairy-bet-btn" onclick="fairyBetAdjust(1)" ${lock || (fairyShardBet >= limit ? "disabled" : "")}>+</button>
+          <button type="button" class="fairy-bet-btn" onclick="fairyBetAdjust(10)" ${lock || (fairyShardBet >= limit ? "disabled" : "")}>+10</button>
+          <button type="button" class="fairy-bet-btn max" onclick="fairyBetMax()" ${lock || (limit <= 0 ? "disabled" : "")}>สูงสุด</button>
+        </div>
+        <div class="fairy-bet-note">${limit <= 0 ? "ยังไม่มีเศษภูติ (ได้จากการสุ่มได้ภูติซ้ำ)" : "ยิ่งใส่เศษมาก ยิ่งมีลุ้นแรงค์สูง · เศษที่ใส่จะถูกใช้ไปเมื่อสุ่ม"}</div>
+      </div>
+      <button class="fairy-roll-btn" onclick="rollFairy()" ${_fairyRolling || fairyCatalog.length === 0 ? "disabled" : ""}>
+        ${_fairyRolling ? "กำลังสุ่ม..." : `🎲 สุ่มภูติ (${FAIRY_ROLL_COST.toLocaleString()} 💰)`}
+      </button>
+      ${!canPay && !_fairyRolling ? `<div class="fairy-roll-hint">เหรียญไม่พอ (มี ${wallet.coins.toLocaleString()} 💰)</div>` : ""}
+      <div class="fairy-shard-chip">${shardImgHTML()} เศษภูติ <b class="num">x${shards}</b></div>`;
+  }
+
+  async function postFairyRoll(shardsUsed) {
+    // ไม่ลองซ้ำอัตโนมัติ เพราะถ้าคำขอแรกสำเร็จแล้วแต่คำตอบไม่ถึง จะถูกหักเหรียญซ้ำ
+    const payload = new URLSearchParams({ action: "rollFairy", id: studentKey, shardsUsed: String(shardsUsed || 0) });
+    const response = await fetch(API_URL, { method: "POST", body: payload });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  }
+
+  async function rollFairy() {
+    if (_fairyRolling) return;
+    if (fairyCatalog.length === 0) { popMessage("ยังไม่มีภูติในระบบ"); return; }
+    if (wallet.coins < FAIRY_ROLL_COST) {
+      popMessage(`เหรียญไม่พอ! ต้องใช้ ${FAIRY_ROLL_COST.toLocaleString()} เหรียญ`);
+      return;
+    }
+
+    const betShards = Math.min(fairyShardBet, fairyBetLimit());   // เซิร์ฟเวอร์ตรวจซ้ำกับค่าในชีทอีกที
+
+    _fairyRolling = true;
+    renderFairyGachaBar();
+
+    try {
+      // ให้ข้อมูลฝั่งเว็บเซฟเสร็จก่อน เพื่อให้เหรียญในชีทตรงกับที่เห็นบนหน้าจอ
+      if (_saveInFlight) { try { await _saveInFlight; } catch (e) {} }
+      await saveWalletAndData();
+
+      showFairyRollAnimation();
+      const [result] = await Promise.all([postFairyRoll(betShards), new Promise(r => setTimeout(r, 1500))]);
+
+      if (!result || result.success !== true) {
+        if (result && typeof result.coin === "number") { wallet.coins = result.coin; updateWalletUI(); }
+        throw new Error((result && result.message) || "สุ่มภูติไม่สำเร็จ");
+      }
+
+      // อัปเดตข้อมูลฝั่งเว็บให้ตรงกับชีท (กันการเซฟครั้งถัดไปเขียนทับ)
+      wallet.coins = result.coin;
+      inventory.shard = result.shards;
+      currentStudent.items = { ...inventory };
+      fairyShardBet = Math.min(fairyShardBet, fairyBetLimit());
+      const f = getFairyById(result.fairyId);
+      if (result.isNew && f && !isFairyOwned(f)) ownedFairyIds.push(f.id);
+
+      updateWalletUI();
+      showFairyRollResult(result, f);
+    } catch (err) {
+      console.error("❌ สุ่มภูติไม่สำเร็จ:", err);
+      closeFairyRoll();
+      popMessage("⚠️ " + (err && err.message ? err.message : "สุ่มภูติไม่สำเร็จ"));
+    } finally {
+      _fairyRolling = false;
+      renderFairyBook();
+      refreshFairyPickBar();
+    }
+  }
+
+  function showFairyRollAnimation() {
+    document.getElementById("fairyRollCard").className = "fairy-roll-card rolling";
+    document.getElementById("fairyRollBody").innerHTML = `
+      <div class="fairy-orb">🔮</div>
+      <div class="fairy-roll-title">กำลังเรียกภูติ...</div>`;
+    document.getElementById("fairyRollOk").style.display = "none";
+    document.getElementById("fairyRollModal").style.display = "flex";
+  }
+
+  function showFairyRollResult(result, f) {
+    const tier = normalizeFairyTier(result.tier);
+    document.getElementById("fairyRollCard").className = `fairy-roll-card result tier-${tier}`;
+
+    const name = f ? fairyEsc(f.name) : "ภูติปริศนา";
+    const img = f
+      ? `<img src="${fairyImg(f)}" alt="${name}" onerror="this.replaceWith(document.createTextNode('🧚'))">`
+      : "🧚";
+
+    let extra;
+    if (result.isNew) {
+      extra = `<div class="fairy-roll-title">🎉 ได้ภูติตัวใหม่!</div>`;
+    } else {
+      extra = `
+        <div class="fairy-roll-title">ได้ตัวซ้ำ! แปลงเป็นเศษภูติ</div>
+        <div class="fairy-roll-shard">${shardImgHTML("shard-ico big")} <b class="num">+${result.shardGained}</b>
+          <span class="sub">(มีทั้งหมด ${result.shards})</span></div>`;
+    }
+
+    document.getElementById("fairyRollBody").innerHTML = `
+      <div class="fairy-roll-img ${result.isNew ? "" : "dup"}">${img}${fairyTierBadge(tier, "on-result")}</div>
+      <div class="fairy-roll-name">${name}</div>
+      ${extra}`;
+    document.getElementById("fairyRollOk").style.display = "";
+    document.getElementById("fairyRollModal").style.display = "flex";
+  }
+
+  function closeFairyRoll() {
+    document.getElementById("fairyRollModal").style.display = "none";
+  }
+
+  // ---------- เลือกภูติเข้าต่อสู้ (1 ตัว) ----------
+  let _fairySaving = false;
+
+  async function saveFairyEquip(id) {
+    const payload = new URLSearchParams({ action: "setFairy", id: studentKey, fairyEquipped: id });
+    let lastError = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const response = await fetch(API_URL, { method: "POST", body: payload });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const result = await response.json();
+        if (!result || result.success !== true) throw new Error((result && result.message) || "บันทึกภูติไม่สำเร็จ");
+        return result;
+      } catch (err) {
+        lastError = err;
+        if (attempt < 3) await new Promise(r => setTimeout(r, 1200));
+      }
+    }
+    throw lastError;
+  }
+
+  async function equipFairy(id) {
+    if (_fairySaving) return;
+    const f = getFairyById(id);
+    if (!f || !isFairyOwned(f)) return;
+
+    const prev = equippedFairyId;
+    const next = isFairyEquipped(f) ? "" : f.id;
+
+    equippedFairyId = next;
+    renderFairyBook();
+    refreshFairyPickBar();
+
+    _fairySaving = true;
+    try {
+      await saveFairyEquip(next);
+      popMessage(next ? `🧚 ตั้ง ${f.name} เป็นภูติต่อสู้แล้ว` : "🧚 ถอดภูติออกแล้ว");
+    } catch (err) {
+      console.error("❌ บันทึกภูติไม่สำเร็จ:", err);
+      equippedFairyId = prev;
+      renderFairyBook();
+      refreshFairyPickBar();
+      popMessage("⚠️ บันทึกภูติไม่สำเร็จ ลองใหม่อีกครั้ง");
+    } finally {
+      _fairySaving = false;
+    }
+  }
+
+  // แถบแสดงภูติที่ใช้อยู่ ในหน้าเลือกสัตว์ก่อนต่อสู้
+  function fairyPickBarInner() {
+    if (getOwnedFairies().length === 0) {
+      return `<div class="fairy-pick-text"><span class="fairy-pick-sub">🧚 ยังไม่มีภูติตัวช่วย</span></div>`;
+    }
+    const f = getEquippedFairy();
+    if (!f) {
+      return `
+        <div class="fairy-pick-img">🧚</div>
+        <div class="fairy-pick-text"><b>ยังไม่ได้เลือกภูติ</b><span class="fairy-pick-sub">เลือกได้ 1 ตัวเพื่อช่วยต่อสู้</span></div>
+        <button class="buy-btn" onclick="openFairyBook()">เลือก</button>`;
+    }
+    return `
+      <div class="fairy-pick-img"><img src="${fairyImg(f)}" alt="" onerror="this.replaceWith(document.createTextNode('🧚'))"></div>
+      <div class="fairy-pick-text"><b>${fairyEsc(f.name)}</b><span class="fairy-pick-sub">ภูติที่ใช้ต่อสู้</span></div>
+      <button class="buy-btn" onclick="openFairyBook()">เปลี่ยน</button>`;
+  }
+
+  function buildFairyPickBarHTML() {
+    return `<div id="fairyPickBar" class="fairy-pick-bar">${fairyPickBarInner()}</div>`;
+  }
+
+  function refreshFairyPickBar() {
+    const el = document.getElementById("fairyPickBar");
+    if (el) el.innerHTML = fairyPickBarInner();
+  }
+
+  // ---------- ภูติในสนามต่อสู้ (side = "my" ฝั่งเรา / "foe" ฝั่งเพื่อน) ----------
+  // ช่องว่างเหนือสัตว์ (คงไว้เพื่อให้เลย์เอาต์เดิมไม่ขยับ) — ตัวภูติจริงอยู่ใน buildFairyUnitHTML
+  function buildFairyLaneHTML() {
+    return `<div class="fairy-lane"></div>`;
+  }
+
+  // ตัวภูติ: วางใน .fighter-assembly-container ของสัตว์ ตำแหน่ง/ขนาดมาจาก PET_LAYOUT (fairy / fairySize)
+  function buildFairyUnitHTML(fairy, side) {
+    if (!fairy) return "";
+    return `
+      <div class="fairy-unit" id="fairyUnit_${side}">
+        <img src="${fairyImg(fairy)}" alt="${fairyEsc(fairy.name)}" onerror="fairyImgError(this)">
+      </div>`;
+  }
+
+  function showFairyFx(side, skillKey, delayMs = 0) {
+    setTimeout(() => {
+      const unit = document.getElementById(`fairyUnit_${side}`);
+      const meta = FAIRY_SKILL_META[skillKey];
+      if (!unit || !meta) return;
+
+      unit.style.setProperty("--fx-color", meta.color);
+      unit.classList.remove("fairy-fire");
+      void unit.offsetWidth;
+      unit.classList.add("fairy-fire");
+
+      const label = document.createElement("div");
+      label.className = "fairy-fx-label";
+      label.textContent = `${meta.icon} ${meta.fx}`;
+      unit.appendChild(label);
+
+      setTimeout(() => unit.classList.remove("fairy-fire"), 750);
+      setTimeout(() => label.remove(), 1250);
+    }, delayMs);
+  }
+
+  function fairyRoll(pct) { return Math.random() * 100 < pct; }
+
+  // ทอยตอน "ผู้โจมตี" ลงมือ: Cri (คูณดาเมจ), Steal (ดูด HP คู่ต่อสู้มาเติมให้ตัวเอง), Heal (ฟื้น HP ตัวเอง)
+  // side = ฝั่งของผู้โจมตี
+  function applyFairyOffense(side, baseDamage) {
+    const fairy = side === "my" ? battleFairy : battleFoeFairy;
+    const attackerMax = side === "my" ? battleMaxHP : battleFriendMaxHP;
+    const defenderMax = side === "my" ? battleFriendMaxHP : battleMaxHP;
+    const r = { damage: baseDamage, crit: 1, steal: 0, heal: 0 };
+    if (!fairy) return r;
+
+    const sk = fairy.skills;
+    let t = 0;
+    const fire = k => { showFairyFx(side, k, t); t += 220; };
+
+    if (sk.cri && fairyRoll(sk.cri.chance)) {
+      r.crit = sk.cri.multiplier;
+      fire("cri");
+    }
+    if (sk.steal && sk.steal.stealPercent > 0 && fairyRoll(sk.steal.chance)) {
+      r.steal = Math.max(1, Math.round(defenderMax * sk.steal.stealPercent / 100));
+      fire("steal");
+    }
+    if (sk.heal && sk.heal.healPercent > 0 && fairyRoll(sk.heal.chance)) {
+      r.heal = Math.max(1, Math.round(attackerMax * sk.heal.healPercent / 100));
+      fire("heal");
+    }
+
+    r.damage = Math.max(1, Math.round(baseDamage * r.crit));
+    return r;
+  }
+
+  // ทอยตอน "ผู้ป้องกัน" ถูกโจมตี: Dodge (หลบหมด) ก่อน แล้วค่อย Protect (ลดดาเมจ)
+  // side = ฝั่งของผู้ป้องกัน
+  function applyFairyDefense(side, damage) {
+    const fairy = side === "my" ? battleFairy : battleFoeFairy;
+    const r = { damage, dodged: false, reduction: 0 };
+    if (!fairy) return r;
+
+    const sk = fairy.skills;
+    let t = 0;
+    const fire = k => { showFairyFx(side, k, t); t += 220; };
+
+    if (sk.dodge && fairyRoll(sk.dodge.chance)) {
+      r.dodged = true;
+      r.damage = 0;
+      fire("dodge");
+      return r;
+    }
+    if (sk.protect && sk.protect.reduction > 0 && fairyRoll(sk.protect.chance)) {
+      r.reduction = sk.protect.reduction;
+      r.damage = Math.max(1, Math.round(damage * (1 - r.reduction / 100)));
+      fire("protect");
+    }
+    return r;
+  }
+
+  // ตอนเราชนะ: Luck (คูณเหรียญรางวัล) และ XP (คูณ EXP) — ใช้ภูติฝั่งเรา
+  function rollFairyWinBonus() {
+    const r = { coinMult: 1, expMult: 1, notes: [] };
+    if (!battleFairy) return r;
+
+    const sk = battleFairy.skills;
+    const name = fairyEsc(battleFairy.name);
+    let t = 0;
+    const fire = k => { showFairyFx("my", k, t); t += 220; };
+
+    if (sk.luck && fairyRoll(sk.luck.chance)) {
+      r.coinMult = sk.luck.multiplier;
+      r.notes.push(`🍀 ${name} ช่วยให้เหรียญรางวัล ×${fairyFmt(sk.luck.multiplier)}`);
+      fire("luck");
+    }
+    if (sk.xp && fairyRoll(sk.xp.chance)) {
+      r.expMult = sk.xp.multiplier;
+      r.notes.push(`✨ ${name} ช่วยให้ EXP ×${fairyFmt(sk.xp.multiplier)}`);
+      fire("xp");
+    }
+    return r;
+  }
+
   function safeParse(value, fallback = []) {
     if (Array.isArray(value)) return value;
     if (!value) return fallback;
@@ -335,7 +923,10 @@ function closeBattleResult() {
       extraStudentMission = data.extraMission || null;
       
       const scoreVal = parseFloat(student["คะแนน"]) || 0;
-      let filteredMissions = safeParse(student["ภารกิจ"]).filter(m => String(m.name || "").trim().toLowerCase() !== "xp");
+      let filteredMissions = safeParse(student["ภารกิจ"]).filter(m => {
+        const mName = String(m.name || "").trim().toLowerCase();
+        return mName !== "xp" && mName !== "fairy";
+      });
 
       let rawLastFed = student["LastFed"];
       let parsedLastFed = { food: "", water: "", validUntil: "" };
@@ -471,6 +1062,7 @@ parsedClaimedRewards = sanitizeClaimedRewards(parsedClaimedRewards, "main_quest"
 }
 
       studentKey = currentStudent["รหัสนักเรียน"];
+      loadFairyData(data.fairyCatalog, student["Fairy"], student["fairyEquipped"]);
       
       const savedBg = localStorage.getItem(`pet_bg_${studentKey}`);
       currentBackground = savedBg ? savedBg : "BG.png";
@@ -1064,10 +1656,35 @@ function isMissionDone(mission) {
       breed: openBreedModal,
       shop: openShopModal,
       rank: openRankModal,
-      mission: openMissionModal
+      mission: openMissionModal,
+      fairy: openFairyBook,
+      plant: () => { if (window.openPlantScreen) window.openPlantScreen(); else popMessage('แปลงผักยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ 🌱'); }
     };
     if (actions[target]) actions[target]();
   }
+
+  // 🌱 สะพานเชื่อมให้ plant.js ใช้เหรียญ/EXP/ข้อความของเกมหลัก
+  window.PlantHost = {
+    id:    () => (currentStudent && currentStudent["รหัสนักเรียน"]) || 'guest',
+    today: () => todayStr(),
+    coins: () => wallet.coins,
+    reward(coin, xp){
+      const levelBefore = wallet.level;
+      wallet.coins += coin; wallet.exp += xp;
+      updateWalletUI();
+      if (wallet.level > levelBefore) popMessage(`🎉 เลเวลอัป! ตอนนี้ Lv.${wallet.level}`);
+      saveWalletAndData().catch(() => {});
+    },
+    // LastFed.Q1..Q6 = วันที่ซ่อมจุดนั้นสำเร็จล่าสุด (i เริ่มที่ 0)
+    getQ: i => (currentStudent && currentStudent.lastFed && currentStudent.lastFed['Q' + (i+1)]) || '',
+    setQ(i, dateStr){
+      if (!currentStudent) return;
+      if (!currentStudent.lastFed) currentStudent.lastFed = { food:"", water:"", validUntil:"" };
+      currentStudent.lastFed['Q' + (i+1)] = dateStr;
+    },
+    pop: text => popMessage(text),
+    closed: () => updateWalletUI()
+  };
 
   // แสดงของในกระเป๋า: ยา (กดใช้ได้) + อาหารที่มี
   function renderBagInventory(){
@@ -1395,6 +2012,7 @@ function isMissionDone(mission) {
     localStorage.setItem(`pet_streak_${studentKey}`, streak);
 
     currentStudent.lastFed = {
+      ...currentStudent.lastFed,   // เก็บ Q1..Q6 (สถานะแปลงผัก) ไว้ด้วย
       food: foodId,
       water: currentStudent.lastFed.water,
       validUntil: calculateFutureDate(durationDays)
@@ -1754,6 +2372,7 @@ function isMissionDone(mission) {
         <div style="max-height: 45vh; overflow-y: auto; display:flex; flex-direction:column; gap:6px;">
           ${petsHtml || '<div style="color:var(--ink-soft); font-size:12px; padding:20px;">ไม่มีสัตว์เลี้ยงโตเต็มวัยพร้อมรบในคอก</div>'}
         </div>
+        ${buildFairyPickBarHTML()}
         <button class="buy-btn" onclick="fetchFriendsForBattle()" style="width:100%; margin-top:12px; background:var(--berry); color:#fff; box-shadow:0 3px 0 var(--berry-dark);">
           โจมตีเพื่อน ⚔️
         </button>
@@ -2251,6 +2870,8 @@ let chosenFriendPetIndex =
     let myName = currentStudent["ชื่อ"] || "ฉัน";
     let friendName = battleTargetFriend["ชื่อ"] || "เพื่อน";
 
+    battleFairy = getEquippedFairy();
+    battleFoeFairy = getFairyById(battleTargetFriend && battleTargetFriend["fairyEquipped"]);
     let myBodyImg = getPetImage(myPet.type, false);
     let myLegImg = getPetImage(myPet.type, true);
     let friendBodyImg = getPetImage(friendPet.type, false);
@@ -2267,6 +2888,7 @@ let chosenFriendPetIndex =
             </div>
             <div style="font-size:9px; color:var(--ink-soft); text-align:right;"><span id="myHpText">${battleCurrentHP}</span>/${battleMaxHP} HP</div>
           </div>
+          ${buildFairyLaneHTML(battleFairy, "my")}
           <div class="fighter-assembly-container" id="myFighter">
             <div class="fighter-flip">
               <img src="${myLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-left" alt="">
@@ -2275,6 +2897,7 @@ let chosenFriendPetIndex =
               <img src="${myLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-left" alt="">
               <img src="${myLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-right" alt="">
             </div>
+            ${buildFairyUnitHTML(battleFairy, "my")}
             <div class="skill-hit-effect" id="myHitEffect"></div>
           </div>
         </div>
@@ -2288,6 +2911,7 @@ let chosenFriendPetIndex =
             </div>
             <div style="font-size:9px; color:var(--ink-soft); text-align:right;"><span id="friendHpText">${battleFriendHP}</span>/${battleFriendMaxHP} HP</div>
           </div>
+          ${buildFairyLaneHTML(battleFoeFairy, "foe")}
           <div class="fighter-assembly-container" id="friendFighter">
             <div class="fighter-flip">
               <img src="${friendLegImg}" class="fighter-leg fighter-leg-back fighter-leg-back-left" alt="">
@@ -2296,6 +2920,7 @@ let chosenFriendPetIndex =
               <img src="${friendLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-left" alt="">
               <img src="${friendLegImg}" class="fighter-leg fighter-leg-front fighter-leg-front-right" alt="">
             </div>
+            ${buildFairyUnitHTML(battleFoeFairy, "foe")}
             <div class="skill-hit-effect" id="friendHitEffect"></div>
           </div>
         </div>
@@ -2360,10 +2985,25 @@ let chosenFriendPetIndex =
       let myPower = myPet.power || 10;
 
       let damageToFriend = Math.max(1, myPower * skillNum);
+
+      // 🧚 ภูติ: ฝั่งเรา Cri / Steal / Heal — ฝั่งเพื่อน Dodge / Protect (ทอยใหม่ทุกครั้งที่โจมตี)
+      const fairyOff = applyFairyOffense("my", damageToFriend);
+      const fairyDef = applyFairyDefense("foe", fairyOff.damage);
+      damageToFriend = fairyDef.damage;
       battleFriendHP = Math.max(0, battleFriendHP - damageToFriend);
+      const stolenHp = Math.min(fairyDef.dodged ? 0 : fairyOff.steal, battleFriendHP);
+      battleFriendHP -= stolenHp;
+      const fairyHealed = fairyOff.heal + stolenHp;
+      if (fairyHealed > 0) {
+        battleCurrentHP = Math.min(battleMaxHP, battleCurrentHP + fairyHealed);
+        const myHpFillF = document.getElementById("myHpFill");
+        const myHpTextF = document.getElementById("myHpText");
+        if (myHpFillF) myHpFillF.style.width = `${(battleCurrentHP / battleMaxHP) * 100}%`;
+        if (myHpTextF) myHpTextF.textContent = battleCurrentHP;
+      }
 
       // ⭐ ท่า skill3 (ตอบเลขคณิตถูก) → ขึ้นเอฟเฟกต์ระเบิดที่ตัวอีกฝ่าย (friendFighter)
-      if (skillNum === 3) {
+      if (skillNum === 3 && !fairyDef.dodged) {
         playSkillHitEffect("friendHitEffect", myPet.type);
       }
 
@@ -2372,7 +3012,18 @@ let chosenFriendPetIndex =
       if (friendHpFill) friendHpFill.style.width = `${(battleFriendHP / battleFriendMaxHP) * 100}%`;
       if (friendHpText) friendHpText.textContent = battleFriendHP;
 
-      popMessage(`💥 โจมตีใส่เพื่อนสร้างความเสียหาย ${damageToFriend} HP!`);
+      let atkMsg;
+      if (fairyDef.dodged) {
+        atkMsg = `🌀 ภูติของเพื่อนช่วยหลบการโจมตี!`;
+      } else {
+        atkMsg = fairyOff.crit > 1
+          ? `💥 คริติคอล ×${fairyFmt(fairyOff.crit)}! ความเสียหาย ${damageToFriend} HP!`
+          : `💥 โจมตีใส่เพื่อนสร้างความเสียหาย ${damageToFriend} HP!`;
+        if (fairyDef.reduction > 0) atkMsg += ` 🛡️-${fairyFmt(fairyDef.reduction)}%`;
+        if (stolenHp > 0) atkMsg += ` 🧛+${stolenHp}`;
+      }
+      if (fairyOff.heal > 0) atkMsg += ` 💚+${fairyOff.heal}`;
+      popMessage(atkMsg);
 
       if (battleFriendHP <= 0) {
 
@@ -2384,7 +3035,10 @@ let chosenFriendPetIndex =
       // 1. คำนวณรางวัล
       // ==========================================
 
-      const rewardCoins = 50;
+      // 🧚 ภูติ: Luck / XP (ทอยตอนชนะ)
+      const fairyBonus = rollFairyWinBonus();
+      const rewardCoins = Math.round(50 * fairyBonus.coinMult);
+      const rewardExp = Math.round(60 * fairyBonus.expMult);
       
       const friendCoins =
         parseInt(
@@ -2423,7 +3077,7 @@ let chosenFriendPetIndex =
       wallet.coins +=
         rewardCoins + stolenCoins;
 
-      wallet.exp += 60;
+      wallet.exp += rewardExp;
 
 
       // ==========================================
@@ -2489,7 +3143,7 @@ let chosenFriendPetIndex =
 
       addHistoryLog(
         "battle_win",
-        `โจมตี ${battleTargetFriend["ชื่อ"] || "เพื่อน"} ชนะ! ได้ 🪙${rewardCoins + stolenCoins} EXP+60`
+        `โจมตี ${battleTargetFriend["ชื่อ"] || "เพื่อน"} ชนะ! ได้ 🪙${rewardCoins + stolenCoins} EXP+${rewardExp}`
       );
 
 
@@ -2546,7 +3200,9 @@ let chosenFriendPetIndex =
 
           `💪 ${myWinPet.type} Power +1`,
 
-          `✨ EXP +60`
+          `✨ EXP +${rewardExp}`,
+
+          ...fairyBonus.notes
 
         ],
 
@@ -2640,10 +3296,25 @@ let chosenFriendPetIndex =
       let friendPower = friendPet.power || 10;
       let enemySkillNum = pickEnemySkillNum();
       let damageToMe = Math.max(1, friendPower * enemySkillNum);
+
+      // 🧚 ภูติ: ฝั่งเพื่อน Cri / Steal / Heal (ใช้ภูติที่เพื่อนตั้งไว้) — ฝั่งเรา Dodge / Protect (ทอยใหม่ทุกครั้งที่ถูกโจมตี)
+      const foeOff = applyFairyOffense("foe", damageToMe);
+      const fairyDef = applyFairyDefense("my", foeOff.damage);
+      damageToMe = fairyDef.damage;
       battleCurrentHP = Math.max(0, battleCurrentHP - damageToMe);
+      const foeStolen = Math.min(fairyDef.dodged ? 0 : foeOff.steal, battleCurrentHP);
+      battleCurrentHP -= foeStolen;
+      const foeHealed = foeOff.heal + foeStolen;
+      if (foeHealed > 0) {
+        battleFriendHP = Math.min(battleFriendMaxHP, battleFriendHP + foeHealed);
+        const foeHpFillF = document.getElementById("friendHpFill");
+        const foeHpTextF = document.getElementById("friendHpText");
+        if (foeHpFillF) foeHpFillF.style.width = `${(battleFriendHP / battleFriendMaxHP) * 100}%`;
+        if (foeHpTextF) foeHpTextF.textContent = battleFriendHP;
+      }
 
       // ⭐ ถ้าเพื่อนสุ่มได้ท่า 3 (แรง) → ขึ้นเอฟเฟกต์ระเบิดที่ตัวเรา (myFighter)
-      if (enemySkillNum === 3) {
+      if (enemySkillNum === 3 && !fairyDef.dodged) {
         playSkillHitEffect("myHitEffect", friendPet.type);
       }
 
@@ -2652,7 +3323,16 @@ let chosenFriendPetIndex =
       if (myHpFill) myHpFill.style.width = `${(battleCurrentHP / battleMaxHP) * 100}%`;
       if (myHpText) myHpText.textContent = battleCurrentHP;
 
-      popMessage(`💥 เพื่อนใช้ท่า${skillLabel[enemySkillNum]} สร้างความเสียหาย ${damageToMe} HP!`);
+      if (fairyDef.dodged) {
+        popMessage(`🌀 ภูติช่วยหลบท่า${skillLabel[enemySkillNum]} ของเพื่อนได้!`);
+      } else {
+        let defMsg = foeOff.crit > 1
+          ? `💥 เพื่อนใช้ท่า${skillLabel[enemySkillNum]} คริติคอล ×${fairyFmt(foeOff.crit)}! ${damageToMe} HP!`
+          : `💥 เพื่อนใช้ท่า${skillLabel[enemySkillNum]} สร้างความเสียหาย ${damageToMe} HP!`;
+        if (fairyDef.reduction > 0) defMsg += ` 🛡️-${fairyFmt(fairyDef.reduction)}%`;
+        if (foeStolen > 0) defMsg += ` 🧛-${foeStolen}`;
+        popMessage(defMsg);
+      }
 
       if (battleCurrentHP <= 0) {
 
