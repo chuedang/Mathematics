@@ -1366,7 +1366,7 @@ html,body{
   position:absolute; left:var(--fairy-x,30px); top:var(--fairy-y,-28px);
   width:var(--fairy-size,40px); height:var(--fairy-size,40px); z-index:6; pointer-events:none;
 }
-.fighter-side.right .fighter-assembly-container > .fairy-unit{ left:var(--fairy-xm,30px); }
+.fighter-side.right .fighter-assembly-container > .fairy-unit{ left:var(--fairy-xm,30px); --fairy-flip:-1; }
 .fairy-unit img{
   width:100%; height:100%; object-fit:contain; display:block; transform-origin:50% 100%;
   animation:fairy-float 2.4s ease-in-out infinite; animation-delay:var(--fairy-delay,0s);
@@ -1374,17 +1374,17 @@ html,body{
 }
 /* ขึ้นลงเล็กน้อย + บีบภาพนิดหน่อย เหมือนกำลังกระพือบิน */
 @keyframes fairy-float{
-  0%,100%{ transform:translateY(0)    scale(1.05,0.94); }
-  50%    { transform:translateY(-6px) scale(0.95,1.06); }
+  0%,100%{ transform:translateY(0)    scale(calc(1.05 * var(--fairy-flip,1)),0.94); }
+  50%    { transform:translateY(-6px) scale(calc(0.95 * var(--fairy-flip,1)),1.06); }
 }
 .fairy-unit.fairy-fire img{
   animation:fairy-fire .7s ease-out 1;
   filter:drop-shadow(0 0 6px var(--fx-color,#ffd34d)) drop-shadow(0 0 12px var(--fx-color,#ffd34d));
 }
 @keyframes fairy-fire{
-  0%  { transform:translateY(0)    scale(1); }
-  30% { transform:translateY(-8px) scale(1.35); }
-  100%{ transform:translateY(0)    scale(1); }
+  0%  { transform:translateY(0)    scale(var(--fairy-flip,1),1); }
+  30% { transform:translateY(-8px) scale(calc(1.35 * var(--fairy-flip,1)),1.35); }
+  100%{ transform:translateY(0)    scale(var(--fairy-flip,1),1); }
 }
 .fairy-fx-label{
   position:absolute; left:50%; bottom:100%; white-space:nowrap; pointer-events:none;
@@ -1521,3 +1521,27 @@ html,body{
   border-color:#ffd54a; background:linear-gradient(160deg,#fff7d6,#ffe4f5,#e0f4ff);
   box-shadow:0 6px 0 #d9a400, 0 0 34px rgba(255,200,80,.9);
 }
+
+/* 🏡 เยี่ยมบ้านเพื่อน */
+.visit-list{ display:flex; flex-direction:column; gap:6px; }
+.visit-row{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  background:#fff; border:2px solid var(--cream-dark); border-radius:14px;
+  padding:6px 10px; cursor:pointer; font-family:inherit; transition:transform .15s ease, border-color .15s ease;
+}
+.visit-row:active{ transform:scale(.97); border-color:var(--berry); }
+.visit-row img{ width:44px; height:44px; flex:0 0 44px; object-fit:contain; filter:drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
+.visit-row-text{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.visit-row-text b{ font-size:13px; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.visit-row-text small{ font-size:10px; color:var(--ink-soft); }
+.visit-row-go{ font-size:20px; color:var(--ink-soft); }
+.visit-empty{ color:var(--ink-soft); font-size:12px; padding:20px; text-align:center; }
+/* 🏡 หน้าเยี่ยมบ้าน (เต็มจอ ใช้ .scene + เกาะเหมือนบ้านเรา) */
+#visitScreen{ display:none; position:fixed; inset:0; width:100%; height:100dvh; z-index:200; background:#2b2219; overflow:hidden; }
+#visitScene{ background-image:url("Background/back.png"); }
+.visit-top{ justify-content:flex-start; align-items:center; gap:8px; z-index:12; }
+.visit-top .back-btn{ flex:0 0 auto; filter:drop-shadow(0 3px 5px rgba(0,0,0,.35)); }
+.visit-title{ width:auto; max-width:calc(100% - 70px); }
+.visit-title .user-name{ font-size:13px; }
+.visit-title .user-class{ font-size:11px; }
+#visitLoading{ position:absolute; inset:0; z-index:11; display:none; align-items:center; justify-content:center; background:rgba(20,20,30,.45); }
