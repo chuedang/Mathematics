@@ -96,10 +96,16 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzTMBFqzbRJNZDIu4lJVUox
     { id: "Tomyumkung.png", type: "food", name: "ต้มยำกุ้ง", price: 160, days: 4, img: "Foods/Tomyumkung.png", noShop: true },
     { id: "MooStak.png", type: "food", name: "หมูสเต๊ะ", price: 100, days: 2, img: "Foods/MooStak.png", noShop: true },
     { id: "GreenCerry.png", type: "food", name: "แกงเขียวหวาน", price: 120, days: 3, img: "Foods/GreenCerry.png", noShop: true },
-    { id: "BG.png", type: "bg", name: "ฉากหลังเริ่มต้น", price: 0, img: "Background/BG.png" },
-    { id: "pinkBG.png", type: "bg", name: "ฉากหลังสีชมพูหวาน", price: 1000, img: "Background/pinkBG.png" },
-    { id: "grayBG.png", type: "bg", name: "ฉากหลังเทาสุดเท่", price: 1500, img: "Background/grayBG.png" },
-    { id: "whiteBG.png", type: "bg", name: "ฉากหลังขาวสะอาด", price: 2000, img: "Background/whiteBG.png" }
+    // 🏝️ เกาะลอยฟ้า (id ต้องตรงกับชื่อไฟล์และ ISLANDS ใน island.js) — พื้นหลังด้านหลังเกาะคือ Background/back.png เสมอ
+    { id: "Grass.png", type: "bg", name: "เกาะทุ่งหญ้า", price: 0, img: "Background/Grass.png" },
+    { id: "Cherry.png", type: "bg", name: "เกาะซากุระ", price: 1500, img: "Background/Cherry.png" },
+    { id: "Stone.png", type: "bg", name: "เกาะหิน", price: 700, img: "Background/Stone.png" },
+    { id: "Ice.png", type: "bg", name: "เกาะน้ำแข็ง", price: 900, img: "Background/Ice.png" },
+    { id: "Pirate.png", type: "bg", name: "เกาะโจรสลัด", price: 1500, img: "Background/Pirate.png" },
+    { id: "Candy.png", type: "bg", name: "เกาะขนม", price: 2000, img: "Background/Candy.png" },
+    { id: "Gem.png", type: "bg", name: "เกาะอัญมณี", price: 3000, img: "Background/Gem.png" },
+    { id: "Celestial.png", type: "bg", name: "เกาะสวรรค์", price: 9000, img: "Background/Celestial.png" },
+    { id: "Hell.png", type: "bg", name: "เกาะนรก", price: 9000, img: "Background/Hell.png" }
   ];
 
   let currentStudent = null;
@@ -113,7 +119,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzTMBFqzbRJNZDIu4lJVUox
   let serverTimeOffsetMs = 0;
   let activeTool = null; 
   let currentShopTab = 'pet';
-  let currentBackground = 'BG.png';
+  let currentBackground = 'Grass.png';
 
   let breedSelectedPets = [null, null];
   let activeBreedSlotIndex = 0;
@@ -248,6 +254,15 @@ function showBattleResult({
   overlay.classList.add("show");
 }
 
+
+/* แสดงผลต่อสู้ผ่านหน้าโหลด (แสงประจบ "ตู้ม") — ถ้าไม่มี battle-loading.js ก็แสดงผลทันทีเหมือนเดิม */
+function showBattleResultFx(opts) {
+  if (window.BattleLoading) {
+    BattleLoading.finish(() => showBattleResult(opts));
+  } else {
+    showBattleResult(opts);
+  }
+}
 
 /* =========================================
    ปิด Result Card
@@ -1064,10 +1079,8 @@ parsedClaimedRewards = sanitizeClaimedRewards(parsedClaimedRewards, "main_quest"
       studentKey = currentStudent["รหัสนักเรียน"];
       loadFairyData(data.fairyCatalog, student["Fairy"], student["fairyEquipped"]);
       
-      const savedBg = localStorage.getItem(`pet_bg_${studentKey}`);
-      currentBackground = savedBg ? savedBg : "BG.png";
-      if(!purchasedItems.includes("BG.png")) purchasedItems.push("BG.png");
-      applyBackground(currentBackground);
+      // 🏝️ พื้นหลังอ่านจาก items (0=ไม่มี 1=มี 9=กำลังใช้) → ตั้งค่าหลัง loadWalletAndInventory ด้านล่าง
+      currentBackground = "Grass.png";
 
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("dashboard").style.display = "block";
@@ -1078,6 +1091,9 @@ parsedClaimedRewards = sanitizeClaimedRewards(parsedClaimedRewards, "main_quest"
       if(classText) classText.textContent = currentStudent["ชั้น"];
 
       loadWalletAndInventory(student);
+      // เกาะที่ใช้อยู่ = ค่า 9 ใน items (normalizeBgState ทำใน loadWalletAndInventory แล้ว)
+      currentBackground = getEquippedBg();
+      applyBackground(currentBackground);
       checkAndInitPets();
       renderPetsDOM();
       refreshHungerState();
@@ -1124,8 +1140,9 @@ parsedClaimedRewards = sanitizeClaimedRewards(parsedClaimedRewards, "main_quest"
 
     // ⭐ ซิงก์รายการที่ "ซื้อแล้ว" (เช่น ฉากหลัง) กลับมาจาก inventory ที่โหลดจาก server
     // ถ้าไม่ทำขั้นนี้ purchasedItems จะว่างเปล่าทุกครั้งที่เข้าใหม่ ทำให้ของที่ซื้อแล้วกลายเป็นให้ซื้อซ้ำ
+    normalizeBgState();
     purchasedItems = Object.keys(inventory).filter(id => (parseInt(inventory[id]) || 0) > 0);
-    if (!purchasedItems.includes("BG.png")) purchasedItems.push("BG.png");
+    if (!purchasedItems.includes("Grass.png")) purchasedItems.push("Grass.png");
 
     updateLevelFromExp();
 
@@ -1421,6 +1438,8 @@ function isMissionDone(mission) {
   }
 
   function renderPetsDOM(){
+    const hasIsland = !!(window.Island && Island.ready());   // 🏝️ โหมดเกาะลอยฟ้า (island.js)
+    if (hasIsland) Island.stopAll();                          // กันตัวเดินเก่าไปขยับ element ใหม่
     const container = document.getElementById("petsContainer");
     container.innerHTML = "";
     petInstances = [];
@@ -1430,16 +1449,17 @@ function isMissionDone(mission) {
       if (pet.breed) return;
 
       const isBaby = isPetBaby(pet.born);
-      const x = sceneW * 0.2 + (index * 60) % (sceneW * 0.6);
-      const y = 45 + (index * 10) % 20;
+      let x, y;
+      if (hasIsland) { const sp = Island.spawnPos(index); x = sp.x; y = sp.y; }   // พิกัดโลก (พิกเซลของ Grass.png)
+      else { x = sceneW * 0.2 + (index * 60) % (sceneW * 0.6); y = 45 + (index * 10) % 20; }
 
       petInstances[index] = ({ index: index, type: pet.type, born: pet.born, sick: pet.sick, dead: pet.dead, x: x, y: y, targetX: x, targetY: y, isWalking: false });
 
       const el = document.createElement("div");
       el.className = `avatar-container pet-${pet.type} ${isBaby ? 'baby' : ''} ${pet.dead ? 'dead' : ''}`;
       el.id = `pet_el_${index}`;
-      el.style.left = x + "px";
-      el.style.top = y + "%";
+      if (hasIsland) Island.place(index, petInstances[index], el);
+      else { el.style.left = x + "px"; el.style.top = y + "%"; }
       el.onclick = (e) => tapPet(e, index);
       applyPetLayout(el, pet.type);
 
@@ -1470,6 +1490,14 @@ function isMissionDone(mission) {
   function updatePetDepth() {
     const els = Array.from(document.querySelectorAll("#petsContainer .avatar-container"));
     if (els.length === 0) return;
+    // 🏝️ บนเกาะ: ชามอาหาร/น้ำเรียงชั้นร่วมกับสัตว์ตามตำแหน่งเท้า (ตัวที่อยู่ต่ำกว่าอยู่ข้างหน้า)
+    const bowls = Array.from(document.querySelectorAll("#world .world-bowl"));
+    if (bowls.length) {
+      const all = els.map(el => ({ el, y: el.offsetTop + el.offsetHeight })).concat(bowls.map(el => ({ el, y: el.offsetTop })));
+      all.sort((a, b) => a.y - b.y);
+      all.forEach((o, i) => { const z = PET_Z_MIN + i; if (o.el.style.zIndex !== String(z)) o.el.style.zIndex = z; });   // อยู่ในโลก (stacking context ของตัวเอง) จึงเกิน 9 ได้
+      return;
+    }
     els.sort((a, b) => a.offsetTop - b.offsetTop);
     const span = PET_Z_MAX - PET_Z_MIN;
     els.forEach((el, i) => {
@@ -1537,8 +1565,58 @@ function isMissionDone(mission) {
     renderMissions();
   }
 
+  // เกาะที่ "เป็นเจ้าของแล้ว" = เกาะฟรี หรือมีใน inventory (ไม่พึ่ง purchasedItems ที่อาจค้าง/ว่าง → กันซื้อซ้ำเสียเหรียญสองรอบ)
+  function ownsBg(id){
+    const it = SHOP_ITEMS.find(i => i.id === id && i.type === 'bg');
+    if(!it) return false;
+    return it.price === 0 || bgState(id) > 0;
+  }
+
+  // 🏝️ สถานะพื้นหลังเก็บใน items: 0 = ไม่มี · 1 = มี · 9 = กำลังใช้อยู่ (มีได้แค่ 1 เกาะ)
+  const BG_NONE = 0, BG_OWNED = 1, BG_EQUIPPED = 9;
+  function bgIds(){ return SHOP_ITEMS.filter(i => i.type === 'bg').map(i => i.id); }
+  function bgState(id){ return parseInt(inventory[id]) || 0; }
+
+  function getEquippedBg(){
+    const eq = bgIds().find(id => bgState(id) === BG_EQUIPPED);
+    return eq || "Grass.png";
+  }
+
+  // ตั้งเกาะที่ใช้: เกาะเดิมที่เป็น 9 ลดเหลือ 1, เกาะใหม่เป็น 9 (ต้องเรียก saveWalletAndData() เองหลังเรียก)
+  function setEquippedBg(id){
+    bgIds().forEach(b => { if(bgState(b) === BG_EQUIPPED) inventory[b] = BG_OWNED; });
+    inventory[id] = BG_EQUIPPED;
+    currentBackground = id;
+    currentStudent.items = { ...inventory };
+    purchasedItems = Object.keys(inventory).filter(k => bgState(k) > 0);
+  }
+
+  // เรียกตอนโหลดข้อมูล: เติมคีย์ที่ขาดเป็น 0, Grass.png (ฟรี) = อย่างน้อย 1, และให้มี 9 เพียงเกาะเดียว
+  // ผู้เล่นเก่าที่ยังไม่มี 9 → ย้ายค่าจาก localStorage เดิม (pet_bg_...) มาให้ครั้งเดียว
+  function normalizeBgState(){
+    const ids = bgIds();
+    ids.forEach(id => {
+      let v = bgState(id);
+      if(v !== BG_NONE && v !== BG_OWNED && v !== BG_EQUIPPED) v = v > 0 ? BG_OWNED : BG_NONE;   // ค่าเก่าแบบนับจำนวน (2,3...) → 1
+      inventory[id] = v;
+    });
+    if(bgState("Grass.png") === BG_NONE) inventory["Grass.png"] = BG_OWNED;
+
+    const equipped = ids.filter(id => bgState(id) === BG_EQUIPPED);
+    let pick = equipped[0];
+    if(!pick){
+      let legacy = null;
+      try { legacy = localStorage.getItem(`pet_bg_${studentKey}`); } catch(e) {}
+      pick = (legacy && ownsBg(legacy)) ? legacy : "Grass.png";
+    }
+    ids.forEach(id => { if(bgState(id) === BG_EQUIPPED) inventory[id] = BG_OWNED; });
+    inventory[pick] = BG_EQUIPPED;
+    currentBackground = pick;
+    currentStudent.items = { ...inventory };
+  }
+
   function buyItem(itemObj){
-    if(itemObj.type === 'pet' || itemObj.type === 'medicine' || itemObj.type === 'food' || (itemObj.type === 'bg' && !purchasedItems.includes(itemObj.id))){
+    if(itemObj.type === 'pet' || itemObj.type === 'medicine' || itemObj.type === 'food' || (itemObj.type === 'bg' && !ownsBg(itemObj.id))){
       if(wallet.coins < itemObj.price){
         popMessage("เหรียญไม่พอจ้า!");
         return;
@@ -1562,11 +1640,13 @@ function isMissionDone(mission) {
           breed: false
         });
       } else {
-        inventory[itemObj.id] = (parseInt(inventory[itemObj.id]) || 0) + 1;
-        currentStudent.items = { ...inventory };
-
         if(itemObj.type === 'bg'){
-          purchasedItems = Object.keys(inventory).filter(id => (parseInt(inventory[id]) || 0) > 0);
+          // ซื้อเสร็จ → ใช้เกาะนั้นทันที (items: ใช้อยู่ = 9, เกาะเดิมที่ใช้อยู่ → 1)
+          setEquippedBg(itemObj.id);
+          applyBackground(currentBackground, true);
+        } else {
+          inventory[itemObj.id] = (parseInt(inventory[itemObj.id]) || 0) + 1;
+          currentStudent.items = { ...inventory };
         }
       }
 
@@ -1588,22 +1668,29 @@ function isMissionDone(mission) {
       }
 
       renderShopList(currentShopTab);
-      popMessage("ซื้อสำเร็จ! 🎉");
+      popMessage(itemObj.type === 'bg' ? `ซื้อและเปลี่ยนเป็น ${itemObj.name} แล้ว! 🎉` : "ซื้อสำเร็จ! 🎉");
       return;
     }
 
-    if(itemObj.type === 'bg' && purchasedItems.includes(itemObj.id)){
-      currentBackground = itemObj.id;
-      localStorage.setItem(`pet_bg_${studentKey}`, currentBackground);
-      applyBackground(currentBackground);
-      popMessage(`เปลี่ยนฉากหลังเป็น ${itemObj.name} แล้ว!`);
+    if(itemObj.type === 'bg' && ownsBg(itemObj.id)){
+      setEquippedBg(itemObj.id);
+      saveWalletAndData();
+      applyBackground(currentBackground, true);
+      popMessage(`เปลี่ยนเป็น ${itemObj.name} แล้ว!`);
       renderShopList(currentShopTab);
     }
   }
 
-  function applyBackground(bgFilename) {
+  // 🏝️ bgFilename = id เกาะ (Grass.png / Cherry.png) · ฉากหลังด้านหลังเกาะคือ back.png เสมอ
+  //    rerender=true เมื่อสลับเกาะกลางเกม → วางสัตว์ใหม่บนเกาะนั้น
+  function applyBackground(bgFilename, rerender) {
     const sceneEl = document.getElementById("scene");
-    if(sceneEl) sceneEl.style.backgroundImage = `url("Background/${bgFilename}")`;
+    const hasIsland = !!(window.Island && Island.ready());
+    if(sceneEl) sceneEl.style.backgroundImage = `url("Background/${hasIsland ? 'back.png' : bgFilename}")`;
+    if(hasIsland && Island.setIsland(bgFilename) && rerender){
+      renderPetsDOM();
+      refreshHungerState();
+    }
   }
 
   function renderShopList(tabType = 'pet'){
@@ -1613,7 +1700,7 @@ function isMissionDone(mission) {
       let btnText = "ซื้อ", btnClass = "buy-btn";
       if(item.type === 'bg') {
         if(currentBackground === item.id) { btnText = "ใช้อยู่"; btnClass = "buy-btn equipped"; }
-        else if(purchasedItems.includes(item.id)) { btnText = "ใช้"; }
+        else if(ownsBg(item.id)) { btnText = "ใช้"; }
       }
       return `
         <div class="shop-item">
@@ -2029,6 +2116,15 @@ function isMissionDone(mission) {
   }
 
   function moveAllPetsToBowl(){
+    if (window.Island && Island.ready()) {          // 🏝️ วิ่งไปรวมกันที่จุดชามบนเกาะ แล้วพากล้องไปดู
+      petInstances.forEach((pInst, idx) => {
+        if (!pInst || currentStudent.pets[idx].dead) return;
+        const t = Island.bowlTarget();
+        Island.walkTo(idx, pInst, t.x, t.y, Island.RUN_SPEED);
+      });
+      Island.focusBowl();
+      return;
+    }
     const sceneW = document.getElementById("scene") ? document.getElementById("scene").clientWidth : 380;
     const bowlX = sceneW * 0.45;
     petInstances.forEach((pInst, idx) => {
@@ -2160,7 +2256,9 @@ function isMissionDone(mission) {
   
   async function openRankModal(){ 
     document.getElementById("rankModal").style.display = "flex";
-    document.getElementById("rank-list").innerHTML = "<p style='text-align:center; color:#7f8c8d;'>กำลังโหลดอันดับ...</p>";
+    document.getElementById("rank-list").innerHTML = window.LoadingFX
+      ? LoadingFX.balls("กำลังโหลดอันดับ...", { color:"#ff6b81", textStyle:"color:#7f8c8d;" })
+      : "<p style='text-align:center; color:#7f8c8d;'>กำลังโหลดอันดับ...</p>";
     try {
       const data = await fetchWithRetry(`${API_URL}?action=ranking`);
       if(data.success && Array.isArray(data.ranking)) renderRankList(data.ranking);
@@ -2654,7 +2752,9 @@ throw new Error(
 
     document.getElementById("battleHeaderTitle").textContent = "⚔️ เลือกโจมตีเพื่อน";
     const area = document.getElementById("battleContentArea");
-    area.innerHTML = `<div style="color:#fff; font-size:14px;">กำลังค้นหาเพื่อนๆ ในระบบ...</div>`;
+    area.innerHTML = window.LoadingFX
+      ? LoadingFX.balls("กำลังค้นหาเพื่อนๆ ในระบบ...", { color:"#fff", textStyle:"color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6);" })
+      : `<div style="color:#fff; font-size:14px;">กำลังค้นหาเพื่อนๆ ในระบบ...</div>`;
 
     try {
       const data = await fetchWithRetry(`${API_URL}?action=ranking`);
@@ -2801,11 +2901,15 @@ if (lockedPet.atk === 0) {
 
 }
 
+if (window.ArenaDash) ArenaDash.start();   // 🚀 กดท้าดวลแล้ว → พุ่งเข้าสนามระหว่างรอระบบ
+
 try {
 
   await saveWalletAndData();
 
 } catch (err) {
+
+  if (window.ArenaDash) ArenaDash.cancel();
 
   console.error(
     "❌ ไม่สามารถบันทึกสิทธิ์โจมตี:",
@@ -2855,7 +2959,9 @@ let chosenFriendPetIndex =
   battleFriendMaxHP = friendPower * 10;
   battleFriendHP = battleFriendMaxHP;
 
-  renderBattleArenaScreen();
+  // แสงประตูสนามกลืนจอแล้วค่อยแสดงสนามต่อสู้ (เปลี่ยนหน้าตอนจอขาวเต็ม)
+  if (window.ArenaDash) await ArenaDash.finish(() => renderBattleArenaScreen());
+  else renderBattleArenaScreen();
 }
 
   function renderBattleArenaScreen() {
@@ -3029,6 +3135,8 @@ let chosenFriendPetIndex =
 
   setTimeout(async () => {
 
+    if (window.BattleLoading) BattleLoading.start();
+
     try {
 
       // ==========================================
@@ -3182,7 +3290,7 @@ let chosenFriendPetIndex =
       );
 
 
-      showBattleResult({
+      showBattleResultFx({
 
         type: "victory",
 
@@ -3228,7 +3336,7 @@ let chosenFriendPetIndex =
       // อย่าแสดงว่าได้รางวัลถ้ายังเซฟไม่ครบ
       // ==========================================
 
-      showBattleResult({
+      showBattleResultFx({
 
         type: "victory",
 
@@ -3338,6 +3446,8 @@ let chosenFriendPetIndex =
 
   setTimeout(async () => {
 
+    if (window.BattleLoading) BattleLoading.start();
+
     // ⭐ สัตว์ของเราแพ้ → เข้าโหมดพักฟื้น 3 ชั่วโมง (เหมือนสัตว์เพื่อนที่โดนโจมตี)
     const myLostPet = currentStudent.pets[battleLockedMyPetIndex];
     if (myLostPet) {
@@ -3360,7 +3470,7 @@ let chosenFriendPetIndex =
        แสดง Card แพ้
     ========================================== */
 
-    showBattleResult({
+    showBattleResultFx({
 
       type: "defeat",
 
@@ -3668,11 +3778,21 @@ let chosenFriendPetIndex =
     }, 30000);
   }
 
+  let _wanderTimer = null;
   function startWanderLoop() {
-    setInterval(() => {
+    if (_wanderTimer) return;                        // กัน interval ซ้อนเวลา login ซ้ำ
+    _wanderTimer = setInterval(() => {
+      const useIsland = !!(window.Island && Island.ready());
       const sceneW = document.getElementById("scene") ? document.getElementById("scene").clientWidth : 380;
       petInstances.forEach((pInst, idx) => {
-        if(currentStudent.pets[idx].dead || Math.random() > 0.4) return;
+        if(!pInst || !currentStudent.pets[idx] || currentStudent.pets[idx].dead) return;
+        if (useIsland) {
+          if (Island.isMoving(idx) || Math.random() > 0.5) return;
+          const t = Island.pickWander(pInst.x, pInst.y);   // จุดเดินเล่นบนสนามหญ้า ระยะ 140-420px
+          if (t) Island.walkTo(idx, pInst, t.x, t.y, Island.WALK_SPEED);
+          return;
+        }
+        if(Math.random() > 0.4) return;
         pInst.targetX = Math.max(30, Math.min(sceneW - 130, pInst.x + (Math.random() * 80 - 40)));
         pInst.targetY = Math.max(35, Math.min(65, pInst.y + (Math.random() * 20 - 10)));
         animatePetMove(idx);
@@ -4705,4 +4825,222 @@ function closeMgResult() {
   const track = document.getElementById("rlTrack");
   if (track) for (const c of track.children) c.classList.remove("rl-winner");
   document.getElementById("rlWindow").classList.remove("rl-flash");
+}
+
+/* =========================================================
+   🏡 เยี่ยมบ้านเพื่อน (ปุ่ม Icon/Search.png)
+   รายชื่อใช้ action=ranking · ตอนกดเข้าบ้านใช้ action=visit (ดึงสด)
+   ========================================================= */
+let visitFriends = [];
+
+function visitEsc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+async function openVisitModal() {
+  document.getElementById("visitModal").style.display = "flex";
+  const body = document.getElementById("visitBody");
+  body.innerHTML = window.LoadingFX
+    ? LoadingFX.balls("กำลังค้นหาบ้านเพื่อนๆ...", { color: "#ff6b81", textStyle: "color:#7f8c8d;" })
+    : "<p style='text-align:center; color:#7f8c8d;'>กำลังค้นหาบ้านเพื่อนๆ...</p>";
+  try {
+    const data = await fetchWithRetry(`${API_URL}?action=ranking`);
+    if (data.success && Array.isArray(data.ranking)) {
+      visitFriends = data.ranking.filter(s => String(s["รหัสนักเรียน"] || "").trim() !== String(studentKey || "").trim());
+      renderVisitList();
+    } else {
+      body.innerHTML = "<p style='text-align:center; color:#e74f66;'>ไม่สามารถโหลดรายชื่อบ้านได้</p>";
+    }
+  } catch (err) {
+    body.innerHTML = "<p style='text-align:center; color:#e74f66;'>เกิดข้อผิดพลาดในการเชื่อมต่อ</p>";
+  }
+}
+
+function buildVisitTilesHTML(query = "") {
+  const q = String(query || "").trim().toLowerCase();
+  let html = "";
+  visitFriends.forEach((f, idx) => {
+    const name = String(f["ชื่อ"] || "");
+    const sid = String(f["รหัสนักเรียน"] || "");
+    if (q && !name.toLowerCase().includes(q) && !sid.toLowerCase().includes(q)) return;
+    html += `<button class="visit-row" onclick="visitFriendHouse(${idx})">
+      <img src="Icon/Plant.png" alt="">
+      <span class="visit-row-text">
+        <b>${visitEsc(name || sid)}</b>
+        <small>รหัส ${visitEsc(sid)}</small>
+      </span>
+      <span class="visit-row-go">›</span>
+    </button>`;
+  });
+  if (html) return `<div class="visit-list">${html}</div>`;
+  return `<div class="visit-empty">${q ? "ไม่พบบ้านที่ตรงกับ \"" + visitEsc(q) + "\"" : "ยังไม่มีบ้านเพื่อนในระบบ"}</div>`;
+}
+
+function renderVisitList() {
+  document.getElementById("visitBody").innerHTML = `
+    <div class="friend-search-box">
+      <span class="friend-search-icon">🔍</span>
+      <input type="text" id="visitSearchInput" class="friend-search-input" placeholder="ค้นหาชื่อหรือรหัสนักเรียน..." autocomplete="off" oninput="filterVisitList(this.value)">
+      <button type="button" id="visitSearchClear" class="friend-search-clear" onclick="clearVisitSearch()" aria-label="ล้างคำค้นหา">✕</button>
+    </div>
+    <div id="visitListItems">${buildVisitTilesHTML("")}</div>`;
+}
+
+function filterVisitList(query) {
+  const el = document.getElementById("visitListItems");
+  if (el) el.innerHTML = buildVisitTilesHTML(query);
+  const clr = document.getElementById("visitSearchClear");
+  if (clr) clr.style.display = query ? "flex" : "none";
+}
+
+function clearVisitSearch() {
+  const input = document.getElementById("visitSearchInput");
+  if (input) { input.value = ""; input.focus(); }
+  filterVisitList("");
+}
+
+// เข้าชมบ้านเพื่อน (ดูอย่างเดียว ไม่มีผลกับข้อมูลใคร)
+// ดึงข้อมูลสดของเพื่อนคนนั้นจากชีทตอนกดเข้าไป (action=visit) ไม่ใช้ข้อมูลเก่าจากตอนโหลดรายชื่อ
+// หน้าเยี่ยมบ้าน = เต็มจอเหมือนบ้านเรา ใช้เกาะ/การเดินชุดเดียวกัน (island.js สร้างอีกชุดแยกจากบ้านเรา)
+// ไม่มีปุ่มอะไรเลยนอกจากย้อนกลับ · ด้านบนบอกแค่ชื่อบ้าน + จำนวนสัตว์ (ไม่แสดงเงิน/XP/คะแนน)
+let visitIsland = null;           // Island ชุดที่ 2 (สร้างตอนเยี่ยมบ้านครั้งแรก)
+let visitPetInstances = [];
+let visitWanderTimer = null;
+let visitDepthTimer = null;
+let visitToken = 0;               // กันผลเก่าวาดทับ เมื่อกดบ้านอื่น/ย้อนกลับระหว่างรอโหลด
+
+function getVisitIsland() {
+  if (visitIsland) return visitIsland;
+  if (!window.createIsland) return null;
+  visitIsland = createIsland({
+    sceneId: "visitScene", petsId: "visitPetsContainer", prefix: "visitWorld", worldId: "visitWorld",
+    petPrefix: "vpet_el_", controls: false, bowls: false
+  });
+  return visitIsland;
+}
+
+function stopVisitLoops() {
+  if (visitWanderTimer) { clearInterval(visitWanderTimer); visitWanderTimer = null; }
+  if (visitDepthTimer) { clearInterval(visitDepthTimer); visitDepthTimer = null; }
+}
+
+// ชั้นภาพ: ตัวที่อยู่ต่ำกว่า (ใกล้คนดู) อยู่ข้างหน้า
+function updateVisitDepth() {
+  const els = Array.from(document.querySelectorAll("#visitPetsContainer .avatar-container"));
+  if (!els.length) return;
+  els.map(el => ({ el, y: el.offsetTop + el.offsetHeight }))
+    .sort((a, b) => a.y - b.y)
+    .forEach((o, i) => { const z = 5 + i; if (o.el.style.zIndex !== String(z)) o.el.style.zIndex = z; });
+}
+
+function buildVisitPets(pets) {
+  const isl = visitIsland;
+  const container = document.getElementById("visitPetsContainer");
+  isl.stopAll();
+  isl.resetPets();             // บ้านใหม่ = เริ่มวางตำแหน่งใหม่ ไม่ใช้ตำแหน่งค้างจากบ้านก่อนหน้า
+  container.innerHTML = "";
+  visitPetInstances = [];
+
+  pets.forEach((pet, index) => {
+    const isBaby = isPetBaby(pet.born);
+    const sp = isl.spawnPos(index);
+    const inst = { index, type: pet.type, born: pet.born, sick: pet.sick, dead: pet.dead, x: sp.x, y: sp.y, targetX: sp.x, targetY: sp.y };
+    visitPetInstances[index] = inst;
+
+    const el = document.createElement("div");
+    el.className = `avatar-container pet-${pet.type} ${isBaby ? "baby" : ""} ${pet.dead ? "dead" : ""}`;
+    el.id = `vpet_el_${index}`;
+    el.style.cursor = "default";
+    isl.place(index, inst, el);
+    applyPetLayout(el, pet.type);
+
+    const bodyImg = getPetImage(pet.type, false), legImg = getPetImage(pet.type, true);
+    const iconHTML = pet.dead ? `<img src="Icon/ghost.png" class="pet-icon-status" alt="">`
+      : (pet.sick ? `<img src="Icon/sick.png" class="pet-icon-status" alt="">`
+      : (isBaby ? `<img src="Icon/baby.png" class="pet-icon-status" alt="">` : ""));
+    el.innerHTML = `
+      ${iconHTML}
+      <div class="pet-flip">
+        <div class="pet-assembly">
+          <img src="${legImg}" class="leg leg-back leg-back-left" alt="">
+          <img src="${legImg}" class="leg leg-back leg-back-right" alt="">
+          <img src="${bodyImg}" class="body-img" alt="">
+          <img src="${legImg}" class="leg leg-front leg-front-left" alt="">
+          <img src="${legImg}" class="leg leg-front leg-front-right" alt="">
+        </div>
+      </div>`;
+    container.appendChild(el);
+  });
+  updateVisitDepth();
+}
+
+function startVisitLoops() {
+  stopVisitLoops();
+  visitDepthTimer = setInterval(updateVisitDepth, 120);
+  visitWanderTimer = setInterval(() => {
+    const isl = visitIsland;
+    if (!isl) return;
+    visitPetInstances.forEach((inst, idx) => {
+      if (!inst || inst.dead) return;                       // ตัวที่ตายไม่เดิน (เหมือนบ้านเรา)
+      if (isl.isMoving(idx) || Math.random() > 0.5) return;
+      const t = isl.pickWander(inst.x, inst.y);
+      if (t) isl.walkTo(idx, inst, t.x, t.y, isl.WALK_SPEED);
+    });
+  }, 4500);
+}
+
+async function visitFriendHouse(idx) {
+  const base = visitFriends[idx];
+  if (!base) return;
+  const sid = String(base["รหัสนักเรียน"] || "");
+  const token = ++visitToken;
+  const screen = document.getElementById("visitScreen");
+  const loading = document.getElementById("visitLoading");
+
+  document.getElementById("visitHouseTitle").textContent = `บ้านของ ${base["ชื่อ"] || sid || "เพื่อน"}`;
+  document.getElementById("visitPetCount").textContent = "-";
+  loading.style.display = "flex";
+  loading.innerHTML = window.LoadingFX
+    ? LoadingFX.balls("กำลังเข้าไปเยี่ยมบ้าน...", { color: "#ff6b81", textStyle: "color:#fff;" })
+    : "<p style='color:#fff;'>กำลังเข้าไปเยี่ยมบ้าน...</p>";
+  screen.style.display = "block";
+
+  const isl = getVisitIsland();
+  if (!isl || !isl.ready()) { closeVisitHouse(); return; }
+
+  let f = base;
+  try {
+    const data = await fetchWithRetry(`${API_URL}?action=visit&id=${encodeURIComponent(sid)}`);
+    if (data && data.success && data.student) f = data.student;
+  } catch (err) { /* ใช้ข้อมูลจากรายชื่อแทน */ }
+
+  // ผู้ใช้กดย้อนกลับ/เลือกบ้านอื่นระหว่างรอ → ไม่ต้องวาดทับ
+  if (token !== visitToken || screen.style.display === "none") return;
+
+  const name = String(f["ชื่อ"] || f["รหัสนักเรียน"] || "เพื่อน");
+  const pets = safeParse(f["pets"]).filter(p => p && !p.breed);
+
+  let fItems = {};
+  try { fItems = typeof f["items"] === "string" ? JSON.parse(f["items"] || "{}") : (f["items"] || {}); } catch (e) { fItems = {}; }
+  const fBg = bgIds().find(id => parseInt(fItems[id]) === 9) || "Grass.png";   // 9 = เกาะที่เพื่อนใช้อยู่
+
+  document.getElementById("visitHouseTitle").textContent = `บ้านของ ${name}`;
+  document.getElementById("visitPetCount").textContent = pets.length;
+
+  isl.setIsland(fBg);          // เปลี่ยนเกาะ (ล้างตำแหน่งสัตว์เก่า) แล้ววางสัตว์ของเพื่อน
+  buildVisitPets(pets);
+  isl.recenter();
+  loading.style.display = "none";
+  startVisitLoops();
+}
+
+function closeVisitHouse() {
+  visitToken++;
+  stopVisitLoops();
+  if (visitIsland) visitIsland.stopAll();
+  document.getElementById("visitScreen").style.display = "none";
+  document.getElementById("visitLoading").style.display = "none";
+  const c = document.getElementById("visitPetsContainer");
+  if (c) c.innerHTML = "";
+  visitPetInstances = [];
 }
