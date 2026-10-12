@@ -13,14 +13,13 @@ const pick = a => a[Math.floor(RNG()*a.length)];
 const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
 const TAU = Math.PI*2;
 const TRIES = 3;
-const GH_SET = 25;               // อุณหภูมิเป้าหมายของเรือนกระจก (°C)
 
 const STATIONS = [
   { id:'spr',  name:'สปริงเกลอร์',     icon:'🚿', topic:'ฟังก์ชันกำลังสอง',            veg:'carrot',  bonus:0 },
   { id:'moi',  name:'ตัวตรวจความชื้น', icon:'📟', topic:'เอกซ์โปเนนเชียล / ลอการิทึม', veg:'tomato',  bonus:0 },
   { id:'mix',  name:'ถังผสมปุ๋ย',      icon:'🧪', topic:'ระบบสมการ 3 ตัวแปร',          veg:'cabbage', bonus:3 },
-  { id:'pipe', name:'ท่อลำเลียงน้ำ',   icon:'🛠️', topic:'เวกเตอร์ 3 มิติ',             veg:'carrot',  bonus:2 },
-  { id:'gh',   name:'เรือนกระจก',      icon:'🏠', topic:'ตรีโกณมิติ (คลื่นไซน์)',      veg:'tomato',  bonus:3 },
+  { id:'pipe', name:'ท่อลำเลียงน้ำ',   icon:'🛠️', topic:'เวกเตอร์ 3 มิติ (บวก · ขนาด · dot · cross)',             veg:'carrot',  bonus:2 },
+  { id:'gh',   name:'เรือนกระจก',      icon:'🏠', topic:'ตรีโกณมิติ (สมการตรีโกณมิติ)',      veg:'tomato',  bonus:3 },
   { id:'fence',name:'รั้วและถังน้ำ',   icon:'📦', topic:'อนุพันธ์ หาค่าสูงสุด',        veg:'cabbage', bonus:3 }
 ];
 
@@ -57,7 +56,8 @@ function isBroken(i){
   }
   return true;
 }
-function levelOf(i){ const H = window.PlantHost; return 1 + Math.floor(seedRng(`lvl|${H.id()}|${H.today()}|${i}`)() * 3); }
+function levelOf(i){ const H = window.PlantHost, r = seedRng(`lvl|${H.id()}|${H.today()}|${i}`)();
+  return STATIONS[i].id === 'gh' ? 2 + Math.floor(r*2) : 1 + Math.floor(r*3); }   // เรือนกระจกมีแค่ระดับ 2 (กลาง) กับ 3 (ยาก)
 const brokenCount = () => STATIONS.reduce((n,_,i) => n + (isBroken(i) ? 1 : 0), 0);
 
 /* ---------- บันทึกในเครื่อง: จำนวนหยดน้ำที่ใช้ไป/จำนวนครั้งที่ตอบพลาดจนน้ำหมด (กันรีโหลดเพื่อรีเซ็ต) ---------- */
@@ -198,90 +198,222 @@ function genMix(lvl){
   }
 }
 
-/* จุด 4: ท่อลำเลียงน้ำ — เวกเตอร์ 3 มิติ */
+/* จุด 4: ท่อลำเลียงน้ำ — เวกเตอร์ 3 มิติ (ไล่ระดับตามเนื้อหา ม.4–6)
+   ระดับ 1 (ม.4)   บวก/ลบเวกเตอร์ในรูปองค์ประกอบ — หาท่อนที่หายไปให้ปลายท่อถึงเป้าหมาย
+   ระดับ 2 (ม.5)   ผลบวกของ 3 ท่อน (ท่อนที่หายไปอยู่ตำแหน่งใดก็ได้) หรือ ขนาด + เวกเตอร์หนึ่งหน่วย (v = L·w/|w|)
+   ระดับ 3 (ม.5–6) ผลคูณเชิงสเกลาร์ (ตั้งฉาก a·b = 0 หาค่า k) หรือ ผลคูณเชิงเวกเตอร์ (a × b) */
 function genPipe(lvl){
   const W = [[1,2,2],[2,1,2],[2,2,1],[2,3,6]];
   const zOK = segs => { let z = 0; return segs.every(s => (z += s[2]) >= 0); };
   const smallOK = v => v.every(c => Math.abs(c) <= 12);
-  for (let guard=0; guard<800; guard++){
-    const dirMode = lvl===3 && RNG() < .5;
-    const nSeg = lvl===1 ? 2 : 3;
-    const rv = () => lvl===1 ? [rnd(0,6),rnd(0,6),rnd(0,3)] : [rnd(-4,6),rnd(-4,6),rnd(-3,4)];
-    if (!dirMode){
+  const rv = () => lvl===1 ? [rnd(0,6),rnd(0,6),rnd(0,3)] : [rnd(-4,6),rnd(-4,6),rnd(-3,4)];
+  const rvSmall = () => [rnd(-3,4), rnd(-3,4), rnd(-2,3)];
+  const zeroMsg = v => isZero(v) ? 'ท่อต้องมีความยาว (ห้ามเป็น 0,0,0)' : null;
+  const kind = lvl===1 ? 'tar' : lvl===2 ? (RNG() < .5 ? 'tar' : 'dir') : (RNG() < .5 ? 'perp' : 'cross');
+  for (let guard=0; guard<3000; guard++){
+
+    if (kind === 'tar'){
+      const nSeg = lvl===1 ? 2 : 3;
       const segs = Array.from({length:nSeg}, rv);
       if (segs.some(isZero) || !zOK(segs)) continue;
-      if (lvl>=2 && segs.some((s,i) => i>0 && dot(segs[i-1],s) < 0)) continue;
-      const unk = lvl===3 ? rnd(0,nSeg-1) : nSeg-1;
+      const unk = lvl===1 ? nSeg-1 : rnd(0,nSeg-1);
       const target = segs.reduce(vadd, [0,0,0]);
       if (!smallOK(target)) continue;
-      const total = segs.reduce((s,v) => s + vlen(v), 0);
-      const lmax = Math.ceil(total) + 1;
-      return { type:'pipe', mode:'tar', segs, unk, target, lmax, rules: lvl>=2, fields:3, neg:true, ansV:segs[unk],
+      const fullSegs = v => segs.map((s,i) => i===unk ? v : s);
+      return { type:'pipe', mode:'tar', segs, unk, target, fields:3, neg:true, ansV:segs[unk],
         answerText:`ท่อนที่ ${unk+1} = ${fmtV(segs[unk])}`,
-        valid: v => isZero(v) ? 'ท่อต้องมีความยาว (ห้ามเป็น 0,0,0)' : null,
-        fullSegs(v){ return segs.map((s,i) => i===unk ? v : s); },
+        valid: zeroMsg, fullSegs,
         judge(v){
-          const full = this.fullSegs(v), end = full.reduce(vadd,[0,0,0]), notes = [];
+          const end = fullSegs(v).reduce(vadd,[0,0,0]), notes = [];
           ['x','y','z'].forEach((ax,k) => { const d = end[k] - target[k]; if (d !== 0) notes.push(`ปลายท่อ${d<0?'สั้นไป':'เลยไป'}ในแกน ${ax}`); });
           return { ok: notes.length === 0, notes };
         }
       };
-    } else {
-      // ท่อนสุดท้าย: ขนานกับ w ยาว L และเลี้ยวไม่เกิน 90° (เครื่องหมายถูกกำหนดด้วย a·b ≥ 0)
+    }
+
+    if (kind === 'dir'){
+      // ท่อนที่ 3: ยาว L ในทิศเดียวกับ (หรือตรงข้ามกับ) w  ⇒  v = ±L·(w/|w|)
       const given = Array.from({length:2}, rv);
-      if (given.some(isZero) || !zOK(given) || dot(given[0],given[1]) < 0) continue;
-      let w = pick(W).slice();
-      w = [w[0],w[1],w[2]].sort(() => RNG()-.5).map(c => c * pick([1,-1]));
-      const prev = given[1], d = dot(prev, w);
-      if (d === 0) continue;
+      if (given.some(isZero) || !zOK(given)) continue;
+      const w = pick(W).slice().sort(() => RNG()-.5).map(c => c * pick([1,-1]));
+      const sgn = RNG() < .75 ? 1 : -1;
       const k = w.some(c => Math.abs(c) === 6) ? rnd(1,2) : rnd(1,3);
       const L = k * Math.round(vlen(w));
-      const s = d > 0 ? 1 : -1;
-      const ans = w.map(c => nz(s*k*c));
+      const ans = w.map(c => nz(sgn*k*c));
       if (!smallOK(ans) || !zOK(given.concat([ans]))) continue;
-      return { type:'pipe', mode:'dir', segs:given, unk:2, w, L, rules:true, fields:3, neg:true, ansV:ans,
-        answerText:`ท่อนที่ 3 = ${fmtV(ans)}`,
-        valid: v => isZero(v) ? 'ท่อต้องมีความยาว (ห้ามเป็น 0,0,0)' : null,
-        fullSegs(v){ return given.concat([v]); },
+      return { type:'pipe', mode:'dir', segs:given, unk:2, w, L, sgn, fields:3, neg:true, ansV:ans,
+        answerText:`ท่อนที่ 3 = ${fmtV(ans)}  (${sgn>0?'':'−'}${L} · w/|w|, |w| = ${Math.round(vlen(w))})`,
+        valid: zeroMsg,
+        fullSegs: v => given.concat([v]),
         judge(v){
           const notes = [];
           if (!isZero(cross(v,w))) notes.push('ท่อไม่ขนานกับ w');
           else {
             const l2 = dot(v,v);
             if (l2 !== L*L) notes.push(l2 < L*L ? 'ท่อสั้นกว่าที่กำหนด' : 'ท่อยาวกว่าที่กำหนด');
-            else if (dot(prev,v) < 0) notes.push('เลี้ยวเกิน 90° (ท่อนสุดท้ายหักกลับ)');
+            else if (dot(v,w)*sgn < 0) notes.push(sgn > 0 ? 'ท่อชี้ทิศตรงข้ามกับ w' : 'โจทย์ให้ไปทิศตรงข้ามกับ w แต่ท่อชี้ทิศเดียวกัน');
           }
           return { ok: notes.length === 0, notes };
         }
       };
     }
+
+    if (kind === 'perp'){
+      // ท่อนที่ 2 = (…k…) ต้องตั้งฉากกับท่อนที่ 1  ⇒  a·b = 0 แล้วแก้สมการเชิงเส้นหา k
+      const a = rv(); if (isZero(a)) continue;
+      const j = rnd(0,1);                                   // k อยู่ที่องค์ประกอบ x หรือ y
+      if (a[j] === 0) continue;
+      const b = [rnd(-4,6), rnd(-4,6), rnd(-3,4)];
+      const rest = [0,1,2].filter(i => i !== j).reduce((s,i) => s + a[i]*b[i], 0);
+      if (rest % a[j] !== 0) continue;
+      const kk = nz(-rest / a[j]);
+      if (kk === 0 || Math.abs(kk) > 9) continue;
+      b[j] = kk;
+      if (dot(a,b) !== 0 || !zOK([a,b])) continue;
+      const fullSegs = v => { const bb = b.slice(); bb[j] = (v[0] === undefined || isNaN(v[0])) ? 0 : v[0]; return [a, bb]; };
+      return { type:'pipe', mode:'perp', segs:[a,b], unk:1, j, kk, fields:1, neg:true, ansV:[kk],
+        answerText:`k = ${kk}  (ท่อนที่ 2 = ${fmtV(b)})`,
+        valid: () => null, fullSegs,
+        judge(v){
+          const d = dot(a, fullSegs(v)[1]);
+          if (d === 0) return { ok:true, notes:[] };
+          return { ok:false, notes:[ d > 0 ? `มุมระหว่างสองท่อนเป็นมุมแหลม (v₁·v₂ = ${d} > 0)` : `มุมระหว่างสองท่อนเป็นมุมป้าน (v₁·v₂ = ${d} < 0)` ] };
+        }
+      };
+    }
+
+    // kind === 'cross': ท่อนที่ 3 = v₁ × v₂
+    const a = rvSmall(), b = rvSmall();
+    if (isZero(a) || isZero(b)) continue;
+    const c = cross(a,b);
+    if (isZero(c) || !smallOK(c) || !zOK([a,b,c])) continue;
+    return { type:'pipe', mode:'cross', segs:[a,b], unk:2, c, fields:3, neg:true, ansV:c,
+      answerText:`ท่อนที่ 3 = ท่อนที่ 1 × ท่อนที่ 2 = ${fmtV(c)}`,
+      valid: zeroMsg,
+      fullSegs: v => [a,b,v],
+      judge(v){
+        const notes = [];
+        if (dot(v,a) !== 0) notes.push('ท่อนที่ 3 ไม่ตั้งฉากกับท่อนที่ 1 (v·v₁ ≠ 0)');
+        if (dot(v,b) !== 0) notes.push('ท่อนที่ 3 ไม่ตั้งฉากกับท่อนที่ 2 (v·v₂ ≠ 0)');
+        if (!notes.length){
+          const t = dot(v,c) / dot(c,c);
+          if (t < 0) notes.push('ทิศกลับด้าน — ใช้ v₁ × v₂ (กฎมือขวา) ไม่ใช่ v₂ × v₁');
+          else if (t !== 1) notes.push(t < 1 ? 'ท่อนสั้นกว่า |v₁ × v₂|' : 'ท่อนยาวกว่า |v₁ × v₂|');
+        }
+        return { ok: notes.length === 0, notes };
+      }
+    };
   }
 }
 
-/* จุด 5: เรือนกระจก — T(t) = A·sin(2π(t−C)/P) + D */
-function genGreenhouse(lvl){
-  const P = lvl===1 ? 24 : lvl===2 ? pick([12,24]) : pick([8,12,16,24]);
-  const A = lvl===1 ? rnd(2,5) : rnd(2,8);
-  const D = rnd(18,32);
-  const C = lvl===1 ? pick([2,4,6]) : rnd(1, Math.max(1, P/2 - 1));
-  const f = t => D + A*Math.sin(TAU*(t - C)/P);
-  const model = v => (t => v[3] + v[0]*Math.sin(TAU*(t - v[2])/v[1]));
-  const yMin = Math.min(D - A - 2, GH_SET - 2), yMax = Math.max(D + A + 2, GH_SET + 2);
-  return { type:'gh', A, P, C, D, f, model, xMax:24, yMin, yMax, showMid: lvl===1, fields:4, neg:false,
-    answerText:`A = ${A}, คาบ = ${P}, C = ${C}, D = ${D}`,
-    valid: v => (v[0] <= 0 || v[1] <= 0 || v[3] <= 0) ? 'A, คาบ และ D ต้องมากกว่า 0' : null,
+/* จุด 5: เรือนกระจก — สมการตรีโกณมิติ (มี 2 ระดับ: ระดับ 2 = กลาง · ระดับ 3 = ยาก)
+   ระดับ 2  f(a·x) = b          f ∈ sin cos tan cosec sec cot · a ∈ {1,2,3} · b เป็นค่ามุมพิเศษ (± 0, 1/2, √2/2, √3/2, 1 · tan/cot ± 0, 1/√3, 1, √3 · cosec/sec ± 1, 2/√3, √2, 2)
+   ระดับ 3  p·f²x + q·f x + r = 0  แยกตัวประกอบเป็นสมการพื้นฐาน (บางข้อมีรากที่เป็นไปไม่ได้ เช่น cos x = 2)
+   ช่วงของ x สุ่มจาก 0 ≤ x ≤ 2π · 0 ≤ x ≤ π · −π ≤ x ≤ π — ผู้เล่นกรอก x ทุกค่าเป็นพหุคูณของ π (กด ÷ ใส่เศษส่วน) */
+const GH_DOMS = [[0,2],[0,1],[-1,1]];
+const gcd = (a,b) => { a = Math.abs(a); b = Math.abs(b); while (b){ const t = a % b; a = b; b = t; } return a; };
+function piStr(n, d){                                           // เศษส่วน n/d ของ π → ข้อความ เช่น 5π/6
+  const g = gcd(n, d) || 1; n /= g; d /= g;
+  if (n === 0) return '0';
+  const sg = n < 0 ? '−' : '', an = Math.abs(n), co = an === 1 ? '' : an;
+  return d === 1 ? `${sg}${co}π` : `${sg}${co}π/${d}`;
+}
+const TF = {
+  sin: t => Math.sin(t), cos: t => Math.cos(t),
+  tan:   t => { const c = Math.cos(t); return Math.abs(c) < 1e-9 ? NaN : Math.sin(t)/c; },
+  cosec: t => { const s = Math.sin(t); return Math.abs(s) < 1e-9 ? NaN : 1/s; },
+  sec:   t => { const c = Math.cos(t); return Math.abs(c) < 1e-9 ? NaN : 1/c; },
+  cot:   t => { const s = Math.sin(t); return Math.abs(s) < 1e-9 ? NaN : Math.cos(t)/s; }
+};
+const GH_B = {
+  sc:  [['0',0], ['1/2',.5], ['√2/2',Math.SQRT1_2], ['√3/2',Math.sqrt(3)/2], ['1',1]],
+  tc:  [['0',0], ['1/√3',1/Math.sqrt(3)], ['1',1], ['√3',Math.sqrt(3)]],
+  sec: [['1',1], ['2/√3',2/Math.sqrt(3)], ['√2',Math.SQRT2], ['2',2]]
+};
+const ghB = fn => fn==='sin' || fn==='cos' ? GH_B.sc : fn==='tan' || fn==='cot' ? GH_B.tc : GH_B.sec;
+
+function ghSolve(test, dom, den){                               // หา x = (k/den)π ทั้งหมดในช่วง ที่ test(x) เป็นจริง (คืนเศษส่วนย่อแล้ว)
+  const out = [];
+  for (let k = dom[0]*den; k <= dom[1]*den; k++){
+    if (!test(Math.PI*k/den)) continue;
+    const g = gcd(k, den) || den;
+    out.push({ n:k/g, d:den/g, v:k/den });
+  }
+  return out;
+}
+function ghPuzzle(lvl, dom, o){                                 // o: fn(x) = ฝั่งซ้ายของสมการ · target = ค่าฝั่งขวา · yFixed = ช่วงแกน y (ถ้ากราฟมีเส้นกำกับ)
+  const test = x => { const y = o.fn(x); return isFinite(y) && Math.abs(y - o.target) < 1e-9; };
+  const sols = ghSolve(test, dom, o.den);
+  if (sols.length < 2 || sols.length > 6) return null;
+  const isSol = v => v >= dom[0]-1e-9 && v <= dom[1]+1e-9 && test(v*Math.PI);
+  let yMin, yMax;
+  if (o.yFixed) [yMin, yMax] = o.yFixed;
+  else {
+    let lo = 1e9, hi = -1e9;
+    for (let i=0; i<=240; i++){ const y = o.fn(Math.PI*(dom[0] + (dom[1]-dom[0])*i/240)); if (isFinite(y)){ lo = Math.min(lo, y); hi = Math.max(hi, y); } }
+    yMin = Math.floor(Math.min(lo, o.target) - .5); yMax = Math.ceil(Math.max(hi, o.target) + .5);
+  }
+  return { type:'gh', lvl, lo:dom[0], hi:dom[1], sols, fields:sols.length, frac:true, neg:true,
+    eqText:o.eqText, curveLabel:o.curveLabel, targetText:o.targetText, fn:o.fn, target:o.target, yMin, yMax, isSol,
+    domTxt: `${dom[0] < 0 ? '−π' : '0'} ≤ x ≤ ${dom[1] === 2 ? '2π' : 'π'}`,
+    answerText: `x = ${sols.map(s => piStr(s.n, s.d)).join(', ')}`,
+    valid(v){
+      for (let i=0; i<v.length; i++) for (let j=i+1; j<v.length; j++)
+        if (Math.abs(v[i]-v[j]) < 1e-9) return 'มีคำตอบซ้ำกัน — ค่า x ต้องต่างกันทุกช่อง';
+      return null;
+    },
     judge(v){
-      const m = model(v); let dev = 0, wave = 0;
-      const offs = D - v[3];
-      for (let t=0; t<=48; t+=.25){
-        const e = f(t) - m(t); dev = Math.max(dev, Math.abs(e)); wave = Math.max(wave, Math.abs(e - offs));
-      }
-      if (dev < .3) return { ok:true, notes:[] };
-      if (wave < .3) return { ok:false, notes:[`อุณหภูมิรวมนิ่งแล้ว แต่ไปค้างที่ ${(GH_SET + offs).toFixed(0)}°C ไม่ใช่ ${GH_SET}°C`] };
-      return { ok:false, notes:[`ผลรวมยังแกว่งอยู่ ±${wave.toFixed(1)}°C`] };
+      let good = 0, out = 0, bad = 0;
+      v.forEach(x => { if (x < dom[0]-1e-9 || x > dom[1]+1e-9) out++; else if (isSol(x)) good++; else bad++; });
+      if (good === v.length) return { ok:true, notes:[] };
+      const notes = [`ถูก ${good} จาก ${v.length} ค่า`];
+      if (out) notes.push(`มี ${out} ค่าอยู่นอกช่วงที่กำหนด`);
+      if (bad) notes.push(`มี ${bad} ค่าที่แทนแล้วไม่ตรงสมการ`);
+      return { ok:false, notes };
     }
   };
 }
+
+/* ระดับ 2: f(a·x) = b */
+function ghLevel2(){
+  for (let guard=0; guard<300; guard++){
+    const dom = pick(GH_DOMS), fn = pick(['sin','cos','tan','cosec','sec','cot']), a = pick([1,2,3]);
+    const [bt, b0] = pick(ghB(fn)), sg = b0 === 0 ? 1 : pick([1,-1]), b = sg*b0, g = TF[fn];
+    const bText = `${sg < 0 ? '−' : ''}${bt}`;
+    const pz = ghPuzzle(2, dom, { fn: x => g(a*x), target:b, den:72, yFixed: (fn==='sin' || fn==='cos') ? null : [-4,4],
+      eqText: `${a === 1 ? `${fn} x` : `${fn}(${a}x)`} = ${bText}`, curveLabel: `y = ${a === 1 ? `${fn} x` : `${fn} ${a}x`}`, targetText: `y = ${bText}` });
+    if (pz) return pz;
+  }
+  return ghPuzzle(2, [0,2], { fn: x => Math.sin(x), target:.5, den:72, yFixed:null, eqText:'sin x = 1/2', curveLabel:'y = sin x', targetText:'y = 1/2' });
+}
+
+/* ระดับ 3: สมการกำลังสองของ sin / cos / tan */
+function ghLevel3(){
+  const mk = (A,B) => [A[1]*B[1], -(A[1]*B[0] + B[1]*A[0]), A[0]*B[0]];      // (n₁u − m₁)(n₂u − m₂) · A = [m,n] แทนราก m/n
+  const poly = (p,q,r,fn) => {
+    let t = `${p === 1 ? '' : p}${fn}²x`;
+    if (q) t += ` ${q < 0 ? '−' : '+'} ${Math.abs(q) === 1 ? '' : Math.abs(q)}${fn} x`;
+    if (r) t += ` ${r < 0 ? '−' : '+'} ${Math.abs(r)}`;
+    return t;
+  };
+  for (let guard=0; guard<400; guard++){
+    const dom = pick(GH_DOMS), fn = pick(['sin','cos','sin','cos','tan']), g = TF[fn];
+    const rat = fn === 'tan' ? [[-1,1],[0,1],[1,1]] : [[-1,1],[-1,2],[0,1],[1,2],[1,1]];
+    const mode = rnd(1,10);
+    let c;
+    if (mode <= 6){ const A = pick(rat), B = pick(rat); if (A[0]===B[0] && A[1]===B[1]) continue; c = mk(A,B); }
+    else if (mode <= 8) c = fn === 'tan' ? pick([[1,0,-3],[3,0,-1],[1,0,-1]]) : pick([[2,0,-1],[4,0,-3],[4,0,-1],[1,0,-1]]);
+    else if (fn !== 'tan') c = mk(pick(rat), pick([[2,1],[-2,1],[3,2],[-3,2]]));   // มีรากที่เป็นไปไม่ได้ (เกิน ±1)
+    else continue;
+    const [p,q,r] = c, lhs = poly(p,q,r,fn);
+    const pz = ghPuzzle(3, dom, { fn: x => { const u = g(x); return p*u*u + q*u + r; }, target:0, den:12, yFixed: fn === 'tan' ? [-6,6] : null,
+      eqText: `${lhs} = 0`, curveLabel: `y = ${lhs}`, targetText: 'y = 0' });
+    if (pz) return pz;
+  }
+  return ghPuzzle(3, [0,2], { fn: x => { const u = Math.cos(x); return 2*u*u - 3*u + 1; }, target:0, den:12, yFixed:null,
+    eqText:'2cos²x − 3cos x + 1 = 0', curveLabel:'y = 2cos²x − 3cos x + 1', targetText:'y = 0' });
+}
+function genGreenhouse(lvl){ return lvl >= 3 ? ghLevel3() : ghLevel2(); }
 
 /* จุด 6: รั้วและถังน้ำ — อนุพันธ์ หาค่าสูงสุด */
 function genFence(lvl){
@@ -356,10 +488,14 @@ function helpHTML(pz){
     case 'spr': return 'ลำน้ำเป็นพาราโบลา <b>y = −a·x² + b·x</b><br>• ตัดแกน x ที่ x = 0 และ x = b/a<br>• ถ้าผ่านจุด (m, H) ต้องได้ H = −a·m² + b·m';
     case 'moi': return 'ความชื้นลดแบบเอกซ์โปเนนเชียล <b>M(t) = M₀ · r<sup>−t/h</sup></b><br>• r = ฐาน (เช่น 2 = ลดครึ่งหนึ่งทุก h ชม.)<br>• หาเวลา: t = h · log<sub>r</sub>(M₀ / L)';
     case 'mix': return 'ปุ๋ยที่ได้ = (ไหล A)·(สูตรถัง A) + (ไหล B)·(สูตรถัง B) + (ไหล C)·(สูตรถัง C)<br>• แยกเป็นสมการ N, P, K ได้ 3 สมการ 3 ตัวแปร (กำจัดตัวแปรหรือใช้เมทริกซ์)<br>• ถ้าถังหนึ่งเกิดจากถังอื่นรวมกัน (det = 0) อาจไม่มีคำตอบ';
-    case 'pipe': return pz.mode==='tar'
-      ? 'ปลายท่อ = ผลบวกเวกเตอร์ของทุกท่อน: <b>v₁ + v₂ + v₃ = เป้าหมาย</b><br>• ท่อนที่หายไป = เป้าหมาย − ท่อนที่เหลือ<br>• ความยาว |v| = √(a²+b²+c²) · เลี้ยวไม่เกิน 90° ⇔ v₁·v₂ ≥ 0'
-      : 'ขนานกับ w ⇔ v = k·w · ความยาว |v| = |k|·|w|, |w| = √(a²+b²+c²)<br>• เลี้ยวไม่เกิน 90° ⇔ (ท่อนก่อนหน้า)·v ≥ 0 ใช้เลือกเครื่องหมายของ k';
-    case 'gh': return '<b>T(t) = A·sin(2π(t − C)/P) + D</b><br>• A = (สูงสุด − ต่ำสุด)/2 · D = (สูงสุด + ต่ำสุด)/2<br>• P = คาบ (เวลาครบ 1 รอบ) · C = เวลาที่กราฟตัดค่ากลางขณะกำลังขึ้น';
+    case 'pipe':
+      if (pz.mode==='tar') return 'ปลายท่อ = ผลบวกเวกเตอร์ของทุกท่อน: <b>v₁ + v₂ (+ v₃) = เป้าหมาย</b><br>• ท่อนที่หายไป = เป้าหมาย − ท่อนที่เหลือ (ลบทีละองค์ประกอบ x, y, z)<br>• ขนาด |v| = √(a² + b² + c²)';
+      if (pz.mode==='dir') return 'เวกเตอร์หนึ่งหน่วยในทิศของ w คือ <b>ŵ = w/|w|</b> เมื่อ |w| = √(a²+b²+c²)<br>• ท่อนที่ยาว L ทิศเดียวกับ w: <b>v = L·ŵ</b> · ทิศตรงข้ามให้ใช้ −L·ŵ<br>• ขนานกับ w ⇔ v = k·w';
+      if (pz.mode==='perp') return 'เวกเตอร์ตั้งฉากกัน ⇔ ผลคูณเชิงสเกลาร์เป็นศูนย์: <b>a·b = a₁b₁ + a₂b₂ + a₃b₃ = 0</b><br>• แทนค่า k แล้วแก้สมการเชิงเส้น<br>• cos θ = (a·b)/(|a||b|) : a·b > 0 มุมแหลม, a·b < 0 มุมป้าน';
+      return '<b>a × b = (a₂b₃ − a₃b₂, a₃b₁ − a₁b₃, a₁b₂ − a₂b₁)</b><br>• a × b ตั้งฉากกับทั้ง a และ b (ตรวจด้วย (a×b)·a = 0) · ทิศตามกฎมือขวา<br>• สลับลำดับเป็น b × a เครื่องหมายจะกลับ';
+    case 'gh':
+      if (pz.lvl === 3) return 'ให้ u = sin x (หรือ cos x, tan x) แล้วแก้สมการกำลังสองของ u โดยแยกตัวประกอบ<br>• sin x และ cos x ต้องอยู่ในช่วง −1 ≤ u ≤ 1 — รากที่เกินช่วงนี้ <b>ไม่มี x ที่เป็นไปได้</b> ให้ตัดทิ้ง<br>• แล้วแก้ sin x = u₁ และ sin x = u₂ ในช่วงที่กำหนด<br>• อย่าหารตลอดด้วย sin x / cos x เพราะคำตอบจะหายไป (เช่น ย้ายข้างแล้วแยกตัวประกอบแทน)';
+      return '<b>sin x = sin α ⇒ x = α + 2kπ หรือ π − α + 2kπ</b> · <b>cos x = cos α ⇒ x = ±α + 2kπ</b> · <b>tan x = tan α ⇒ x = α + kπ</b><br>• cosec = 1/sin · sec = 1/cos · cot = 1/tan → กลับเป็น sin, cos, tan แล้วแก้<br>• f(ax) = b: หา ax ก่อน แล้วหารด้วย a — ช่วงของ ax กว้าง a เท่า (เช่น 0 ≤ x ≤ 2π, a = 2 ⇒ 0 ≤ 2x ≤ 4π)<br>• มุมพิเศษ: sin(π/6) = 1/2 · sin(π/4) = √2/2 · sin(π/3) = √3/2 · tan(π/6) = 1/√3 · tan(π/3) = √3';
     case 'fence':
       if (pz.kind==='wall3') return 'ตั้งฟังก์ชันพื้นที่ A(x) แล้วหา <b>A′(x) = 0</b><br>• ด้านขนานโรงนา y = L − 2x ⇒ A = x(L − 2x)<br>• สูงสุดเมื่อ A′ เปลี่ยนจากบวกเป็นลบ';
       if (pz.kind==='tank') return 'ใช้แผ่นโลหะ x² + 4xh = S ⇒ h = (S − x²)/(4x)<br>• ความจุ V(x) = x²h = x(S − x²)/4 แล้วหา <b>V′(x) = 0</b>';
@@ -377,17 +513,27 @@ function infoHTML(pz){
       + tr(['สูตรที่แปลงต้องการ', pz.target[0], pz.target[1], pz.target[2]], 'tg') + `</table>`;
   }
   if (pz.type === 'pipe'){
-    const lines = pz.segs.map((s,i) => (pz.mode==='tar' && i===pz.unk)
-      ? `ท่อนที่ ${i+1} = <b>❓</b> (ต้องหา)` : `ท่อนที่ ${i+1} = <b>${fmtV(s)}</b>`);
-    if (pz.mode === 'dir') lines.push(`ท่อนที่ 3 = <b>❓</b> ขนานกับ <b>w = ${fmtV(pz.w)}</b> ยาว <b>${pz.L}</b> ม.`);
-    else lines.push(`ปลายท่อต้องถึงถังที่ <b>${fmtV(pz.target)}</b>`);
-    if (pz.rules){
-      if (pz.mode==='tar') lines.push(`ความยาวรวมไม่เกิน ${pz.lmax} ม. · เลี้ยวไม่เกิน 90°`);
-      else lines.push('เลี้ยวไม่เกิน 90° (ห้ามหักกลับ)');
+    const known = i => `ท่อนที่ ${i+1} = <b>${fmtV(pz.segs[i])}</b>`;
+    const lines = [];
+    if (pz.mode === 'tar'){
+      pz.segs.forEach((sg,i) => lines.push(i===pz.unk ? `ท่อนที่ ${i+1} = <b>❓</b> (ต้องหา)` : known(i)));
+      lines.push(`ปลายท่อต้องถึงถังที่ <b>${fmtV(pz.target)}</b>`);
+    } else if (pz.mode === 'dir'){
+      lines.push(known(0), known(1));
+      lines.push(`ท่อนที่ 3 = <b>❓</b> ขนานกับ <b>w = ${fmtV(pz.w)}</b> ยาว <b>${pz.L}</b> ม. ไปทิศ<b>${pz.sgn>0 ? 'เดียวกับ' : 'ตรงข้ามกับ'}</b> w`);
+    } else if (pz.mode === 'perp'){
+      lines.push(known(0));
+      lines.push(`ท่อนที่ 2 = <b>(${pz.segs[1].map((c,i) => i===pz.j ? 'k' : c).join(', ')})</b>`);
+      lines.push('ท่อนที่ 2 ต้อง<b>ตั้งฉาก</b>กับท่อนที่ 1 — หาค่า k');
+    } else {
+      lines.push(known(0), known(1));
+      lines.push('ท่อนที่ 3 = <b>❓</b> ตั้งฉากกับทั้งท่อนที่ 1 และ 2 · ใช้ผลคูณเชิงเวกเตอร์ <b>v₁ × v₂</b>');
     }
     return lines.join('<br>');
   }
-  if (pz.type === 'gh') return `🎯 เป้าหมาย: อุณหภูมิรวมคงที่ <b>${GH_SET}°C</b> — เครื่องสร้างคลื่นชดเชยจากแบบจำลองที่คุณตั้ง`;
+  if (pz.type === 'gh') return pz.lvl === 3
+    ? `⚙️ วาล์วสมดุลของเรือนกระจกทำงานเมื่อ <b>${pz.eqText}</b><br>หมุนมุม x (เรเดียน) ได้ในช่วง <b>${pz.domTxt}</b> · หาค่า x <b>ทุกค่า</b> ที่ทำให้สมการเป็นจริง (มี ${pz.sols.length} ค่า)`
+    : `🎛️ พัดลมเรือนกระจกจะเดินเครื่องเมื่อสัญญาณ <b>${pz.eqText}</b><br>หมุนมุม x (เรเดียน) ได้ในช่วง <b>${pz.domTxt}</b> · หาค่า x <b>ทุกค่า</b> ที่ทำให้สมการเป็นจริง (มี ${pz.sols.length} ค่า)`;
   if (pz.type === 'fence'){
     if (pz.kind==='wall3') return `รั้วยาว <b>${pz.L}</b> ม. ล้อม 3 ด้านติดผนังโรงนา · x = ด้านที่ตั้งฉากโรงนา · ต้องการพื้นที่มากสุด`;
     if (pz.kind==='tank') return `แผ่นโลหะ <b>${pz.S0}</b> ตร.ม. ทำถังฐานสี่เหลี่ยมจัตุรัสไม่มีฝา (พื้น + 4 ด้าน) · ต้องการความจุมากสุด`;
@@ -403,8 +549,13 @@ function eqHTML(pz, st){
     case 'spr': return `<span>y = −</span>${F(0)}<span>x² +</span>${F(1)}<span>x</span>`;
     case 'moi': return `<span>ตั้งเวลารดน้ำ t =</span>${F(0)}<span>ชั่วโมง</span>`;
     case 'mix': return `<span>ถัง A</span>${F(0)}<span>ถัง B</span>${F(1)}<span>ถัง C</span>${F(2)}<span>ส่วน/นาที</span>`;
-    case 'pipe': return `<span>ท่อนที่ ${pz.unk+1}</span><span>(</span>${F(0)}<span>,</span>${F(1)}<span>,</span>${F(2)}<span>)</span>`;
-    case 'gh': return `<span>T(t) =</span>${F(0)}<span>·sin(2π(t −</span>${F(2)}<span>)/</span>${F(1)}<span>) +</span>${F(3)}`;
+    case 'pipe':
+      if (pz.mode==='perp'){
+        const cm = i => i===pz.j ? F(0) : `<span>${pz.segs[1][i]}</span>`;
+        return `<span>ท่อนที่ 2 = (</span>${cm(0)}<span>,</span>${cm(1)}<span>,</span>${cm(2)}<span>) → ค่า k</span>`;
+      }
+      return `<span>ท่อนที่ ${pz.unk+1}</span><span>(</span>${F(0)}<span>,</span>${F(1)}<span>,</span>${F(2)}<span>)</span>`;
+    case 'gh': return `<span>x =</span>` + pz.sols.map((_,i) => `${F(i)}<span>π${i < pz.sols.length-1 ? ' ,' : ''}</span>`).join('');
     case 'fence': return pz.kind==='tank'
       ? `<span>ฐาน x =</span>${F(0)}<span>ม. สูง h =</span>${F(1)}<span>ม.</span>`
       : `<span>ความกว้าง x =</span>${F(0)}<span>ม.</span>`;
@@ -417,8 +568,12 @@ function startMsg(pz){
     case 'spr': return 'ตั้งค่า a และ b ให้น้ำผ่านห่วงและตกที่ต้นไม้';
     case 'moi': return 'หาเวลาที่ความชื้นลดลงถึงเส้นสีแดง แล้วตั้งเวลารดน้ำ';
     case 'mix': return 'หาอัตราไหลของวาล์วทั้ง 3 ให้ปุ๋ยที่ผสมได้ตรงสูตรของแปลง';
-    case 'pipe': return 'หาเวกเตอร์ของท่อนที่หายไป แล้วพิมพ์ค่า (a, b, c) — กด ± เพื่อใส่เครื่องหมายลบ';
-    case 'gh': return 'อ่านกราฟอุณหภูมิ แล้วหา A, คาบ, C, D ของ T(t)';
+    case 'pipe':
+      if (pz.mode==='dir') return 'หาเวกเตอร์ท่อนที่ 3 จากความยาวและทิศของ w (ใช้เวกเตอร์หนึ่งหน่วย) แล้วพิมพ์ค่า (a, b, c) — กด ± เพื่อใส่เครื่องหมายลบ';
+      if (pz.mode==='perp') return 'หาค่า k ที่ทำให้ท่อนที่ 2 ตั้งฉากกับท่อนที่ 1 (ใช้ผลคูณเชิงสเกลาร์) — กด ± เพื่อใส่เครื่องหมายลบ';
+      if (pz.mode==='cross') return 'หาท่อนที่ 3 ที่ตั้งฉากกับท่อนที่ 1 และ 2 ด้วยผลคูณเชิงเวกเตอร์ แล้วพิมพ์ค่า (a, b, c)';
+      return 'หาเวกเตอร์ของท่อนที่หายไป แล้วพิมพ์ค่า (a, b, c) — กด ± เพื่อใส่เครื่องหมายลบ';
+    case 'gh': return 'หาค่า x ทุกค่าในช่วงที่กำหนด แล้วพิมพ์เป็นพหุคูณของ π — กด ÷ เพื่อใส่เศษส่วน (เช่น 5 ÷ 6 = 5π/6) · กด ± ใส่เครื่องหมายลบ';
     case 'fence': return 'ใส่ขนาดแล้วดูแปลงงอกตามจริง — ตั้งฟังก์ชันและหาอนุพันธ์เพื่อหาค่าที่ดีที่สุด';
   }
   return '';
@@ -440,7 +595,7 @@ function renderPanel(){
   if (pz.fields > 1 || pz.neg){
     keys.push(pz.neg ? '<button class="pl-key alt" data-k="sign">±</button>' : '<span></span>');
     keys.push(pz.fields > 1 ? '<button class="pl-key alt" data-k="next">⇄ ช่องถัดไป</button>' : '<span></span>');
-    keys.push('<span></span>');
+    keys.push(pz.frac ? '<button class="pl-key alt" data-k="frac">÷ เศษส่วน</button>' : '<span></span>');
   }
   const extras = [];
   if (pz.type==='mix' && pz.hasNone) extras.push('<button class="pl-extra" id="plNone">🚫 ผสมไม่ได้</button>');
@@ -451,7 +606,7 @@ function renderPanel(){
       <div class="pl-id">${spriteIcon(st.id + '_bad') || `<span class="pl-ico">${st.icon}</span>`}<div><div class="pl-name">จุด ${S.sel+1}: ${st.name}</div><div class="pl-topic">${st.topic}</div></div></div>
       <div class="pl-headr"><div class="pl-water" id="plWater"></div><button class="pl-close" id="plClose" aria-label="ปิด">✕</button></div>
     </div>
-    <div class="pl-lvls"><span class="pl-diff d${S.lvl}">${'⭐'.repeat(S.lvl)} ระดับ ${S.lvl}${S.lvl===3 ? ' (ยาก)' : ''}</span>
+    <div class="pl-lvls"><span class="pl-diff d${S.lvl}">${'⭐'.repeat(S.lvl)} ระดับ ${S.lvl}${S.lvl===3 ? ' (ยาก)' : (st.id==='gh' ? ' (กลาง)' : '')}</span>
       <span class="pl-badge">🔧 เครื่องขัดข้อง ซ่อมให้ได้เพื่อรับรางวัล</span></div>
     <canvas id="plGraph"></canvas>
     ${infoHTML(pz) ? `<div class="pl-info">${infoHTML(pz)}</div>` : ''}
@@ -468,7 +623,7 @@ function renderPanel(){
 }
 
 function updateFields(){
-  for (let i=0;i<4;i++){
+  for (let i=0;i<8;i++){
     const el = $('plF'+i); if (!el) continue;
     el.textContent = S.vals[i] === '' || S.vals[i] === undefined ? '?' : S.vals[i];
     el.classList.toggle('on', i === S.field);
@@ -481,12 +636,23 @@ function updateWater(){
 
 function press(k){
   if (S.busy || S.done || !S.pz) return;
-  const f = S.field;
+  const f = S.field, fr = !!S.pz.frac;
   let s = S.vals[f] === undefined ? '' : S.vals[f];
   if (k === 'back') s = s.slice(0,-1);
   else if (k === 'clear') s = '';
   else if (k === 'next'){ if (S.pz.fields > 1) S.field = (f+1) % S.pz.fields; updateFields(); return; }
   else if (k === 'sign'){ if (S.pz.neg) s = s.startsWith('-') ? s.slice(1) : '-' + s; }
+  else if (k === 'frac'){ if (fr && /^-?\d+$/.test(s)) s += '/'; }
+  else if (fr){                                                   // ช่องเศษส่วน (คูณ π): ตัวเศษ/ตัวส่วน ส่วนละไม่เกิน 2 หลัก
+    const i = s.indexOf('/'), head = i < 0 ? '' : s.slice(0, i+1);
+    let part = i < 0 ? s : s.slice(i+1);
+    if (part.replace('-','').length < 2){
+      if (part === '0') part = k;
+      else if (part === '-' && k === '0') { /* ไม่รับ -0 */ }
+      else part += k;
+    }
+    s = head + part;
+  }
   else if (s.replace('-','').length < 3){
     if (s === '0') s = k;
     else if (s === '-' && k === '0') { /* ไม่รับ -0 */ }
@@ -496,7 +662,11 @@ function press(k){
   updateFields();
 }
 
-function parseVals(){ return S.vals.map(x => (x === '' || x === '-' || x === undefined) ? NaN : parseInt(x,10)); }
+const parseFracPi = x => { const m = /^(-?\d+)(?:\/(\d+))?$/.exec(x || ''); if (!m) return NaN; const d = m[2] === undefined ? 1 : +m[2]; return d === 0 ? NaN : (+m[1]) / d; };
+function parseVals(){
+  if (S.pz && S.pz.frac) return S.vals.map(parseFracPi);          // ช่องเศษส่วน: ค่าเป็นจำนวนเท่าของ π
+  return S.vals.map(x => (x === '' || x === '-' || x === undefined) ? NaN : parseInt(x,10));
+}
 
 function startRun(v, r){
   spend();
@@ -773,6 +943,17 @@ function drawPipe(g, w, h, now){
     g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(q[0]-tw/2, q[1]-14, tw, 12);
     g.fillStyle = '#2d4a37'; g.fillText(t, q[0], q[1]-8);
   });
+  // มุมระหว่างท่อ (ผลคูณเชิงสเกลาร์) — แสดงหลังจากเดินเครื่องแล้วเท่านั้น
+  if (pz.mode === 'perp'){
+    const vv = S.anim ? S.anim.v : (S.traces.length ? S.traces[S.traces.length-1].v : null);
+    if (vv){
+      const sg = pz.fullSegs(vv), d = dot(sg[0], sg[1]), mm = vlen(sg[0])*vlen(sg[1]);
+      const ang = mm ? Math.acos(clamp(d/mm, -1, 1))*180/Math.PI : 0;
+      g.font = 'bold 10px sans-serif'; g.textAlign = 'left'; g.textBaseline = 'top';
+      g.fillStyle = d === 0 ? '#2a9d55' : '#c4493a';
+      g.fillText(`v₁·v₂ = ${d}   มุมระหว่างท่อ ≈ ${ang.toFixed(1)}°`, 8, 6);
+    }
+  }
   // ทิศ w
   if (pz.mode === 'dir'){
     const s0 = ptsNow[2], e = vadd(s0, pz.w);
@@ -805,46 +986,66 @@ function drawPipe(g, w, h, now){
   }
 }
 
-/* จุด 5: เรือนกระจก */
+/* จุด 5: เรือนกระจก — กราฟของสมการ จุดที่กราฟตัดเส้นเป้าหมาย = คำตอบ x */
 function drawGH(g, w, h, now){
-  const pz = S.pz;
-  const A = axes(g, w, h, { xMin:0, xMax:24, yMin:pz.yMin, yMax:pz.yMax, xs:2, ys:niceStep(pz.yMax-pz.yMin, 6), xl:'เวลา t (ชม.)', yl:'อุณหภูมิ (°C)' });
-  const { X, Y, padL, padR } = A;
+  const pz = S.pz, PI = Math.PI;
+  const xMin = pz.lo*PI, xMax = pz.hi*PI, yMin = pz.yMin, yMax = pz.yMax;
+  const padL = 34, padR = 12, padT = 12, padB = 24;
+  const X = x => padL + (x - xMin)/(xMax - xMin)*(w-padL-padR);
+  const Y = y => h-padB - (y - yMin)/(yMax - yMin)*(h-padT-padB);
+  g.font = '10px sans-serif'; g.strokeStyle = '#e1eedb'; g.lineWidth = 1; g.fillStyle = '#6b7f70';
+  g.textAlign = 'center'; g.textBaseline = 'top';
+  for (let k=Math.ceil(pz.lo*2); k<=pz.hi*2; k++){ const x = k*PI/2; g.beginPath(); g.moveTo(X(x),padT); g.lineTo(X(x),h-padB); g.stroke(); g.fillText(piStr(k,2), X(x), h-padB+4); }
+  const ys = [0.5,1,2,5,10].find(s => (yMax-yMin)/s <= 8) || 10;
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (let y=Math.ceil(yMin/ys)*ys; y<=yMax+1e-9; y+=ys){ g.beginPath(); g.moveTo(padL,Y(y)); g.lineTo(w-padR,Y(y)); g.stroke(); g.fillText(Number.isInteger(y) ? y : y.toFixed(1), padL-4, Y(y)); }
+  g.strokeStyle = '#9aa5a0'; g.lineWidth = 1.5;
+  if (yMin < 0 && yMax > 0){ g.beginPath(); g.moveTo(padL,Y(0)); g.lineTo(w-padR,Y(0)); g.stroke(); }
+  if (pz.lo < 0){ g.beginPath(); g.moveTo(X(0),padT); g.lineTo(X(0),h-padB); g.stroke(); }
+  g.strokeStyle = '#4a6b52'; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(padL,padT); g.lineTo(padL,h-padB); g.lineTo(w-padR,h-padB); g.stroke();
+  g.textAlign = 'right'; g.textBaseline = 'alphabetic'; g.fillStyle = '#4a6b52'; g.fillText('x (เรเดียน)', w-padR, h-padB-4);
   g.globalAlpha = .88; drawSprite(g, 'gh_ok', w-padR-30, 58, 54); g.globalAlpha = 1;   // เรือนกระจกเป็นฉากหลัง
-  g.setLineDash([6,4]); g.lineWidth = 2;
-  g.strokeStyle = '#2a9d55'; g.beginPath(); g.moveTo(padL, Y(GH_SET)); g.lineTo(w-padR, Y(GH_SET)); g.stroke();
+
+  g.save(); g.beginPath(); g.rect(padL, padT, w-padL-padR, h-padT-padB); g.clip();
+  g.setLineDash([6,4]); g.lineWidth = 2; g.strokeStyle = '#2a9d55';
+  g.beginPath(); g.moveTo(padL, Y(pz.target)); g.lineTo(w-padR, Y(pz.target)); g.stroke(); g.setLineDash([]);
+  g.strokeStyle = '#e0662a'; g.lineWidth = 3; g.beginPath();
+  let pen = false, py = 0;
+  for (let i=0; i<=360; i++){                                    // ตัดเส้นที่แกว่งทะลุเส้นกำกับ (tan / cot / sec / cosec)
+    const x = xMin + (xMax-xMin)*i/360, y = pz.fn(x);
+    if (!isFinite(y) || y < yMin-1.5 || y > yMax+1.5 || (pen && Math.abs(y-py) > (yMax-yMin)*.7)){ pen = false; continue; }
+    pen ? g.lineTo(X(x),Y(y)) : g.moveTo(X(x),Y(y)); pen = true; py = y;
+  }
+  g.stroke();
+  g.restore();
   g.fillStyle = '#2a8a4a'; g.font = 'bold 10px sans-serif'; g.textAlign = 'right'; g.textBaseline = 'bottom';
-  g.fillText(`เป้า ${GH_SET}°C`, w-padR-2, Y(GH_SET)-3);
-  if (pz.showMid){
-    g.strokeStyle = '#9aa5a0'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(padL, Y(pz.D)); g.lineTo(w-padR, Y(pz.D)); g.stroke();
-    g.fillStyle = '#7c8a84'; g.textAlign = 'left'; g.fillText('เส้นกลางของคลื่น', padL+6, Y(pz.D)-3);
-  }
-  g.setLineDash([]);
-  const curve = (fn, t0, t1, color, lw, dash) => {
-    g.strokeStyle = color; g.lineWidth = lw; g.setLineDash(dash||[]); g.beginPath();
-    const n = Math.max(2, Math.round((t1-t0)*8));
-    for (let i=0;i<=n;i++){ const t = t0 + (t1-t0)*i/n, y = fn(t); i ? g.lineTo(X(t),Y(y)) : g.moveTo(X(t),Y(y)); }
-    g.stroke(); g.setLineDash([]);
-  };
-  curve(pz.f, 0, 24, '#e0662a', 3);
-  S.traces.forEach(tr => curve(pz.model(tr.v), 0, 24, 'rgba(142,88,200,.5)', 2, [4,4]));
-  const total = (v, t) => pz.f(t) - pz.model(v)(t) + GH_SET;
+  g.fillText(pz.targetText, w-padR-2, Y(pz.target)-3);
+
   const lastTr = S.traces.length ? S.traces[S.traces.length-1] : null;
-  if (!S.anim && lastTr){
-    curve(t => total(lastTr.v, t), 0, 24, lastTr.ok ? '#2a9d55' : 'rgba(224,60,60,.7)', 3);
-  }
-  if (S.anim){
-    const p = clamp((now - S.anim.t0)/S.anim.dur, 0, 1), tEnd = 24*p, v = S.anim.v;
-    curve(pz.model(v), 0, 24, 'rgba(142,88,200,.6)', 2, [4,4]);
-    if (tEnd > 0.05){
-      curve(t => total(v, t), 0, tEnd, S.anim.ok ? '#2a9d55' : '#e03c3c', 3.5);
-      g.fillStyle = '#fff'; g.strokeStyle = S.anim.ok ? '#2a9d55' : '#e03c3c'; g.lineWidth = 2;
-      g.beginPath(); g.arc(X(tEnd), Y(total(v, tEnd)), 4, 0, Math.PI*2); g.fill(); g.stroke();
-    }
+  const marks = []; let sweep = null;
+  if (S.anim){                                                   // เครื่องกวาดตามแกน x แล้วทำเครื่องหมายค่าที่ผู้เล่นตั้งไว้
+    const p = clamp((now - S.anim.t0)/S.anim.dur, 0, 1); sweep = xMin + (xMax-xMin)*p;
+    S.anim.v.forEach(v => { if (v*PI <= sweep) marks.push({ v, ok: pz.isSol(v) }); });
+  } else if (lastTr) lastTr.v.forEach(v => marks.push({ v, ok: pz.isSol(v) }));
+  if (sweep !== null){ g.strokeStyle = 'rgba(142,88,200,.55)'; g.lineWidth = 2; g.beginPath(); g.moveTo(X(sweep),padT); g.lineTo(X(sweep),h-padB); g.stroke(); }
+  marks.forEach(m => {
+    if (m.v < pz.lo-1e-9 || m.v > pz.hi+1e-9) return;
+    g.fillStyle = m.ok ? '#2a9d55' : '#e03c3c'; g.strokeStyle = '#fff'; g.lineWidth = 2;
+    g.beginPath(); g.arc(X(m.v*PI), Y(pz.target), 5, 0, Math.PI*2); g.fill(); g.stroke();
+  });
+  if (S.reveal){                                                 // เฉลย: วงกลมเขียวพร้อมค่า x ทุกจุด
+    g.font = 'bold 10px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    pz.sols.forEach((s,i) => {
+      const cx = X(s.v*PI), cy = Y(pz.target);
+      g.strokeStyle = '#2a9d55'; g.fillStyle = '#fff'; g.lineWidth = 2.5;
+      g.beginPath(); g.arc(cx, cy, 7, 0, Math.PI*2); g.fill(); g.stroke();
+      g.fillStyle = '#1f7a41'; g.fillText(piStr(s.n, s.d), cx, cy + (i % 2 ? 17 : -15));
+    });
   }
   g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.font = '10px sans-serif';
-  g.fillStyle = '#e0662a'; g.fillText('━ อุณหภูมิจริง', padL+8, 22);
-  if (S.traces.length){ g.fillStyle = '#8e58c8'; g.fillText('┅ แบบจำลองของคุณ', padL+88, 22); g.fillStyle = '#2a9d55'; g.fillText('━ ผลรวมหลังชดเชย', padL+196, 22); }
+  const l1 = '━ ' + pz.curveLabel; g.fillStyle = '#e0662a'; g.fillText(l1, padL+8, 22);
+  g.fillStyle = '#2a8a4a'; g.fillText('┅ ' + pz.targetText, padL+8+g.measureText(l1).width+14, 22);
 }
 
 /* จุด 6: รั้วและถังน้ำ */
@@ -1495,6 +1696,7 @@ function onKey(e){
   if (e.key >= '0' && e.key <= '9') press(e.key);
   else if (e.key === 'Backspace') press('back');
   else if (e.key === '-') press('sign');
+  else if (e.key === '/') press('frac');
   else if (e.key === 'Tab' || e.key === 'ArrowRight'){ e.preventDefault(); press('next'); }
   else if (e.key === 'Enter') run();
   else if (e.key === 'Escape') closeSheet();
