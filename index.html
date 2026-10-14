@@ -226,7 +226,7 @@
       </div>
     </div>
 
-    <!-- 🏡 หน้าเยี่ยมบ้านเพื่อน: เต็มจอเหมือนบ้านเรา สัตว์เดินเล่นตามปกติ มีแค่ปุ่มย้อนกลับ (ไม่แสดงเงิน/XP) -->
+    <!-- 🏡 หน้าเยี่ยมบ้านเพื่อน: เต็มจอเหมือนบ้านเรา สัตว์เดินเล่นตามปกติ มีปุ่มย้อนกลับ + ปุ่มท้าดวลขวาบน (ไม่แสดงเงิน/XP) -->
     <div id="visitScreen">
       <div class="scene" id="visitScene">
         <div id="visitPetsContainer"></div>
@@ -238,7 +238,11 @@
             <div class="user-name" id="visitHouseTitle">บ้านของเพื่อน</div>
             <div class="user-class">🐾 มีสัตว์เลี้ยง <span class="num" id="visitPetCount">0</span> ตัว</div>
           </div>
+          <button class="visit-battle-btn" id="visitBattleBtn" onclick="challengeFromVisit()" aria-label="ท้าดวลเพื่อน">
+            <img src="Icon/battle.png" alt=""><span id="visitBattleBtnText">ท้าดวล</span>
+          </button>
         </div>
+        <div class="toast-msg" id="visitToast"></div>
         <div id="visitLoading"></div>
       </div>
     </div>
