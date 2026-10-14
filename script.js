@@ -4908,6 +4908,7 @@ let visitPetInstances = [];
 let visitWanderTimer = null;
 let visitDepthTimer = null;
 let visitToken = 0;               // กันผลเก่าวาดทับ เมื่อกดบ้านอื่น/ย้อนกลับระหว่างรอโหลด
+let visitCurrentIdx = -1;         // ลำดับเพื่อนที่กำลังเยี่ยมอยู่ (ใช้กับปุ่มท้าดวลขวาบน)
 
 function getVisitIsland() {
   if (visitIsland) return visitIsland;
@@ -4994,6 +4995,7 @@ async function visitFriendHouse(idx) {
   if (!base) return;
   const sid = String(base["รหัสนักเรียน"] || "");
   const token = ++visitToken;
+  visitCurrentIdx = idx;
   const screen = document.getElementById("visitScreen");
   const loading = document.getElementById("visitLoading");
 
@@ -5043,4 +5045,69 @@ function closeVisitHouse() {
   const c = document.getElementById("visitPetsContainer");
   if (c) c.innerHTML = "";
   visitPetInstances = [];
+}
+// ⚔️ ปุ่มขวาบนในหน้าเยี่ยมบ้าน → ท้าดวลเจ้าของบ้านนี้ได้ทันที (ข้ามหน้าเลือกเพื่อน)
+let visitToastTimer = null;
+function visitToast(text) {
+  const el = document.getElementById("visitToast");
+  if (!el) { popMessage(text); return; }
+  el.textContent = text; el.style.display = "block";
+  clearTimeout(visitToastTimer);
+  visitToastTimer = setTimeout(() => { el.style.display = "none"; }, 2200);
+}
+
+async function challengeFromVisit() {
+  if (battleEntering) return;
+  const base = visitFriends[visitCurrentIdx];
+  if (!base) return;
+  const btn = document.getElementById("visitBattleBtn");
+  const btnText = document.getElementById("visitBattleBtnText");
+  const setBusy = busy => { if (btn) btn.disabled = busy; if (btnText) btnText.textContent = busy ? "กำลังเตรียม..." : "ท้าดวล"; };
+  setBusy(true);
+
+  // ดึงข้อมูลเพื่อนสดๆ ก่อนสู้ (การชนะมีการหักเหรียญ/บันทึกข้อมูลเพื่อน จึงไม่ควรใช้ข้อมูลเก่าจากตอนโหลดรายชื่อ)
+  let friend = base;
+  try {
+    const data = await fetchWithRetry(`${API_URL}?action=ranking`);
+    if (data && data.success && Array.isArray(data.ranking)) {
+      const sid = String(base["รหัสนักเรียน"] || "").trim();
+      const fresh = data.ranking.find(s => String(s["รหัสนักเรียน"] || "").trim() === sid);
+      if (fresh) friend = fresh;
+    }
+  } catch (err) { /* ใช้ข้อมูลจากรายชื่อแทน */ }
+  setBusy(false);
+
+  // กดย้อนกลับหรือเปลี่ยนบ้านระหว่างรอ → ไม่ต้องทำต่อ
+  if (document.getElementById("visitScreen").style.display === "none" || visitFriends[visitCurrentIdx] !== base) return;
+
+  // เลือกสัตว์ของเรา: ใช้ตัวที่ล็อคไว้ ถ้าใช้ไม่ได้ก็หาตัวแรกที่พร้อมรบ
+  const pets = (currentStudent && currentStudent.pets) || [];
+  const nowMS = getReferenceDate().getTime();
+  const isAdultReady = p => {
+    if (!p || p.dead || isPetBaby(p.born)) return false;
+    const be = p.breedEndTime ? new Date(p.breedEndTime).getTime() : null;
+    return !(p.breed === true && be && nowMS < be);
+  };
+  const canAttack = i => isAdultReady(pets[i]) && getPetAttackStatus(i).count > 0;
+
+  let myIdx = -1;
+  if (battleLockedMyPetIndex !== null && canAttack(battleLockedMyPetIndex)) myIdx = battleLockedMyPetIndex;
+  else myIdx = pets.findIndex((p, i) => canAttack(i));
+
+  if (myIdx === -1) {
+    visitToast(pets.some((p, i) => isAdultReady(p))
+      ? "สัตว์ของคุณใช้สิทธิ์บุกครบแล้ว! รอสักพักนะ"
+      : "กรุณามีสัตว์โตเต็มวัยอย่างน้อย 1 ตัว!");
+    return;
+  }
+  if (!safeParse(friend["pets"]).some(p => isFriendPetReadyForBattle(p))) {
+    visitToast("เพื่อนคนนี้ไม่มีสัตว์ที่พร้อมต่อสู้!");
+    return;
+  }
+
+  battleLockedMyPetIndex = myIdx;
+  closeVisitHouse();
+  closeModal("visitModal");
+  openBattleScreen();                 // เตรียมหน้าต่อสู้ไว้ข้างหลัง แล้วเข้าสู่ขั้นตอนท้าดวลเดิม (ArenaDash เต็มจอทันที)
+  await selectFriendTarget(friend);
 }
