@@ -1541,7 +1541,11 @@ html,body{
 #visitScene{ background-image:url("Background/back.png"); }
 .visit-top{ justify-content:flex-start; align-items:center; gap:8px; z-index:12; }
 .visit-top .back-btn{ flex:0 0 auto; filter:drop-shadow(0 3px 5px rgba(0,0,0,.35)); }
-.visit-title{ width:auto; max-width:calc(100% - 70px); }
+.visit-title{ width:auto; max-width:calc(100% - 175px); }
+.visit-battle-btn{ margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:5px; padding:6px 11px 6px 8px; border:2px solid var(--sun); border-radius:14px; background:rgba(255,249,238,0.95); color:var(--ink); font-family:inherit; font-weight:600; font-size:12px; white-space:nowrap; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.25); transition:transform .1s; }
+.visit-battle-btn img{ width:22px; height:22px; object-fit:contain; }
+.visit-battle-btn:active{ transform:scale(.93); }
+.visit-battle-btn:disabled{ opacity:.65; cursor:default; }
 .visit-title .user-name{ font-size:13px; }
 .visit-title .user-class{ font-size:11px; }
 #visitLoading{ position:absolute; inset:0; z-index:11; display:none; align-items:center; justify-content:center; background:rgba(20,20,30,.45); }
