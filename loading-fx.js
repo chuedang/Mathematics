@@ -9,7 +9,8 @@
         BattleLoading.start();  BattleLoading.finish(() => {...});  BattleLoading.cancel();
         BattleLoading.run(promise, res => ..., err => ...);
 
-   3) 🚀 พุ่งเข้าสนาม มุมมองบุคคลที่ 1 ความเร็วสูง (ใช้ตอนกดท้าดวล แล้วรอเข้าสนาม) — API เหมือนกันกับข้อ 2
+   3) 🎬 เล่น Background/enter.mp4 ค้างเฟรมขาวจนโหลดเสร็จ (ใช้ตอนกดท้าดวล แล้วรอเข้าสนาม) — API เหมือนกันกับข้อ 2
+        (ถ้าวิดีโอเล่นไม่ได้ จะใช้เอฟเฟคพุ่งเข้าสนามแบบ canvas แทนอัตโนมัติ)
         ArenaDash.start();  await ArenaDash.finish(() => { แสดงสนาม });  ArenaDash.cancel();
         ArenaDash.run(promise, res => ..., err => ...);
 
@@ -82,6 +83,13 @@ function balls(text, opts){
 /* ================= เครื่องยนต์หน้าจอ canvas (ใช้ร่วมกัน 2 โหมด: chase / dash) ================= */
 let root = null, cv = null, g = null, raf = 0, st = null;
 
+/* 🎬 โหมด dash (ท้าดวลเพื่อน) ใช้วิดีโอ Background/enter.mp4 — เฟรมสุดท้ายเป็นแสงขาวล้วน
+   เล่นจบแล้วค้างเฟรมขาวไว้จนกว่าระบบจะโหลดเสร็จ ค่อยเปลี่ยนหน้าข้างหลัง แล้วจางเผยสนาม
+   ถ้าวิดีโอเล่นไม่ได้/โหลดไม่ขึ้น จะสลับไปใช้เอฟเฟค canvas เดิมให้อัตโนมัติ */
+const VIDEO_SRC = 'Background/enter.mp4';
+const VIDEO_MAX_MS = 15000;             // กันค้าง: ถ้าวิดีโอไม่จบภายในเวลานี้ ถือว่าจบ
+let vid = null, vidBroken = false;
+
 function reduced(){
   try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
   catch(e){ return false; }
@@ -97,6 +105,12 @@ function ensure(){
   root.style.cssText = `position:${host ? 'absolute' : 'fixed'};inset:0;z-index:300;touch-action:none;display:none;`;
   cv = document.createElement('canvas');
   cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;';
+  vid = document.createElement('video');
+  vid.src = VIDEO_SRC;
+  vid.muted = true; vid.defaultMuted = true; vid.playsInline = true; vid.preload = 'auto';
+  vid.setAttribute('playsinline', ''); vid.setAttribute('webkit-playsinline', '');
+  vid.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#fff;pointer-events:none;';
+  root.appendChild(vid);
   root.appendChild(cv);
   (host || document.body).appendChild(root);
   g = cv.getContext('2d');
@@ -112,7 +126,10 @@ function resize(){
 
 function settle(){                      // ปิดหน้าโหลดแล้ว resolve promise ของ finish()
   cancelAnimationFrame(raf); raf = 0;
-  if (root) root.style.display = 'none';
+  if (st && st.stall) clearTimeout(st.stall);
+  if (vid){ try { vid.pause(); } catch(e){} vid.onended = vid.onerror = null; vid.style.display = 'none'; }
+  if (cv) cv.style.display = 'block';
+  if (root){ root.style.display = 'none'; root.style.transition = ''; root.style.opacity = '1'; }
   const req = st && st.req; st = null;
   if (req) req.resolve();
 }
@@ -121,18 +138,61 @@ function start(mode){
   if (st && !st.req) return;            // กำลังโหลดอยู่แล้ว
   if (st) settle();
   ensure();
-  root.style.display = 'block';
+  root.style.display = 'block'; root.style.opacity = '1'; root.style.transition = '';
   const now = performance.now();
   st = { mode, t0:now, last:now, tp:now, phase:'load', parts:[], req:null, cbDone:false, reduce:reduced() };
   if (st.reduce){                       // ผู้ใช้ปิดแอนิเมชัน: แค่หรี่จอ ไม่มีเอฟเฟค
     root.style.background = 'rgba(4,6,18,.85)';
     return;
   }
+  if (mode === 'dash' && !vidBroken){ beginVideo(); return; }
   root.style.background = 'transparent';
   const { w, h } = resize();
   MODES[mode].init(w, h);
   cancelAnimationFrame(raf);
   raf = requestAnimationFrame(frame);
+}
+
+/* ---- โหมดวิดีโอ (enter.mp4) ---- */
+function beginVideo(){
+  const mine = st;
+  mine.video = true; mine.vidDone = false;
+  root.style.background = '#000';
+  cv.style.display = 'none';
+  vid.style.display = 'block';
+  vid.onended = () => { if (st === mine){ mine.vidDone = true; videoCheck(); } };   // จบแล้ว = ค้างเฟรมขาวสุดท้ายอยู่เอง
+  vid.onerror = () => videoFail(mine);
+  mine.stall = setTimeout(() => { if (st === mine){ mine.vidDone = true; videoCheck(); } }, VIDEO_MAX_MS);
+  try { vid.currentTime = 0; } catch(e){}
+  const p = vid.play();
+  if (p && p.catch) p.catch(() => videoFail(mine));
+}
+
+function videoFail(mine){               // เล่นวิดีโอไม่ได้ → ใช้เอฟเฟค canvas เดิมแทน
+  if (st !== mine || !mine.video) return;
+  vidBroken = true; mine.video = false;
+  clearTimeout(mine.stall);
+  try { vid.pause(); } catch(e){}
+  vid.onended = vid.onerror = null; vid.style.display = 'none';
+  cv.style.display = 'block'; root.style.background = 'transparent';
+  const now = performance.now();
+  mine.t0 = mine.last = mine.tp = now; mine.phase = 'load';
+  const { w, h } = resize();
+  MODES.dash.init(w, h);
+  cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
+}
+
+function videoCheck(){                  // เรียกเมื่อ (วิดีโอจบ) และ (โหลดเสร็จ) ครบทั้งคู่
+  const mine = st;
+  if (!mine || !mine.video || !mine.req || !mine.vidDone || mine.closing) return;
+  mine.closing = true;
+  try { mine.req.cb && mine.req.cb(); } catch(e){ console.error(e); }   // จอขาวเต็ม → เปลี่ยนหน้าข้างหลังได้เนียน
+  setTimeout(() => {
+    if (st !== mine) return;
+    root.style.transition = 'opacity ' + T_FADE + 'ms ease';
+    root.style.opacity = '0';
+    setTimeout(() => { if (st === mine) settle(); }, T_FADE + 40);
+  }, T_HOLD);
 }
 
 function finish(cb){
@@ -143,6 +203,8 @@ function finish(cb){
     if (st.reduce){
       try { cb && cb(); } catch(e){ console.error(e); }
       settle();
+    } else if (st.video){
+      videoCheck();
     }
   });
 }
@@ -477,6 +539,7 @@ const ArenaDash = {                     // ใหม่: พุ่งเข้�
 };
 
 injectCss();
+try { ensure(); vid.load(); } catch(e){}          // โหลดวิดีโอเตรียมไว้ล่วงหน้า (ให้เริ่มเล่นทันทีตอนกดท้าดวล)
 window.BattleLoading = BattleLoading;
 window.ArenaDash = ArenaDash;
 window.LoadingFX = { balls, battle:BattleLoading, dash:ArenaDash };
