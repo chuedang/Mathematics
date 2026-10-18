@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="plant.css">
+<link rel="stylesheet" href="Minigame.css">
 </head>
 <body>
 
@@ -175,18 +175,6 @@
           <button class="menu-cell" onclick="menuGo('battle')">
             <img src="Icon/battle.png" alt=""><span>ต่อสู้</span>
           </button>
-          <button class="menu-cell" onclick="menuGo('math')">
-            <img src="Icon/cal.png" alt=""><span>คิดเลข</span>
-          </button>
-          <button class="menu-cell" onclick="menuGo('roulette')">
-            <img src="Icon/random.png" alt=""><span>สุ่มของ</span>
-          </button>
-          <button class="menu-cell" onclick="menuGo('equation')">
-            <img src="Icon/equation.png" alt=""><span>แก้สมการ</span>
-          </button>
-          <button class="menu-cell" onclick="menuGo('factor')">
-            <img src="Icon/factor.png" alt=""><span>แยกตัวประกอบ</span>
-          </button>
           <button class="menu-cell" onclick="menuGo('breed')">
             <img src="Icon/breed.png" alt=""><span>ผสมพันธุ์</span>
           </button>
@@ -202,8 +190,8 @@
           <button class="menu-cell" onclick="menuGo('fairy')">
             <img src="Icon/fairy_btn.png" alt=""><span>ภูติ</span>
           </button>
-          <button class="menu-cell" onclick="menuGo('plant')">
-            <img src="Icon/Plant.png" alt=""><span>แปลงผัก</span>
+          <button class="menu-cell" onclick="menuGo('minigame')">
+            <img src="Icon/Minigame.png" alt=""><span>มินิเกม</span>
           </button>
           <button class="menu-cell" onclick="menuGo('exit')">
             <img src="Icon/exit.png" alt=""><span>ออก</span>
@@ -382,136 +370,12 @@
     </div>
 
 
-    <!-- 🎮 Minigame -->
-    <div class="minigame-screen" id="minigameScreen">
-      <div class="mg-top-bar">
-        <button class="back-btn" onclick="mgBack()" aria-label="ย้อนกลับ">
-          <img src="Icon/back.png" alt="ย้อนกลับ">
-        </button>
-        <div class="mg-title" id="mgTitle">🎮 มินิเกม</div>
-        <div class="mg-coin-chip">💰 <span id="mgCoins" class="num">0</span></div>
-      </div>
-
-      <!-- โหมดตอบโจทย์เลข -->
-      <div class="mg-pane" id="mgMathPane">
-        <div class="mg-card">
-          <div class="mg-reward-line">ตอบถูกข้อละ <b>+1 💰 เหรียญ</b> และ <b>+1 ⭐ EXP</b></div>
-          <div class="mg-timer-track"><div class="mg-timer-fill" id="mgTimerFill"></div></div>
-          <div class="mg-timer-text" id="mgTimerText">เหลือเวลา 10 วินาที</div>
-          <div class="mg-equation" id="mgEquation">-</div>
-          <div class="mg-answer-row">
-            <span>คำตอบ</span>
-            <div class="mg-answer-box" id="mgAnswerBox">&nbsp;</div>
-          </div>
-          <div class="mg-feedback" id="mgFeedback"></div>
-          <div class="mg-keypad">
-            <button class="mg-key" onclick="mgPress('7')">7</button>
-            <button class="mg-key" onclick="mgPress('8')">8</button>
-            <button class="mg-key" onclick="mgPress('9')">9</button>
-            <button class="mg-key" onclick="mgPress('4')">4</button>
-            <button class="mg-key" onclick="mgPress('5')">5</button>
-            <button class="mg-key" onclick="mgPress('6')">6</button>
-            <button class="mg-key" onclick="mgPress('1')">1</button>
-            <button class="mg-key" onclick="mgPress('2')">2</button>
-            <button class="mg-key" onclick="mgPress('3')">3</button>
-            <button class="mg-key back" onclick="mgBackspace()">⌫</button>
-            <button class="mg-key" onclick="mgPress('0')">0</button>
-            <button class="mg-key ok" onclick="mgSubmit()">✓</button>
-          </div>
-        </div>
-        <div class="mg-session" id="mgSessionStats"></div>
-      </div>
-
-      <!-- โหมดแยกตัวประกอบ -->
-      <div class="mg-pane" id="mgFactorPane">
-        <div class="mg-card">
-          <div class="mg-reward-line">ลากกล่องไปวางให้ครบ 6 ช่อง แล้วกด <b>ตอบ</b> · ถูกข้อละ <b>+3 💰</b> และ <b>+3 ⭐ EXP</b></div>
-          <div id="fcPlay">
-            <div class="mg-timer-track"><div class="mg-timer-fill" id="fcTimerFill"></div></div>
-            <div class="mg-timer-text" id="fcTimerText">เหลือเวลา 3:00</div>
-            <div class="mg-equation fc-equation" id="fcEquation">-</div>
-            <div class="fc-slots" id="fcSlots"></div>
-            <div class="mg-feedback" id="fcFeedback"></div>
-            <div class="fc-palette">
-              <div class="fc-ops" id="fcOps"></div>
-              <div class="fc-nums" id="fcNums"></div>
-            </div>
-            <div class="fc-actions">
-              <button class="fc-clear-btn" onclick="fcClear()">🗑 ล้าง</button>
-              <button class="fc-submit-btn" id="fcSubmitBtn" onclick="fcSubmit()" disabled>✓ ตอบ</button>
-            </div>
-            <div class="mg-session" id="fcScore"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- โหมดแก้สมการ (จับเวลา 3 นาที/ข้อ) -->
-      <div class="mg-pane" id="mgEquationPane">
-        <div class="mg-card">
-          <div class="mg-reward-line">ถูกข้อละ <b>+5 💰</b> <b>+5 ⭐</b> · แบบ 2 ตัวแปร <b>+6 💰</b> <b>+6 ⭐</b> · ข้อละ 10 นาที</div>
-          <div class="mg-timer-track"><div class="mg-timer-fill" id="eqTimerFill"></div></div>
-          <div class="mg-timer-text" id="eqTimerText">เหลือเวลา 3:00</div>
-          <div class="mg-equation" id="eqEquation">-</div>
-          <div class="mg-answer-row">
-            <span class="eq-var">x =</span>
-            <div class="mg-answer-box" id="eqAnswerBox" onclick="eqSelect('x')">&nbsp;</div>
-          </div>
-          <div class="mg-answer-row" id="eqRowY" style="display:none;">
-            <span class="eq-var">y =</span>
-            <div class="mg-answer-box" id="eqAnswerBoxY" onclick="eqSelect('y')">&nbsp;</div>
-          </div>
-          <div class="mg-feedback" id="eqFeedback"></div>
-          <div class="mg-keypad">
-            <button class="mg-key" onclick="eqPress('7')">7</button>
-            <button class="mg-key" onclick="eqPress('8')">8</button>
-            <button class="mg-key" onclick="eqPress('9')">9</button>
-            <button class="mg-key" onclick="eqPress('4')">4</button>
-            <button class="mg-key" onclick="eqPress('5')">5</button>
-            <button class="mg-key" onclick="eqPress('6')">6</button>
-            <button class="mg-key" onclick="eqPress('1')">1</button>
-            <button class="mg-key" onclick="eqPress('2')">2</button>
-            <button class="mg-key" onclick="eqPress('3')">3</button>
-            <button class="mg-key back" onclick="eqBackspace()">⌫</button>
-            <button class="mg-key" onclick="eqPress('0')">0</button>
-            <button class="mg-key" onclick="eqToggleSign()">+/−</button>
-          </div>
-          <button class="fc-submit-btn" style="width:100%; margin-top:10px;" onclick="eqSubmit()">✓ ตอบ</button>
-        </div>
-        <div class="mg-session" id="eqSessionStats"></div>
-      </div>
-
-      <!-- โหมดวงล้อสุ่มไอเทม -->
-      <div class="mg-pane" id="mgRoulettePane">
-        <div class="rl-hint">หมุนวงล้อครั้งละ <b>200 💰</b> ลุ้นอาหาร วัคซีน และ <b>มังกรไฟ</b>!</div>
-        <div class="rl-stage" id="rlStage">
-          <div class="rl-window" id="rlWindow">
-            <div class="rl-track" id="rlTrack"></div>
-            <div class="rl-fade left"></div>
-            <div class="rl-fade right"></div>
-            <div class="rl-marker" id="rlMarker"></div>
-          </div>
-        </div>
-        <button class="rl-spin-btn" id="rlSpinBtn" onclick="spinRoulette()">🎰 หมุนเลย! (200 💰)</button>
-        <div class="rl-prize-title" style="margin-top:14px;">ของรางวัลที่ลุ้นได้</div>
-        <div class="rl-prize-list" id="rlPrizeList"></div>
-      </div>
-
-      <!-- ผลรางวัล -->
-      <div class="mg-result-overlay" id="mgResultOverlay">
-        <div class="mg-result-card" id="mgResultCard">
-          <img id="mgResultImg" src="" alt="รางวัล">
-          <h3 id="mgResultTitle"></h3>
-          <p id="mgResultDesc"></p>
-          <button class="claim-btn" onclick="closeMgResult()">เยี่ยมเลย!</button>
-        </div>
-      </div>
-    </div>
 
 </div>
 
-<script src="plant.js"></script>
 <script src="loading-fx.js"></script>
 <script src="island.js"></script>
 <script src="script.js"></script>
+<script src="Minigame.js"></script>
 </body>
 </html>
