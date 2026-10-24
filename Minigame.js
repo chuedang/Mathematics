@@ -1,7 +1,7 @@
 /* 🎮 Minigame.js — มินิเกมทั้งหมดอยู่ไฟล์นี้ (ต้องโหลดหลัง script.js และใช้ Minigame.css)
    1) หน้ารวมมินิเกม (ปุ่ม Icon/Minigame.png ในเมนูกระเป๋า → menuGo('minigame') → openMgHub)
    2) 🧮 คิดเลข  3) 🎰 สุ่มของ  4) 📐 แก้สมการ  5) 🧩 แยกตัวประกอบ
-   6) 🌱 แปลงผัก (2.5D)      7) 🚀 ลงจอดยานอวกาศ
+   6) 🌱 แปลงผัก (2.5D)      7) 🚀 ลงจอดยานอวกาศ      8) 🔺 ภาคตัดกรวย
    ใช้ตัวแปร/ฟังก์ชันส่วนกลางของ script.js: wallet, inventory, popMessage, updateWalletUI, saveWalletAndData ฯลฯ */
 
 /* ---------- วาง HTML ของหน้าจอเกมทั้งหมดลงใน #dashboard ---------- */
@@ -23,7 +23,8 @@
         <button class="mghub-card" onclick="mgHubGo('equation')"><img src="Icon/equation.png" alt=""><b>แก้สมการ</b><small>หาค่า x และ y</small></button>
         <button class="mghub-card" onclick="mgHubGo('plant')"><img src="Icon/Plant.png" alt=""><b>แปลงผัก</b><small>ซ่อมเครื่องจักรด้วยคณิตศาสตร์</small></button>
         <button class="mghub-card" onclick="mgHubGo('roulette')"><img src="Icon/random.png" alt=""><b>สุ่มของ</b><small>หมุนวงล้อ 200 💰</small></button>
-        <button class="mghub-card" onclick="mgHubGo('landing')"><span class="mghub-new">ใหม่!</span><span class="mghub-emoji">🚀</span><b>ลงจอดยานอวกาศ</b><small>ใช้สูตรระยะห่างสองจุด</small></button>
+        <button class="mghub-card" onclick="mgHubGo('landing')"><span class="mghub-emoji">🚀</span><b>ลงจอดยานอวกาศ</b><small>ใช้สูตรระยะห่างสองจุด</small></button>
+        <button class="mghub-card" onclick="mgHubGo('conic')"><span class="mghub-new">ใหม่!</span><span class="mghub-emoji">🔺</span><b>ภาคตัดกรวย</b><small>ตัดกรวยเป็นวงกลม วงรี พาราโบลา ไฮเพอร์โบลา</small></button>
       </div>
     </div>
 
@@ -172,6 +173,7 @@
     mgFromHub = true;
     if (game === 'plant'){ if (window.openPlantScreen) window.openPlantScreen(); else { popMessage('แปลงผักยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ 🌱'); openMgHub(); } }
     else if (game === 'landing'){ if (window.openLandingScreen) window.openLandingScreen(); else { popMessage('เกมลงจอดยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ 🚀'); openMgHub(); } }
+    else if (game === 'conic'){ if (window.openConicScreen) window.openConicScreen(); else { popMessage('เกมภาคตัดกรวยยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ 🔺'); openMgHub(); } }
     else openMinigame(game);
   }
   // เกมปิดแล้ว → ถ้าเข้ามาจากหน้ารวม ให้กลับไปหน้ารวม
@@ -3166,8 +3168,7 @@ function build(){
         <div class="cell"><span id="ldBLbl"></span><br><b id="ldB"></b></div>
       </div>
       <div class="ld-info" id="ldPerRow" style="margin-top:6px"><div class="cell" id="ldPer"></div></div>
-      <details class="ld-formula"><summary>💡 สูตรที่ใช้</summary>
-        <div>ระยะห่างสองจุด d = √[(x₂ − x₁)² + (y₂ − y₁)²]<br>จุดกึ่งกลาง M = ( (x₁ + x₂)/2 , (y₁ + y₂)/2 )<br>จุดแบ่งส่วนของเส้นตรง ถ้า AP : PM = m : n → P = ( (n·x₁ + m·x₂)/(m + n) , (n·y₁ + m·y₂)/(m + n) )<br>ระยะจากจุด (x₀, y₀) ถึงเส้นตรง ax + by + c = 0 : d = |ax₀ + by₀ + c| / √(a² + b²)<br>ระยะระหว่างเส้นขนาน ax + by + c₁ = 0 กับ ax + by + c₂ = 0 : d = |c₁ − c₂| / √(a² + b²)<br>จำนวนถัง = d ÷ (ระยะต่อ 1 ถัง)</div></details>
+      <details class="ld-formula"><summary>💡 สูตรที่ใช้</summary><div id="ldFormula"></div></details>
       <div id="ldFuelBox">
         <div class="ld-fuel">
           <button class="ld-step" id="ldMinus" aria-label="ลดถัง">−</button>
@@ -3192,6 +3193,18 @@ function build(){
       </div>
     </div>`;
   (document.getElementById('dashboard') || document.body).appendChild(el);
+
+  [['ระยะห่างสองจุด', 'd=\\sqrt{(x_2-x_1)^2+(y_2-y_1)^2}', 'd = √[(x₂ − x₁)² + (y₂ − y₁)²]'],
+   ['จุดกึ่งกลาง', 'M=\\left(\\dfrac{x_1+x_2}{2},\\ \\dfrac{y_1+y_2}{2}\\right)', 'M = ((x₁ + x₂)/2 , (y₁ + y₂)/2)'],
+   ['จุดแบ่งส่วนของเส้นตรง ถ้า AP : PM = m : n', 'P=\\left(\\dfrac{nx_1+mx_2}{m+n},\\ \\dfrac{ny_1+my_2}{m+n}\\right)', 'P = ((n·x₁ + m·x₂)/(m + n) , (n·y₁ + m·y₂)/(m + n))'],
+   ['ระยะจากจุด (x₀, y₀) ถึงเส้นตรง', 'ax+by+c=0:\\quad d=\\dfrac{|ax_0+by_0+c|}{\\sqrt{a^2+b^2}}', 'ax + by + c = 0 : d = |ax₀ + by₀ + c| / √(a² + b²)'],
+   ['ระยะระหว่างเส้นขนาน', 'd=\\dfrac{|c_1-c_2|}{\\sqrt{a^2+b^2}}', 'd = |c₁ − c₂| / √(a² + b²)']
+  ].forEach(([lb, tx, pl]) => {
+    const row = document.createElement('span'); row.className = 'ldf';
+    row.innerHTML = '<span class="l"></span> <span class="k"></span>'; row.firstChild.textContent = lb + ' ';
+    $('ldFormula').appendChild(row); window.mgTex(row.querySelector('.k'), tx, pl);
+  });
+  { const row = document.createElement('span'); row.className = 'ldf'; row.textContent = 'จำนวนถัง = ระยะ ÷ ระยะต่อ 1 ถัง'; $('ldFormula').appendChild(row); }
 
   $('ldBack').addEventListener('click', closeLanding);
   $('ldMinus').addEventListener('click', () => setTanks(S.tanks - 1));
@@ -3546,4 +3559,897 @@ function closeLanding(){
 }
 window.openLandingScreen = openLandingScreen;
 window.closeLandingScreen = closeLanding;
+})();
+
+
+/* =====================================================================
+   ➗ ตัวช่วยแสดงสมการแบบ LaTeX (KaTeX จาก CDN — โหลดเองอัตโนมัติ ไม่ต้องแก้ index.html)
+   window.mgTex(element, latex, ข้อความสำรอง)  → โหลด KaTeX ไม่ได้ (ออฟไลน์) จะแสดงข้อความสำรองแทน เกมไม่พัง
+===================================================================== */
+(function(){
+  const B = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/';
+  let p = null;
+  function load(){
+    if (p) return p;
+    p = new Promise(res => {
+      if (window.katex) return res(true);
+      const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = B + 'katex.min.css'; document.head.appendChild(l);
+      const sc = document.createElement('script'); sc.src = B + 'katex.min.js';
+      sc.onload = () => res(true); sc.onerror = () => res(false); document.head.appendChild(sc);
+    });
+    return p;
+  }
+  window.mgTex = function(el, latex, plain){
+    if (!el) return;
+    el.textContent = plain != null ? plain : latex;     // แสดงข้อความสำรองไว้ก่อน
+    el.dataset.tex = latex;
+    load().then(ok => {
+      if (!ok || !window.katex || el.dataset.tex !== latex) return;
+      try { window.katex.render(latex, el, { throwOnError:false }); } catch(_){}
+    });
+  };
+  load();   // โหลดล่วงหน้าตั้งแต่เปิดเกม
+})();
+
+
+/* =====================================================================
+   🔺 เกมภาคตัดกรวย (Conic Sections)
+   กรวยคู่ 3 มิติ (วาดด้วย canvas) + ระนาบตัดที่เลื่อน/เอียงได้ → เห็นหน้าตัดเป็น วงกลม / วงรี / พาราโบลา / ไฮเพอร์โบลา
+   • กดปุ่มรูปร่าง → ระนาบเอียงไปมุมที่ถูกต้องแล้วตัดกรวยให้ดู   • สไลเดอร์ปรับมุมเองได้   • ลากนิ้วเพื่อหมุนกรวย
+   • คณิตศาสตร์จริง: เส้นกำเนิดกรวยทำมุม α = 35° กับแกน, ระนาบเอียง θ จากแนวนอน
+       θ = 0 → วงกลม · θ < 90°−α → วงรี · θ = 90°−α (= 55°) → พาราโบลา · θ > 90°−α → ไฮเพอร์โบลา      e = sin θ / cos α
+   ต้องมี window.mgHubReturn() จากหน้ารวมมินิเกม (ไม่ให้เหรียญ/EXP เพราะเป็นเกมสำรวจ)
+   • ปุ่ม "เล่นเกม!" มุมขวาบน → เกมประกอบยานอวกาศด้วยสมการวงกลม (ดูบล็อก GP / gdraw ด้านล่าง)
+===================================================================== */
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const TAU = Math.PI * 2;
+const AL = 35 * Math.PI / 180;           // มุมระหว่างเส้นกำเนิดกับแกนกรวย
+const TH_PAR = 90 - 35;                  // องศาที่ระนาบขนานเส้นกำเนิด (พาราโบลา) = 55°
+const H = 2.2;                           // กรวยสูงจาก z = −H ถึง +H
+const Z0 = 1.0;                          // ระนาบตัดผ่านแกนที่ความสูง z = Z0
+const PRESET = { circle: 0, ellipse: 30, parabola: TH_PAR, hyperbola: 74 };
+
+const TY = {
+  circle:    { n:'⭕ วงกลม',      c:'#4ade80', e:'e = 0', etex:'e=0', tex:'x^2+y^2=r^2',
+               rule:'ระนาบ “ขนานกับฐาน” (ตั้งฉากกับแกนกรวย) ตัดเส้นกำเนิดทุกเส้นที่ระยะเท่ากัน จึงได้วงกลม',
+               eq:'x² + y² = r²' },
+  ellipse:   { n:'🥚 วงรี',        c:'#fbbf24', e:'0 < e < 1', etex:'0<e<1', tex:'\\dfrac{x^2}{a^2}+\\dfrac{y^2}{b^2}=1',
+               rule:'ระนาบเอียง แต่ยังชันน้อยกว่าเส้นกำเนิด ตัดเส้นกำเนิดครบทุกเส้นในกรวยฝั่งเดียว ได้เส้นโค้งปิด',
+               eq:'x²/a² + y²/b² = 1' },
+  parabola:  { n:'🌈 พาราโบลา',    c:'#f472b6', e:'e = 1', etex:'e=1', tex:'y^2=4px',
+               rule:'ระนาบ “ขนานกับเส้นกำเนิด” ของกรวย 1 เส้น จึงตัดแล้วเส้นโค้งเปิดออกไม่ปิดตัว (ตัดกรวยฝั่งเดียว)',
+               eq:'y² = 4px' },
+  hyperbola: { n:'🪁 ไฮเพอร์โบลา', c:'#60a5fa', e:'e > 1', etex:'e>1', tex:'\\dfrac{x^2}{a^2}-\\dfrac{y^2}{b^2}=1',
+               rule:'ระนาบชันกว่าเส้นกำเนิด จึงตัดกรวย “ทั้งสองฝั่ง” ได้เส้นโค้ง 2 กิ่ง',
+               eq:'x²/a² − y²/b² = 1' }
+};
+
+const S = { th:0, yaw:.6, pit:.34, open:false, raf:0, last:0, idle:0, spin:false, spinV:0, drag:null, tw:null, type:'', dpr:1 };
+const classify = d => d < .5 ? 'circle' : Math.abs(d - TH_PAR) < .6 ? 'parabola' : d < TH_PAR ? 'ellipse' : 'hyperbola';
+
+/* ---------- คำนวณเส้นตัดจริง: ยิงเส้นกำเนิดทุกทิศ φ แล้วหาจุดที่ชนระนาบ ---------- */
+function section(th){
+  const ct = Math.cos(th), st = Math.sin(th), ca = Math.cos(AL), sa = Math.sin(AL), N = 720, out = [];
+  for (let i = 0; i < N; i++){
+    const ph = i / N * TAU, D = ct * ca + st * sa * Math.cos(ph);
+    let q = null;
+    if (Math.abs(D) > 1e-6){
+      const t = ct * Z0 / D, z = t * ca;          // t < 0 = กรวยฝั่งล่าง
+      if (Math.abs(z) <= H) q = { p:[t * sa * Math.cos(ph), t * sa * Math.sin(ph), z], s: D > 0 ? 1 : -1 };
+    }
+    out.push(q);
+  }
+  return out;
+}
+function runs(pts){                                // แบ่งเป็นช่วงต่อเนื่อง (1 วง หรือ 1–2 กิ่ง)
+  const N = pts.length, k0 = pts.findIndex(q => !q);
+  if (k0 < 0) return [{ closed:true, a:pts.slice() }];
+  const out = []; let cur = null;
+  for (let j = 1; j <= N; j++){
+    const q = pts[(k0 + j) % N];
+    if (q && cur && cur.s === q.s) cur.a.push(q);
+    else { if (cur) out.push(cur); cur = q ? { s:q.s, a:[q], closed:false } : null; }
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+function proj(p, W, Hh, sc){
+  const c = Math.cos(S.yaw), s = Math.sin(S.yaw), cp = Math.cos(S.pit), sp = Math.sin(S.pit);
+  const x1 = p[0] * c - p[1] * s, y1 = p[0] * s + p[1] * c;
+  return [W / 2 + sc * x1, Hh / 2 - sc * (y1 * sp + p[2] * cp), -y1 * cp + p[2] * sp];
+}
+function fit(cv){
+  S.dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== Math.round(w * S.dpr) || cv.height !== Math.round(h * S.dpr)){ cv.width = Math.round(w * S.dpr); cv.height = Math.round(h * S.dpr); }
+}
+const path = (g, pts, close) => { g.beginPath(); pts.forEach((v, i) => i ? g.lineTo(v[0], v[1]) : g.moveTo(v[0], v[1])); if (close) g.closePath(); };
+
+/* ---------- วาดโมเดล 3 มิติ ---------- */
+function draw(){
+  const cv = $('cnCv'); fit(cv);
+  const g = cv.getContext('2d'), W = cv.clientWidth, Hh = cv.clientHeight, sc = Math.min(W, Hh) / 6.4;
+  g.setTransform(S.dpr, 0, 0, S.dpr, 0, 0); g.clearRect(0, 0, W, Hh);
+  const P = p => proj(p, W, Hh, sc), th = S.th * Math.PI / 180, ct = Math.cos(th), st = Math.sin(th), ta = Math.tan(AL);
+  const col = TY[S.type].c;
+
+  // ผิวกรวย (กระจกใส เรียงตามความลึก)
+  const K = 36, R = 8, quads = [];
+  for (const sg of [1, -1]) for (let r = 0; r < R; r++) for (let k = 0; k < K; k++){
+    const z1 = H * r / R, z2 = H * (r + 1) / R, a1 = k / K * TAU, a2 = (k + 1) / K * TAU;
+    const c = [[z1,a1],[z1,a2],[z2,a2],[z2,a1]].map(([z, a]) => P([z * ta * Math.cos(a), z * ta * Math.sin(a), sg * z]));
+    quads.push({ c, d:(c[0][2] + c[1][2] + c[2][2] + c[3][2]) / 4 });
+  }
+  quads.sort((a, b) => a.d - b.d);
+  g.lineWidth = .6; g.fillStyle = 'rgba(110,150,255,.13)'; g.strokeStyle = 'rgba(170,195,255,.26)';
+  for (const o of quads){ path(g, o.c, true); g.fill(); g.stroke(); }
+  g.strokeStyle = 'rgba(190,210,255,.75)'; g.lineWidth = 1.6;                        // ขอบปากกรวยบน/ล่าง
+  for (const sg of [1, -1]){ const ring = []; for (let k = 0; k <= 72; k++){ const a = k / 72 * TAU; ring.push(P([H * ta * Math.cos(a), H * ta * Math.sin(a), sg * H])); } path(g, ring); g.stroke(); }
+  g.setLineDash([5, 5]); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1;   // แกนกรวย
+  path(g, [P([0, 0, -H - .3]), P([0, 0, H + .3])]); g.stroke(); g.setLineDash([]);
+  const ap = P([0, 0, 0]); g.fillStyle = '#fff'; g.beginPath(); g.arc(ap[0], ap[1], 3, 0, TAU); g.fill();
+
+  // ระนาบตัด
+  const pl = [[-1,-1],[1,-1],[1,1],[-1,1]].map(([a, b]) => P([a * 2.3 * ct, b * 1.8, Z0 - a * 2.3 * st]));
+  g.fillStyle = 'rgba(255,255,255,.07)'; path(g, pl, true); g.fill();
+
+  // หน้าตัด
+  const rs = runs(section(th));
+  for (const r of rs){
+    const pp = r.a.map(q => P(q.p));
+    g.globalAlpha = .55; g.fillStyle = col; path(g, pp, true); g.fill(); g.globalAlpha = 1;
+    g.strokeStyle = col; g.lineWidth = 3.5; g.lineJoin = 'round'; path(g, pp, r.closed); g.stroke();
+  }
+  g.setLineDash([6, 4]); g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1.4; path(g, pl, true); g.stroke(); g.setLineDash([]);
+
+  drawFlat(rs, th, col);
+}
+
+/* ---------- หน้าตัดที่ถูกวางแบนให้ดูรูปร่างจริง ---------- */
+function drawFlat(rs, th, col){
+  const cv = $('cnFlat'); fit(cv);
+  const g = cv.getContext('2d'), W = cv.clientWidth, Hh = cv.clientHeight, ct = Math.cos(th), st = Math.sin(th);
+  g.setTransform(S.dpr, 0, 0, S.dpr, 0, 0); g.clearRect(0, 0, W, Hh);
+  const uv = rs.map(r => r.a.map(q => [q.p[0] * ct - (q.p[2] - Z0) * st, q.p[1]]));
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+  uv.forEach(a => a.forEach(([u, v]) => { x0 = Math.min(x0, u); x1 = Math.max(x1, u); y0 = Math.min(y0, v); y1 = Math.max(y1, v); }));
+  const s = .78 * Math.min(W, Hh) / Math.max(x1 - x0, y1 - y0, .3), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  const T = ([u, v]) => [W / 2 + (u - cx) * s, Hh / 2 - (v - cy) * s];
+  g.strokeStyle = 'rgba(160,180,255,.3)'; g.lineWidth = 1;
+  const o = T([0, 0]); path(g, [[0, o[1]], [W, o[1]]]); g.stroke(); path(g, [[o[0], 0], [o[0], Hh]]); g.stroke();
+  uv.forEach((a, i) => {
+    const pp = a.map(T);
+    g.globalAlpha = .5; g.fillStyle = col; path(g, pp, true); g.fill(); g.globalAlpha = 1;
+    g.strokeStyle = col; g.lineWidth = 3; path(g, pp, rs[i].closed); g.stroke();
+  });
+}
+
+/* ---------- ข้อความอธิบาย + ปุ่ม ---------- */
+function setInfo(){
+  const t = TY[S.type];
+  $('cnName').textContent = t.n; $('cnName').style.color = t.c;
+  $('cnRule').textContent = t.rule; window.mgTex($('cnEqK'), t.tex, t.eq);
+  document.querySelectorAll('#conicScreen .cn-btn').forEach(b => b.classList.toggle('on', b.dataset.t === S.type));
+}
+function goTo(deg){ S.tw = { a:S.th, b:deg, t0:performance.now(), d:1000 }; S.idle = performance.now(); }
+
+function frame(now){
+  if (!S.open) return;
+  S.raf = requestAnimationFrame(frame);
+  const dt = Math.min(50, now - (S.last || now)); S.last = now;
+  if (S.tw){
+    const k = Math.min(1, (now - S.tw.t0) / S.tw.d), e = k < .5 ? 2 * k * k : 1 - 2 * (1 - k) * (1 - k);
+    S.th = S.tw.a + (S.tw.b - S.tw.a) * e; $('cnRange').value = S.th;
+    if (k >= 1) S.tw = null;
+  }
+  if (S.spin && !S.drag){                                              // จิ้ม 2 ที → หมุนโชว์อัตโนมัติ (ค่อย ๆ เร่ง)
+    S.spinV = Math.min(.0016, (S.spinV || 0) + dt * .000006);
+    S.yaw += dt * S.spinV;
+  } else if (!S.drag && now - S.idle > 2500) S.yaw += dt * .0002;
+  const ty = classify(S.th); if (ty !== S.type){ S.type = ty; setInfo(); }
+  $('cnDeg').textContent = (Math.round(S.th * 10) / 10) + '°';
+  const ev = (Math.sin(S.th * Math.PI / 180) / Math.cos(AL)).toFixed(2), ek = ty + ev;
+  if (ek !== S.ek){ S.ek = ek; window.mgTex($('cnE'), TY[ty].etex + '\\quad(e\\approx ' + ev + ')', TY[ty].e + '  (e ≈ ' + ev + ')'); }
+  draw();
+}
+
+function build(){
+  if ($('conicScreen')) return;
+  const el = document.createElement('div');
+  el.className = 'cn-screen'; el.id = 'conicScreen';
+  el.innerHTML = `
+    <div class="cn-top">
+      <button class="back-btn" id="cnBack" aria-label="ย้อนกลับ"><img src="Icon/back.png" alt="ย้อนกลับ"></button>
+      <div class="cn-title">🔺 ภาคตัดกรวย</div>
+      <button class="cn-play" id="cnPlay">🎮 เล่นเกม!</button>
+    </div>
+    <div class="cn-view"><canvas id="cnCv"></canvas><div class="cn-hint" id="cnHint">👆 ลากนิ้วเพื่อหมุนดู · จิ้ม 2 ทีให้หมุนโชว์อัตโนมัติ</div></div>
+    <div class="cn-panel">
+      <div class="cn-btns">
+        <button class="cn-btn" data-t="circle" style="--c:#4ade80">วงกลม</button>
+        <button class="cn-btn" data-t="ellipse" style="--c:#fbbf24">วงรี</button>
+        <button class="cn-btn" data-t="parabola" style="--c:#f472b6">พาราโบลา</button>
+        <button class="cn-btn" data-t="hyperbola" style="--c:#60a5fa">ไฮเพอร์โบลา</button>
+      </div>
+      <div class="cn-slide"><span>เอียงระนาบ</span><input type="range" id="cnRange" min="0" max="80" step="0.5" value="0"><b id="cnDeg">0°</b></div>
+      <div class="cn-note">เส้นกำเนิดทำมุม <span id="cnN1"></span> กับแกน · ระนาบขนานเส้นกำเนิดเมื่อเอียง <span id="cnN2"></span></div>
+      <div class="cn-info">
+        <canvas id="cnFlat" class="cn-flat"></canvas>
+        <div class="cn-txt">
+          <div class="cn-name" id="cnName"></div>
+          <div id="cnRule"></div>
+          <div class="cn-eq cn-eqrow">สมการมาตรฐาน: <span id="cnEqK"></span></div>
+          <div class="cn-eq cn-erow"><span id="cnE"></span></div>
+        </div>
+      </div>
+    </div>`;
+  (document.getElementById('dashboard') || document.body).appendChild(el);
+
+  window.mgTex($('cnN1'), '\\alpha=35^\\circ', 'α = 35°'); window.mgTex($('cnN2'), '90^\\circ-35^\\circ=55^\\circ', '90° − 35° = 55°');
+  $('cnBack').addEventListener('click', closeConic);
+  $('cnPlay').addEventListener('click', openGame);
+  el.querySelectorAll('.cn-btn').forEach(b => b.addEventListener('click', () => goTo(PRESET[b.dataset.t])));
+  $('cnRange').addEventListener('input', e => { S.tw = null; S.th = +e.target.value; S.idle = performance.now(); });
+
+  const cv = $('cnCv');
+  const setSpin = on => {
+    S.spin = on; S.spinV = 0; S.idle = performance.now();
+    $('cnHint').textContent = on ? '🔄 กำลังหมุนโชว์ · จิ้ม 2 ทีอีกครั้งหรือลากนิ้วเพื่อหยุด'
+                                 : '👆 ลากนิ้วเพื่อหมุนดู · จิ้ม 2 ทีให้หมุนโชว์อัตโนมัติ';
+  };
+  S.setSpin = setSpin;
+  let lastTap = 0, tapX = 0, tapY = 0, moved = 0;
+  cv.addEventListener('pointerdown', e => {
+    S.drag = { x:e.clientX, y:e.clientY }; moved = 0; cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!S.drag) return;
+    moved += Math.abs(e.clientX - S.drag.x) + Math.abs(e.clientY - S.drag.y);
+    if (moved > 8 && S.spin) setSpin(false);                           // ลากเองเมื่อไหร่ → หยุดหมุนอัตโนมัติ
+    S.yaw += (e.clientX - S.drag.x) * .01;
+    S.pit = Math.max(.05, Math.min(1.2, S.pit + (e.clientY - S.drag.y) * .008));
+    S.drag = { x:e.clientX, y:e.clientY }; S.idle = performance.now();
+  });
+  const up = () => { S.drag = null; S.idle = performance.now(); };
+  cv.addEventListener('pointerup', e => {
+    up();
+    if (moved > 8) { lastTap = 0; return; }                            // เป็นการลาก ไม่ใช่การจิ้ม
+    const now = performance.now();
+    if (now - lastTap < 350 && Math.hypot(e.clientX - tapX, e.clientY - tapY) < 30){ lastTap = 0; setSpin(!S.spin); }
+    else { lastTap = now; tapX = e.clientX; tapY = e.clientY; }
+  });
+  cv.addEventListener('pointercancel', up);
+}
+
+function openConicScreen(){
+  build();
+  S.open = true; S.th = 0; S.tw = null; S.type = ''; S.ek = ''; S.last = 0; S.idle = performance.now(); S.yaw = .6; S.pit = .34;
+  $('cnRange').value = 0;
+  if (S.setSpin) S.setSpin(false); else S.spin = false;
+  $('conicScreen').style.display = 'flex';
+  cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(frame);
+}
+function closeConic(){
+  S.open = false; cancelAnimationFrame(S.raf);
+  $('conicScreen').style.display = 'none';
+  if (window.mgHubReturn) window.mgHubReturn();
+}
+
+/* =====================================================================
+   🚀 ปุ่ม "เล่นเกม!" มุมขวาบน → เกมประกอบยานอวกาศ (โหมดวงกลม + วงรี)
+   • เริ่มด้วยมุมมอง 2D มองจากด้านบนของยาน มีเส้นประสีฟ้าบอกชิ้นส่วนที่ต้องประกอบ
+   • เติมสมการให้ถูก → กล้องเอียงเป็น 3D หมุนรอบยาน แล้ววงแหวนหล่นลงมาครอบชิ้นส่วนพอดี
+       วงกลม  (x − h)² + (y − k)² = r²           (ช่อง h, k, r²)
+       วงรี   (x − h)²/a² + (y − k)²/b² = 1       (ช่อง h, a², k, b²  เรียงตามที่เห็นบนจอ)
+   • ลำตัวยาน (วงกลมรัศมี 2 กลางจอ) ประกอบไว้แล้ว · 5 ชิ้นส่วนที่ผู้เล่นต้องประกอบ (กล้องซูมเข้าหาชิ้นที่ทำ แล้วซูมออกก่อนไปชิ้นถัดไป)
+       1) ไอพ่นซ้าย  วงกลม รัศมี 2 จุดศูนย์กลาง C(−6, 0)      2) ไอพ่นขวา  สมการวงกลมเดิม เปลี่ยนแค่จุดศูนย์กลางเป็น C(6, 0)
+       3) เกราะป้องกัน  วงรี x²/16 + y²/9 = 1 ครอบตัวยาน แตะไอพ่นสองข้างที่ (±4, 0)
+       4) ฐานโค้ง  พาราโบลา x² = 4(y + 4) ผ่านจุดที่ยานต่อกับไอพ่น ลากลงตามแกน z ยาวเท่าไอพ่น (1.7)
+       5) ปีกข้าง  ไฮเพอร์โบลา x²/64 − y²/16 = 1 อยู่ข้างไอพ่นทั้งสอง )o0o(
+   • หน้าตายาน: จรวดมีครีบ แถบสี ช่องหน้าต่าง หัวกรวย+เสาอากาศ / ถังเชื้อเพลิงมีแถบ / เครื่องยนต์มีท่อพ่นไฟ /
+                ห้องสื่อสารมีเสา / แผงโซลาร์และจานเรดาร์เป็นแผ่นวงรี · ประกอบครบแล้วเครื่องยนต์พ่นไฟ
+===================================================================== */
+const GP = [   // ชิ้นส่วนของยาน: c = จุดศูนย์กลาง, r2 (วงกลม) / a2,b2 (วงรี, ไฮเพอร์โบลา) / par (พาราโบลา), hz = ความสูง, fitz = ความสูงที่วงแหวนมาครอบ, cam = มุมกล้อง [x, y, ซูม]
+  { n:'ลำตัวยาน',   kind:'hull',   c:[0, 0],  r2:4, hz:5.4, fitz:1.3, col:'#dfe7ff', mode:'graph', pre:true, cam:[0, 0, 1],      // ประกอบไว้แล้วตั้งแต่เริ่ม (ไม่ใช่โจทย์)
+    bands:[[0, .32, '#59627c'], [.32, 3.2, '#dfe7ff'], [3.2, 3.7, '#e74f66'], [3.7, 5.4, '#dfe7ff']] },
+  // ไอพ่น 2 ตัว: วงกลมรัศมี 2 (r² = 4) สมการเหมือนกัน เปลี่ยนแค่จุดศูนย์กลาง · ขอบในอยู่ที่ x = ±4 ขอบนอกที่ x = ±8
+  { n:'ไอพ่นซ้าย',  kind:'engine', c:[-6, 0], r2:4, hz:1.7, fitz:.7, col:'#ff9f68', mode:'radius', cam:[-6, 0, 2.4] },
+  { n:'ไอพ่นขวา',   kind:'engine', c:[6, 0],  r2:4, hz:1.7, fitz:.7, col:'#ff9f68', mode:'radius', cam:[6, 0, 2.4], note:'สมการวงกลมเหมือนไอพ่นซ้าย เปลี่ยนแค่จุดศูนย์กลาง' },
+  // เกราะ: วงรี x²/16 + y²/9 = 1 ครอบตัวยาน ปลายแกนนอน (±4, 0) แตะขอบในของไอพ่นทั้งสองพอดี
+  { n:'เกราะป้องกัน', kind:'shield', c:[0, 0],  a2:16, b2:9, hz:.3, fitz:.05, col:'#7df9ff', mode:'evtx', pts:[[-4, 0], [4, 0], [0, 3]], cam:[0, 0, 2] },
+  // ฐานโค้ง: พาราโบลา (x − h)² = 4p(y − k) จุดยอด (0, −4) ผ่านจุดต่อยาน-ไอพ่น (±4, 0) → p = 1  (x² = 4(y + 4)) ลากลงตามแกน z สูงเท่าไอพ่น
+  { n:'ฐานโค้ง',    kind:'base',   c:[0, -4], par:{ h:0, k:-4, p:1 }, hz:1.7, fitz:.7, col:'#9aa7e0', mode:'para', v:[0, -4], pts:[[-4, 0], [4, 0]], cam:[0, -1.5, 2] },
+  // ปีกข้าง: ไฮเพอร์โบลา (x − h)²/a² − (y − k)²/b² = 1 จุดยอด (±8, 0) แตะขอบนอกไอพ่น ผ่านจุด (10, 3) → x²/64 − y²/16 = 1  รูป )o0o(
+  { n:'ปีกข้าง',    kind:'wing',   c:[0, 0],  a2:64, b2:16, hyp:true, hz:1.7, fitz:.7, col:'#c4a2ff', mode:'hv', p:[10, 3], pts:[[-8, 0], [8, 0]], cam:[0, 0, 1.05] }
+];
+GP.forEach(m => {                                   // ครึ่งแกนตามแนวนอน rx และแนวตั้ง ry (วงกลม: เท่ากัน)
+  m.ell = m.a2 != null;
+  m.shape = m.hyp ? 'hyper' : m.ell ? 'ellipse' : m.par ? 'parab' : 'circle';
+  m.rx = Math.sqrt(m.ell ? m.a2 : m.par ? 1 : m.r2); m.ry = Math.sqrt(m.ell ? m.b2 : m.par ? 1 : m.r2);
+});
+/* ---------- เส้นโค้งของฐาน (พาราโบลา) และปีก (ไฮเพอร์โบลา) ---------- */
+function hypBranches(h, a2, k, b2, yr, n){          // ไฮเพอร์โบลาเปิดซ้าย-ขวา: คืน [กิ่งซ้าย, กิ่งขวา] แต่ละกิ่งคือ [[x,y],...] (ไล่ y จาก k−yr ถึง k+yr)
+  const a = Math.sqrt(a2), L = [], R = [];
+  for (let i = 0; i <= n; i++){ const y = k - yr + 2 * yr * i / n, d = a * Math.sqrt(1 + (y - k) * (y - k) / b2); L.push([h - d, y]); R.push([h + d, y]); }
+  return [L, R];
+}
+function parabPts(h, p, k, xr, n){                  // พาราโบลาเปิดขึ้น/ลง (x − h)² = 4p(y − k) ไล่ x จาก h−xr ถึง h+xr
+  const out = [];
+  for (let i = 0; i <= n; i++){ const x = h - xr + 2 * xr * i / n; out.push([x, k + (x - h) * (x - h) / (4 * p)]); }
+  return out;
+}
+function clipSegs(brs, lim, ox = 0, oy = 0){                        // ตัดช่วงที่ล้นพื้นแท่น (ใช้กับสมการผิดที่เส้นพุ่งออกไปไกล)
+  const out = [];
+  brs.forEach(br => { let cur = []; br.forEach(q => { if (Math.abs(q[0] - ox) <= lim && Math.abs(q[1] - oy) <= lim){ cur.push(q); } else { if (cur.length > 1) out.push(cur); cur = []; } }); if (cur.length > 1) out.push(cur); });
+  return out;
+}
+const splitMid = br => { const m = br.length >> 1; return [br.slice(0, m + 1), br.slice(m)]; };   // แบ่งกิ่งครึ่งหนึ่ง เพื่อเรียงความลึกตอนวาด
+const FLOOR = 12;                                   // พื้นแท่นกว้าง ±12 (ไฮเพอร์โบลาต้องมีที่ให้กางออกข้างไอพ่น)
+const PARA_SEGS = (() => { const pts = parabPts(0, 1, -4, 4, 48); return [pts.slice(0, 17), pts.slice(16, 33), pts.slice(32)]; })();   // x จาก −4 ถึง 4 (ปลายสองข้างแตะไอพ่นพอดี)
+const HYP_SEGS = hypBranches(0, 64, 0, 16, 4.2, 40).flatMap(splitMid);                                                              // y ±4.2 → x ≈ ±11.6
+GP.find(m => m.kind === 'base').segs = PARA_SEGS;
+GP.find(m => m.kind === 'wing').segs = HYP_SEGS;
+/* ---------- สุ่มเลื่อน “ทั้งยาน” ไปพิกัดอื่นทุกครั้งที่เริ่มเล่น (ทุกชิ้นเลื่อนเท่ากัน รูปทรงและระยะห่างเหมือนเดิม) ---------- */
+const GBASE = GP.map(m => ({ c:m.c.slice(), p:m.p && m.p.slice(), v:m.v && m.v.slice(), pts:m.pts && m.pts.map(q => q.slice()),
+  par:m.par && { ...m.par }, cam:m.cam.slice(), segs:m.segs && m.segs.map(sg => sg.map(q => q.slice())) }));   // ค่าตั้งต้น (ลำตัวยานอยู่ที่ (0, 0))
+const GOFF = { x:0, y:0 };                                       // ตำแหน่งจุดศูนย์กลางลำตัวยานตอนนี้
+function gShift(ox, oy){
+  GOFF.x = ox; GOFF.y = oy;
+  GP.forEach((m, i) => { const b = GBASE[i];
+    m.c = [b.c[0] + ox, b.c[1] + oy];
+    if (b.p) m.p = [b.p[0] + ox, b.p[1] + oy];
+    if (b.v) m.v = [b.v[0] + ox, b.v[1] + oy];
+    if (b.pts) m.pts = b.pts.map(q => [q[0] + ox, q[1] + oy]);
+    if (b.par) m.par = { h:b.par.h + ox, k:b.par.k + oy, p:b.par.p };      // จุดยอดเลื่อน แต่ p เท่าเดิม
+    m.cam = [b.cam[0] + ox, b.cam[1] + oy, b.cam[2]];
+    if (b.segs) m.segs = b.segs.map(sg => sg.map(q => [q[0] + ox, q[1] + oy]));
+  });
+}
+function gRandShift(){                                           // สุ่มจำนวนเต็ม −6…6 ทั้ง x และ y ไม่ซ้ำ (0, 0) และไม่ซ้ำรอบก่อน
+  const r = () => Math.floor(Math.random() * 13) - 6; let x, y;
+  do { x = r(); y = r(); } while ((!x && !y) || (x === GOFF.x && y === GOFF.y));
+  gShift(x, y);
+}
+const G = { shake:0, fl:null, bad:null, why:'', open:false, i:1, f:0, v:['', '', ''], phase:'2d', done:[true], pitch:Math.PI / 2, yaw:0, ringZ:0, ringA:0, flash:0, an:null, raf:0, last:0, drag:null, pk:'', zoom:1, cx:0, cy:0, ct:null };
+const PI2 = Math.PI / 2, RING_H = .42, LIGHT = 2.2, KS = 44;
+const gsg = n => String(n).replace('-', '−');
+const gpt = p => `(${gsg(p[0])}, ${gsg(p[1])})`;
+const ease = k => k < .5 ? 2 * k * k : 1 - 2 * (1 - k) * (1 - k);
+const lerp = (a, b, t) => a + (b - a) * t;
+const shade = (h, f) => { const n = parseInt(h.slice(1), 16); const c = x => Math.min(255, Math.round(x * f)); return `rgb(${c((n >> 16) & 255)},${c((n >> 8) & 255)},${c(n & 255)})`; };
+const STARS = Array.from({ length:46 }, (_, i) => { const f = x => x - Math.floor(x); return [f(Math.sin(i * 12.9898) * 43758.5453), f(Math.sin(i * 78.233) * 12345.678)]; });
+const nang = (t, rx, ry) => Math.atan2(Math.sin(t) / ry, Math.cos(t) / rx);          // ทิศตั้งฉากของผิวที่พารามิเตอร์ t (ใช้กับวงรี)
+function bandsOf(m){                                                                  // แถบสีรอบตัวชิ้นส่วน [z0, z1, สี]
+  if (m.bands) return m.bands;
+  if (m.kind === 'panel') return [[0, m.hz, '#26356e']];
+  if (m.kind === 'dish')  return [[0, m.hz, '#8c97b8']];
+  if (m.kind === 'tank')  return [[0, .2, '#59627c'], [.2, .62, m.col], [.62, .98, '#fff1de'], [.98, m.hz - .2, m.col], [m.hz - .2, m.hz, '#e9efff']];
+  return [[0, .2, '#59627c'], [.2, m.hz - .2, m.col], [m.hz - .2, m.hz, '#e9efff']];
+}
+
+/* ---------- วาดฉาก (กล้องปรับ pitch/yaw ได้: pitch = 90° คือมองตรงจากด้านบน) ---------- */
+function gdraw(){
+  const cv = $('cgCv'); fit(cv);
+  const g = cv.getContext('2d'), W = cv.clientWidth, Hh = cv.clientHeight, sc = Math.min(W, Hh) / 27 * G.zoom;
+  g.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
+  const bg = g.createLinearGradient(0, 0, 0, Hh); bg.addColorStop(0, '#070b26'); bg.addColorStop(1, '#1a2260');
+  g.fillStyle = bg; g.fillRect(0, 0, W, Hh);
+  g.fillStyle = '#fff'; g.globalAlpha = .5; for (const [sx, sy] of STARS) g.fillRect(sx * W, sy * Hh, 1.5, 1.5); g.globalAlpha = 1;
+  const now = performance.now();
+
+  const cp = Math.cos(G.pitch), sp = Math.sin(G.pitch), cw = Math.cos(G.yaw), sw = Math.sin(G.yaw);
+  const P = (x, y, z) => { x -= G.cx; y -= G.cy; const x1 = x * cw - y * sw, y1 = x * sw + y * cw; return [W / 2 + sc * x1, Hh / 2 - sc * (y1 * sp + (z - 3) * cp), -y1 * cp + z * sp]; };
+  const facing = na => cp > .02 && -cp * Math.sin(na + G.yaw) > 0;     // ผนังด้านนอกที่หันเข้าหากล้อง (na = ทิศตั้งฉากของผนัง)
+  const quad = (pts, fill) => { path(g, pts, true); g.fillStyle = fill; g.strokeStyle = fill; g.lineWidth = .7; g.fill(); g.stroke(); };
+  const GOLD = { o:'#ffd84a', i:'#c9a21c', t:'#fff0a0' }, RED = { o:'#ff5a5a', i:'#a02828', t:'#ffc4c4' };
+  const rp = (cx, cy, rx, ry, z, a) => P(cx + rx * Math.cos(a), cy + ry * Math.sin(a), z);
+  const ringBack = (cx, cy, rx, ry, rz, al, B) => {                  // ผนังด้านในฝั่งไกล (วาดก่อนโมดูล)
+    if (cp <= .02) return;
+    const ex = rx + .03, ey = ry + .03;
+    g.globalAlpha = al;
+    for (let k = 0; k < KS; k++){ const a1 = k / KS * TAU, a2 = (k + 1) / KS * TAU, am = (a1 + a2) / 2;
+      if (!facing(nang(am, rx, ry))) quad([rp(cx, cy, ex, ey, rz, a1), rp(cx, cy, ex, ey, rz, a2), rp(cx, cy, ex, ey, rz + RING_H, a2), rp(cx, cy, ex, ey, rz + RING_H, a1)], shade(B.i, .55)); }
+    g.globalAlpha = 1;
+  };
+  const ringFront = (cx, cy, rx, ry, rz, al, B, hz) => {             // ผนังด้านนอกฝั่งใกล้ + หน้าบน
+    const ix = rx + .03, iy = ry + .03, ox = rx + .17, oy = ry + .17, above = rz + RING_H >= hz;
+    g.globalAlpha = al;
+    for (let k = 0; k < KS; k++){ const a1 = k / KS * TAU, a2 = (k + 1) / KS * TAU, am = (a1 + a2) / 2, na = nang(am, rx, ry), fc = facing(na);
+      if (fc) quad([rp(cx, cy, ox, oy, rz, a1), rp(cx, cy, ox, oy, rz, a2), rp(cx, cy, ox, oy, rz + RING_H, a2), rp(cx, cy, ox, oy, rz + RING_H, a1)], shade(B.o, .55 + .6 * (.5 + .5 * Math.cos(na - LIGHT))));
+      if (cp <= .05 || above || fc) quad([rp(cx, cy, ix, iy, rz + RING_H, a1), rp(cx, cy, ox, oy, rz + RING_H, a1), rp(cx, cy, ox, oy, rz + RING_H, a2), rp(cx, cy, ix, iy, rz + RING_H, a2)], shade(B.t, .85 + .2 * Math.cos(na - LIGHT)));
+    }
+    g.globalAlpha = 1;
+  };
+
+  // ริบบิ้นสีทองที่หล่นลงมาครอบเส้นโค้งไฮเพอร์โบลา (กำแพงบางๆ ตามแนวเส้นโค้ง เรียงตามความลึก)
+  const ribbonSegs = (segs, z, al, B, dx) => {
+    if (z == null || al <= 0) return;
+    const Q = [], w = .18, ox = dx || 0;
+    for (const sgm of segs) for (let i = 0; i < sgm.length - 1; i++){
+      const x0 = sgm[i][0] + ox, y0 = sgm[i][1], x1 = sgm[i + 1][0] + ox, y1 = sgm[i + 1][1], ddx = x1 - x0, ddy = y1 - y0, L = Math.hypot(ddx, ddy) || 1;
+      const nx = -ddy / L * w, ny = ddx / L * w, na = Math.atan2(ddx, -ddy), f = .62 + .5 * Math.abs(Math.cos(na - LIGHT));
+      const at = (x, y, zz, sgn) => P(x + sgn * nx, y + sgn * ny, zz), zt = z + RING_H;
+      const A1 = at(x0, y0, z, 1), A2 = at(x1, y1, z, 1), A3 = at(x1, y1, zt, 1), A4 = at(x0, y0, zt, 1);
+      const B1 = at(x0, y0, z, -1), B2 = at(x1, y1, z, -1), B3 = at(x1, y1, zt, -1), B4 = at(x0, y0, zt, -1);
+      Q.push({ q:[A1, A2, A3, A4], d:(A1[2] + A2[2] + A3[2] + A4[2]) / 4, c:shade(B.o, f) });
+      Q.push({ q:[B1, B2, B3, B4], d:(B1[2] + B2[2] + B3[2] + B4[2]) / 4, c:shade(B.o, f * .9) });
+      Q.push({ q:[B4, B3, A3, A4], d:(A3[2] + A4[2] + B3[2] + B4[2]) / 4 + .02, c:shade(B.t, .9 + .15 * Math.cos(na - LIGHT)) });
+    }
+    Q.sort((a, b) => a.d - b.d);
+    g.globalAlpha = al; for (const o of Q) quad(o.q, o.c); g.globalAlpha = 1;
+  };
+  // กำแพงโค้ง: เส้นโค้งที่ลากลงตามแกน z (ฐานพาราโบลา / ปีกไฮเพอร์โบลา) สูง hz เท่าไอพ่น หนาเล็กน้อย
+  const curveWall = (seg, m) => {
+    const Q = [], w = .13, z0 = 0, z1 = m.hz;
+    for (let i = 0; i < seg.length - 1; i++){
+      const x0 = seg[i][0], y0 = seg[i][1], x1 = seg[i + 1][0], y1 = seg[i + 1][1], ddx = x1 - x0, ddy = y1 - y0, L = Math.hypot(ddx, ddy) || 1;
+      const nx = -ddy / L * w, ny = ddx / L * w, na = Math.atan2(ddx, -ddy), f = .5 + .5 * Math.abs(Math.cos(na - LIGHT));
+      const at = (x, y, z, sg) => P(x + sg * nx, y + sg * ny, z);
+      const A1 = at(x0, y0, z0, 1), A2 = at(x1, y1, z0, 1), A3 = at(x1, y1, z1, 1), A4 = at(x0, y0, z1, 1);
+      const B1 = at(x0, y0, z0, -1), B2 = at(x1, y1, z0, -1), B3 = at(x1, y1, z1, -1), B4 = at(x0, y0, z1, -1);
+      Q.push({ q:[A1, A2, A3, A4], d:(A1[2] + A2[2] + A3[2] + A4[2]) / 4, c:shade(m.col, .55 + .6 * f) });
+      Q.push({ q:[B1, B2, B3, B4], d:(B1[2] + B2[2] + B3[2] + B4[2]) / 4, c:shade(m.col, .5 + .5 * f) });
+      Q.push({ q:[B4, B3, A3, A4], d:(A3[2] + A4[2] + B3[2] + B4[2]) / 4 + .02, c:shade('#e9efff', .85 + .15 * f) });
+    }
+    Q.sort((a, b) => a.d - b.d);
+    for (const o of Q) quad(o.q, o.c);
+  };
+
+  // พื้นแท่นประกอบ (เลื่อนตามยาน) + ตารางพิกัด · แกน x, y ยังอยู่ที่ (0, 0) จริง ผู้เล่นต้องอ่านพิกัดที่เลื่อนไปเอง
+  const FX = GOFF.x, FY = GOFF.y;
+  path(g, [[FX - FLOOR, FY - FLOOR], [FX + FLOOR, FY - FLOOR], [FX + FLOOR, FY + FLOOR], [FX - FLOOR, FY + FLOOR]].map(([x, y]) => P(x, y, 0)), true);
+  g.fillStyle = 'rgba(28,40,110,.78)'; g.fill(); g.strokeStyle = '#3a4a9a'; g.lineWidth = 2; g.stroke();
+  for (let i = -FLOOR; i <= FLOOR; i++){
+    const gx = FX + i, gy = FY + i;
+    g.strokeStyle = gx ? 'rgba(140,170,255,.16)' : 'rgba(180,200,255,.6)'; g.lineWidth = gx ? 1 : 1.6;
+    path(g, [P(gx, FY - FLOOR, 0), P(gx, FY + FLOOR, 0)]); g.stroke();
+    g.strokeStyle = gy ? 'rgba(140,170,255,.16)' : 'rgba(180,200,255,.6)'; g.lineWidth = gy ? 1 : 1.6;
+    path(g, [P(FX - FLOOR, gy, 0), P(FX + FLOOR, gy, 0)]); g.stroke();
+  }
+  const la = Math.max(0, Math.min(1, (G.pitch - 1.0) / .45));
+  const drawAxisNums = () => {                                         // ตัวเลขบนแกน x, y — วาดเป็นชั้นบนสุดของฉาก (มีขอบเข้มกันกลืนกับชิ้นส่วน)
+    if (la <= 0) return;
+    g.save(); g.globalAlpha = la; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+    const tx = (t, q, fill) => { g.strokeStyle = 'rgba(6,10,40,.92)'; g.lineWidth = 3.2; g.strokeText(t, q[0], q[1]); g.fillStyle = fill; g.fillText(t, q[0], q[1]); };
+    g.font = '700 10px "Baloo 2", sans-serif';
+    const stp = sc >= 20 ? 1 : 2;                                       // ซูมออกแล้วตัวเลขแน่น → เว้นทีละ 2
+    for (let i = -FLOOR; i <= FLOOR; i++){ const gx = FX + i, gy = FY + i;
+      if (gx && !(gx % stp)) tx(gsg(gx), P(gx, -.6, 0), '#d6dfff');
+      if (gy && !(gy % stp)) tx(gsg(gy), P(-.7, gy, 0), '#d6dfff'); }
+    tx('O', P(-.6, -.6, 0), '#d6dfff');
+    g.font = '700 12px "Baloo 2", sans-serif'; tx('x', P(FX + FLOOR + .8, .7, 0), '#ffd84a'); tx('y', P(.7, FY + FLOOR + .8, 0), '#ffd84a');
+    g.restore();
+  };
+
+  // ชิ้นส่วนที่ยังไม่ถึงคิวจะซ่อนไว้ (เห็นแค่เส้นประเป้าหมาย) · โผล่ออกมาเมื่อตอบถูกและวงแหวนหล่นลงมาถึงครึ่งทาง
+  const shown = i => GP[i].pre || G.done[i] || !!(G.an && G.an.type === 'up' && i === G.i && (now - G.an.t0) / G.an.d >= .45);
+  // โครงเชื่อมระหว่างโมดูล (ท่อโลหะ)
+  g.lineCap = 'round';
+  for (let i = 1; i < GP.length; i++){
+    if (GP[i].kind !== 'engine' || !shown(i)) continue;
+    const z = Math.min(.45, GP[i].hz * .7), a = P(GP[0].c[0], GP[0].c[1], z), b = P(GP[i].c[0], GP[i].c[1], z);
+    g.strokeStyle = '#2c3668'; g.lineWidth = sc * .38; path(g, [a, b]); g.stroke();
+    g.strokeStyle = '#7f8fd0'; g.lineWidth = sc * .22; path(g, [a, b]); g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,.38)'; g.lineWidth = sc * .06; path(g, [[a[0], a[1] - sc * .05], [b[0], b[1] - sc * .05]]); g.stroke();
+  }
+
+  // เปลวไฟท้ายจรวดและไอพ่น — ขึ้นเมื่อประกอบครบทุกชิ้น
+  if (GP.every((_, i) => G.done[i])){
+    GP.forEach((part, pi) => {
+      if (part.kind !== 'hull' && part.kind !== 'engine') return;
+      const fl = (part.kind === 'hull' ? 1.8 : 1.4) + .45 * Math.sin(now / 70 + pi) + .25 * Math.sin(now / 33 + pi);
+      for (const [rf, zf, col] of [[.62, fl, 'rgba(255,120,40,.55)'], [.4, fl * .78, 'rgba(255,190,70,.8)'], [.2, fl * .5, 'rgba(255,250,200,.95)']]){
+        const tip = P(part.c[0], part.c[1], -zf), pts = [];
+        for (let k = 0; k < 24; k++){ const a = k / 24 * TAU; pts.push(P(part.c[0] + part.rx * rf * Math.cos(a), part.c[1] + part.ry * rf * Math.sin(a), .05)); }
+        for (let k = 0; k < 24; k++) quad([pts[k], pts[(k + 1) % 24], tip], col);
+      }
+    });
+  }
+
+  // โมดูลทั้งหมด (เรียงไกล → ใกล้)
+  const shi = GP.findIndex(m => m.kind === 'shield'), sh = GP[shi];            // เกราะวงรี: วงแหวนครอบทั้งยาน วาดแยกจากชิ้นอื่น
+  const sRz = G.done[shi] ? sh.fitz : (G.an && G.an.type === 'up' && shi === G.i && G.ringA > 0 ? G.ringZ : null), sRa = G.done[shi] ? 1 : G.ringA;
+  if (sRz != null) ringBack(sh.c[0], sh.c[1], sh.rx, sh.ry, sRz, sRa, GOLD);
+  const order = GP.map((m, i) => ({ m, i, d:P(m.c[0], m.c[1], m.hz / 2)[2] })).filter(o => o.m.kind !== 'shield' && !o.m.segs);
+  GP.forEach((m, i) => { if (m.segs) m.segs.forEach((sg, j) => { const q = sg[sg.length >> 1]; order.push({ m, i, br:j, d:P(q[0], q[1], m.hz / 2)[2] }); }); });   // เส้นโค้งแต่ละท่อนเข้าคิวเรียงความลึกด้วย
+  order.sort((a, b) => a.d - b.d);
+  const fins = (m, far) => {                                         // ครีบหาง 4 ด้านของลำตัว (far = ครีบฝั่งไกลวาดก่อนผนัง)
+    for (let k = 0; k < 4; k++){
+      const a = k * PI2; if ((Math.sin(a + G.yaw) > 0) !== far) continue;
+      const ca = Math.cos(a), sa = Math.sin(a), r = m.rx, L = .8, t = .1, f = .75 + .35 * Math.cos(a - LIGHT);
+      const at = (d, z, o) => P(m.c[0] + ca * d - sa * o, m.c[1] + sa * d + ca * o, z);
+      const A = [at(r - .05, .12, t), at(r + L, .12, t), at(r - .05, 2.1, t)], B = [at(r - .05, .12, -t), at(r + L, .12, -t), at(r - .05, 2.1, -t)];
+      quad(B, shade('#b93a50', f * .8)); quad([A[1], B[1], B[2], A[2]], shade('#ff7b8f', f)); quad(A, shade('#e74f66', f));
+    }
+  };
+  for (const { m, i, br } of order){
+    if (br != null){ if (shown(i)) curveWall(m.segs[br], m); continue; }
+    const rx = m.rx, ry = m.ry, cx = m.c[0], cy = m.c[1];
+    const rz = m.pre ? null : G.done[i] ? m.fitz : (G.an && G.an.type === 'up' && i === G.i && G.ringA > 0 ? G.ringZ : null);
+    const ra = G.done[i] ? 1 : G.ringA;
+    if (!shown(i)){ if (rz != null){ ringBack(cx, cy, rx, ry, rz, ra, GOLD); ringFront(cx, cy, rx, ry, rz, ra, GOLD, m.hz); } continue; }   // ชิ้นที่ยังไม่โผล่: เห็นแค่วงแหวนที่กำลังหล่นลงมา
+    const wp = (fx, fy, z, a) => P(cx + fx * Math.cos(a), cy + fy * Math.sin(a), z);
+
+    if (m.kind === 'hull') fins(m, true);
+    if (rz != null) ringBack(cx, cy, rx, ry, rz, ra, GOLD);
+    const bands = bandsOf(m);
+    for (let k = 0; k < KS; k++){                                   // ผนังข้างของโมดูล (แยกเป็นแถบสี)
+      const a1 = k / KS * TAU, a2 = (k + 1) / KS * TAU, am = (a1 + a2) / 2, na = nang(am, rx, ry);
+      if (!facing(na)) continue;
+      const lf = .4 + .75 * (.5 + .5 * Math.cos(na - LIGHT));
+      for (const [z0, z1, c] of bands) quad([wp(rx, ry, z0, a1), wp(rx, ry, z0, a2), wp(rx, ry, z1, a2), wp(rx, ry, z1, a1)], shade(c, lf));
+    }
+    if (m.kind === 'hull'){
+      fins(m, false);
+      for (let j = 0; j < 8; j++){                                  // ช่องหน้าต่างกลมรอบลำตัว
+        const t = j * TAU / 8 + .2, fv = -Math.sin(t + G.yaw);
+        if (cp <= .15 || fv <= .12) continue;
+        const q = wp(rx, ry, 4.5, t), wr = .42 * sc, hx = wr * fv, hy = wr * cp;
+        g.beginPath(); g.ellipse(q[0], q[1], hx * 1.2, hy * 1.2, 0, 0, TAU); g.fillStyle = '#2a3556'; g.fill();
+        const gl = g.createRadialGradient(q[0] - hx * .3, q[1] - hy * .3, 1, q[0], q[1], Math.max(hx, hy));
+        gl.addColorStop(0, '#d8f2ff'); gl.addColorStop(1, '#2a7fd0');
+        g.beginPath(); g.ellipse(q[0], q[1], hx, hy, 0, 0, TAU); g.fillStyle = gl; g.fill();
+      }
+      const tri = [], ap = P(cx, cy, m.hz + 2.6);                   // หัวจรวด (กรวย) + เสาอากาศ
+      for (let k = 0; k < KS; k++){ const a1 = k / KS * TAU, a2 = (k + 1) / KS * TAU, p1 = wp(rx, ry, m.hz, a1), p2 = wp(rx, ry, m.hz, a2);
+        tri.push({ pts:[p1, p2, ap], d:(p1[2] + p2[2] + ap[2]) / 3, f:.4 + .8 * (.5 + .5 * Math.cos((a1 + a2) / 2 - LIGHT)) }); }
+      tri.sort((a, b) => a.d - b.d);
+      for (const t of tri) quad(t.pts, shade('#e74f66', t.f));
+      const ant = P(cx, cy, m.hz + 3.5); g.strokeStyle = '#f2f5ff'; g.lineWidth = 2; path(g, [ap, ant]); g.stroke();
+      g.fillStyle = '#ffd84a'; g.beginPath(); g.arc(ant[0], ant[1], 2.6, 0, TAU); g.fill();
+    } else {                                                        // ฝาบนของโมดูล
+      const top = []; for (let k = 0; k < KS; k++) top.push(wp(rx, ry, m.hz, k / KS * TAU));
+      const c0 = P(cx, cy, m.hz), rs = Math.max(rx, ry) * sc;
+      if (m.kind === 'panel'){                                      // แผงโซลาร์: ช่องเซลล์สีฟ้า
+        const p1 = P(cx - rx, cy, m.hz), p2 = P(cx + rx, cy, m.hz), lg = g.createLinearGradient(p1[0], p1[1], p2[0], p2[1]);
+        lg.addColorStop(0, shade(m.col, 1.3)); lg.addColorStop(1, shade(m.col, .62));
+        path(g, top, true); g.fillStyle = lg; g.fill();
+        g.strokeStyle = 'rgba(255,255,255,.4)'; g.lineWidth = 1;
+        for (const u of [-.75, -.5, -.25, 0, .25, .5, .75]){ const d = Math.sqrt(1 - u * u); path(g, [P(cx + u * rx, cy - ry * d, m.hz), P(cx + u * rx, cy + ry * d, m.hz)]); g.stroke(); }
+        for (const v of [-.5, 0, .5]){ const d = Math.sqrt(1 - v * v); path(g, [P(cx - rx * d, cy + v * ry, m.hz), P(cx + rx * d, cy + v * ry, m.hz)]); g.stroke(); }
+        path(g, top, true); g.strokeStyle = '#e9efff'; g.lineWidth = 1.8; g.stroke();
+      } else {
+        const gr = g.createRadialGradient(c0[0] - rs * .3, c0[1] - rs * .3, 2, c0[0], c0[1], rs * 1.05);
+        gr.addColorStop(0, shade(m.col, 1.3)); gr.addColorStop(1, shade(m.col, .72));
+        path(g, top, true); g.fillStyle = gr; g.fill(); g.strokeStyle = shade(m.col, .55); g.lineWidth = 1.2; g.stroke();
+        if (m.kind === 'dish'){                                     // จานเรดาร์: วงซ้อนกัน + ก้านรับสัญญาณ
+          for (const f of [.74, .48, .22]){ const ring = []; for (let k = 0; k <= KS; k++) ring.push(wp(rx * f, ry * f, m.hz, k / KS * TAU)); path(g, ring); g.strokeStyle = 'rgba(40,50,100,.35)'; g.lineWidth = 1.4; g.stroke(); }
+          const feed = P(cx, cy, m.hz + 1); g.strokeStyle = '#e9efff'; g.lineWidth = 2; path(g, [c0, feed]); g.stroke();
+          g.fillStyle = '#ff5a5a'; g.beginPath(); g.arc(feed[0], feed[1], 3, 0, TAU); g.fill();
+        } else {
+          const inner = []; for (let k = 0; k <= KS; k++) inner.push(wp(rx * .55, ry * .55, m.hz, k / KS * TAU));
+          path(g, inner); g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1.4; g.stroke();
+          if (m.kind === 'engine'){                                 // ท่อพ่นไฟ: ปากท่อสีดำ + ขอบส้มเรืองแสง
+            const hole = []; for (let k = 0; k < KS; k++) hole.push(wp(rx * .6, ry * .6, m.hz, k / KS * TAU));
+            const hg = g.createRadialGradient(c0[0], c0[1], 1, c0[0], c0[1], rs * .62); hg.addColorStop(0, '#ffb347'); hg.addColorStop(.45, '#2a1420'); hg.addColorStop(1, '#0d0a14');
+            path(g, hole, true); g.fillStyle = hg; g.fill(); g.strokeStyle = '#ff8a2a'; g.lineWidth = 2; g.stroke();
+          } else if (m.kind === 'power'){                           // โมดูลพลังงาน: สายฟ้า
+            g.font = `${Math.round(rs * 1.05)}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff8c4'; g.fillText('⚡', c0[0], c0[1] + 1);
+          } else {
+            const hub = []; for (let k = 0; k <= 20; k++) hub.push(wp(rx * .16, ry * .16, m.hz, k / 20 * TAU));
+            path(g, hub, true); g.fillStyle = 'rgba(0,0,0,.35)'; g.fill();
+          }
+          if (m.kind === 'comm'){                                   // ห้องสื่อสาร: เสาอากาศ
+            const mast = P(cx, cy, m.hz + 1.9); g.strokeStyle = '#e9efff'; g.lineWidth = 2.2; path(g, [c0, mast]); g.stroke();
+            g.fillStyle = '#ff5a5a'; g.beginPath(); g.arc(mast[0], mast[1], 3.2, 0, TAU); g.fill();
+            const arm = [P(cx - .6, cy, m.hz + 1.3), P(cx + .6, cy, m.hz + 1.3)]; g.lineWidth = 1.6; path(g, arm); g.stroke();
+          }
+        }
+      }
+    }
+    if (rz != null) ringFront(cx, cy, rx, ry, rz, ra, GOLD, m.hz);
+  }
+
+  if (sRz != null) ringFront(sh.c[0], sh.c[1], sh.rx, sh.ry, sRz, sRa, GOLD, sh.hz);
+  GP.forEach((m, i) => {                                             // ริบบิ้นทองบนฐานโค้ง / ปีกข้าง
+    if (!m.segs) return;
+    const z = G.done[i] ? m.fitz : (G.an && G.an.type === 'up' && i === G.i && G.ringA > 0 ? G.ringZ : null);
+    if (z != null) ribbonSegs(m.segs, z, G.done[i] ? 1 : G.ringA, GOLD);
+  });
+  if (G.done[shi]){                                                  // โดมเกราะเรืองแสงครอบยาน (ขึ้นเมื่อประกอบเกราะแล้ว)
+    const Hd = 9, pl = .5 + .2 * Math.sin(now / 400), dp = (ph, a) => P(sh.c[0] + sh.rx * Math.cos(ph) * Math.cos(a), sh.c[1] + sh.ry * Math.cos(ph) * Math.sin(a), Hd * Math.sin(ph));
+    const base = []; for (let k = 0; k < 48; k++) base.push(dp(0, k / 48 * TAU));
+    path(g, base, true); g.fillStyle = 'rgba(125,249,255,.07)'; g.fill();
+    g.strokeStyle = `rgba(125,249,255,${pl})`; g.lineWidth = 1.2;
+    for (const ph of [0, .4, .8, 1.2]){ const rg = []; for (let k = 0; k <= 48; k++) rg.push(dp(ph, k / 48 * TAU)); path(g, rg); g.stroke(); }
+    for (let j = 0; j < 8; j++){ const mer = []; for (let k = 0; k <= 12; k++) mer.push(dp(k / 12 * PI2, j * TAU / 8)); path(g, mer); g.stroke(); }
+  }
+
+  if (G.bad && G.bad.a > 0){                                         // วงแหวนจากสมการที่ผิด (สีแดง) ครอบลงมาแล้วเข้าไม่พอดี
+    const b = G.bad, jx = Math.sin(now / 35) * .22 * G.shake;
+    if (b.wing) ribbonSegs(b.segs, b.z, b.a, RED, jx);
+    else { ringBack(b.cx + jx, b.cy, b.rx, b.ry, b.z, b.a, RED); ringFront(b.cx + jx, b.cy, b.rx, b.ry, b.z, b.a, RED, -1); }
+    if (G.phase === 'fail' || b.z <= GP[G.i].fitz + .01){
+      const q = P(b.cx, b.cy, b.z + RING_H + .9); g.font = '700 13px "Mitr", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillStyle = '#ff8a8a'; g.fillText('✖ ไม่พอดี', q[0], q[1]);
+    }
+  }
+  // เส้นประเป้าหมาย (สีฟ้า) — เห็นเฉพาะมุมมอง 2D
+  const m = GP[G.i];
+  const ta = (G.phase === '3d' || G.phase === 'fail') ? 0 : Math.max(0, Math.min(1, (G.pitch - 1.0) / .45));
+  if (ta > 0 && !G.done[G.i]){
+    const ring = []; for (let k = 0; k <= 72; k++){ const a = k / 72 * TAU; ring.push(P(m.c[0] + m.rx * Math.cos(a), m.c[1] + m.ry * Math.sin(a), m.hz)); }
+    g.globalAlpha = ta * (.7 + .3 * Math.sin(now / 220));
+    g.setLineDash([8, 5]); g.strokeStyle = '#7df9ff'; g.lineWidth = 3;
+    if (m.segs) m.segs.forEach(sgm => { path(g, sgm.map(q => P(q[0], q[1], m.hz))); g.stroke(); }); else { path(g, ring); g.stroke(); }
+    g.setLineDash([]);
+    g.globalAlpha = ta;
+    g.font = '700 12px "Baloo 2", sans-serif'; g.textAlign = 'left'; g.textBaseline = 'middle';
+    if (m.mode !== 'evtx' && m.mode !== 'para'){                                          // ปลายแกนแบบ evtx ไม่บอกจุดศูนย์กลาง ให้ผู้เล่นหาเอง
+      const c0 = P(m.c[0], m.c[1], m.hz); g.fillStyle = '#7df9ff';
+      g.strokeStyle = '#7df9ff'; g.lineWidth = 1.6; path(g, [[c0[0] - 6, c0[1]], [c0[0] + 6, c0[1]]]); g.stroke(); path(g, [[c0[0], c0[1] - 6], [c0[0], c0[1] + 6]]); g.stroke();
+      g.fillText('C', c0[0] + 8, c0[1] - 9);
+    }
+    if (m.mode === 'point'){ const q = P(m.p[0], m.p[1], m.hz); g.fillStyle = '#ffd84a'; g.beginPath(); g.arc(q[0], q[1], 4.5, 0, TAU); g.fill(); g.fillText('P', q[0] + 8, q[1] - 9); }
+    if (m.mode === 'evtx') m.pts.forEach((p, j) => { const q = P(p[0], p[1], m.hz); g.fillStyle = '#ffd84a'; g.beginPath(); g.arc(q[0], q[1], 4.5, 0, TAU); g.fill(); g.fillText(['V₁', 'V₂', 'W'][j], q[0] + 8, q[1] - 9); });
+    if (m.mode === 'hv') [[m.p, 'P'], [m.pts[0], 'V₁'], [m.pts[1], 'V₂']].forEach(([p, nm]) => { const q = P(p[0], p[1], m.hz); g.fillStyle = '#ffd84a'; g.beginPath(); g.arc(q[0], q[1], 4.5, 0, TAU); g.fill(); g.fillText(nm, q[0] + 8, q[1] - 9); });
+    if (m.mode === 'para') [[m.v, 'V'], [m.pts[0], 'A'], [m.pts[1], 'B']].forEach(([p, nm]) => { const q = P(p[0], p[1], m.hz); g.fillStyle = '#ffd84a'; g.beginPath(); g.arc(q[0], q[1], 4.5, 0, TAU); g.fill(); g.fillText(nm, q[0] + 8, q[1] - 9); });
+    g.globalAlpha = 1;
+  }
+  if (G.flash > 0 && G.fl){                                          // แสงวาบตอนวงแหวนลงถึงที่ (ขาว = พอดี / แดง = ไม่พอดี)
+    const f = G.fl, e = (1 - G.flash) * 1.6, fl = []; for (let k = 0; k <= 72; k++){ const a = k / 72 * TAU; fl.push(P(f.cx + (f.rx + e) * Math.cos(a), f.cy + (f.ry + e) * Math.sin(a), f.z)); }
+    if (f.wing){ g.globalAlpha = G.flash; g.strokeStyle = f.col; g.lineWidth = 3 + (1 - G.flash) * 8; f.segs.forEach(sgm => { path(g, sgm.map(q => P(q[0], q[1], f.z))); g.stroke(); }); g.globalAlpha = 1; }
+    else { g.globalAlpha = G.flash; g.strokeStyle = f.col; g.lineWidth = 4; path(g, fl); g.stroke(); g.globalAlpha = 1; }
+  }
+  drawAxisNums();                                                    // ตัวเลขบนแกนอยู่ชั้นบนสุดเสมอ
+}
+
+/* ---------- แอนิเมชันกล้อง + วงแหวนหล่นลงมา ---------- */
+function gstep(now, dt){
+  const a = G.an, m = GP[G.i], c = G.ct;
+  if (c){                                                            // กล้อง: เลื่อน/ซูม (via = ซูมออกให้เห็นทั้งยานก่อน แล้วซูมเข้าหาชิ้นใหม่)
+    const k = Math.min(1, (now - c.t0) / c.d); let x, y, z;
+    if (c.via && k < .5){ const u = ease(k * 2); x = lerp(c.f[0], GOFF.x, u); y = lerp(c.f[1], GOFF.y, u); z = lerp(c.f[2], 1, u); }
+    else if (c.via){ const u = ease((k - .5) * 2); x = lerp(GOFF.x, c.t[0], u); y = lerp(GOFF.y, c.t[1], u); z = lerp(1, c.t[2], u); }
+    else { const u = ease(k); x = lerp(c.f[0], c.t[0], u); y = lerp(c.f[1], c.t[1], u); z = lerp(c.f[2], c.t[2], u); }
+    G.cx = x; G.cy = y; G.zoom = z; if (k >= 1) G.ct = null;
+  }
+  if (a){
+    const k = Math.min(1, (now - a.t0) / a.d);
+    if (a.type === 'up' || a.type === 'fail'){
+      G.pitch = lerp(PI2, .58, ease(Math.min(1, k / .45))); G.yaw = a.y0 + 2.4 * ease(k);
+      const ok = a.type === 'up', top = m.hz + 3.4;
+      let z, al;
+      if (k < .3){ al = k / .3; z = top; }
+      else if (k < .8){ const u = (k - .3) / .5; al = 1; z = lerp(top, m.fitz, u * u); }
+      else {
+        al = 1; z = m.fitz;
+        if (!a.fit){ a.fit = true; G.flash = 1;
+          G.fl = m.segs ? { wing:true, segs: ok ? m.segs : G.bad.segs, z:m.fitz + RING_H, col: ok ? '#fff6b0' : '#ff6a6a' }
+               : ok ? { cx:m.c[0], cy:m.c[1], rx:m.rx + .17, ry:m.ry + .17, z:m.fitz + RING_H, col:'#fff6b0' } : { cx:G.bad.cx, cy:G.bad.cy, rx:G.bad.rx + .17, ry:G.bad.ry + .17, z:m.fitz + RING_H, col:'#ff6a6a' };
+          if (!ok) G.shake = 1; }
+      }
+      if (ok){ G.ringA = al; G.ringZ = z; } else { G.bad.a = al; G.bad.z = z; }
+      if (k >= 1){
+        G.an = null;
+        if (ok){ G.done[G.i] = true; G.ringA = 0; G.phase = '3d'; gAssembled(); } else { G.phase = 'fail'; gFailed(); }
+      }
+    } else {
+      G.pitch = lerp(a.p0, PI2, ease(k)); G.yaw = lerp(a.y0, 0, ease(k));
+      if (k >= 1){ G.an = null; G.phase = '2d'; }
+    }
+  }
+  if (G.flash > 0) G.flash = Math.max(0, G.flash - dt / 600);
+  if (G.shake > 0) G.shake = Math.max(0, G.shake - dt / 900);
+}
+function gframe(now){
+  if (!G.open) return;
+  G.raf = requestAnimationFrame(gframe);
+  const dt = Math.min(50, now - (G.last || now)); G.last = now;
+  gstep(now, dt);
+  if ((G.phase === '3d' || G.phase === 'fail') && !G.drag) G.yaw += dt * .00035;
+  gdraw();
+}
+
+/* ---------- ส่วนหน้าจอ: โจทย์ ช่องกรอก ปุ่มตัวเลข ---------- */
+function gMsg(text, cls){ const el = $('cgMsg'); el.textContent = text; el.className = 'cg-msg ' + (cls || ''); }
+function gNum(s){ return (s === '' || s === '-') ? NaN : Number(s); }
+function gTexPart(s, v){ const n = gNum(v); return isNaN(n) ? [`(${s}-\\square)^2`, `(${s} − ▢)²`] : n === 0 ? [`${s}^2`, `${s}²`] : n > 0 ? [`(${s}-${n})^2`, `(${s} − ${n})²`] : [`(${s}+${-n})^2`, `(${s} + ${-n})²`]; }
+/* สมการที่ผู้เล่นกรอก → [LaTeX, ข้อความสำรอง]   วงกลม: [h, k, r²]   วงรี/ไฮเพอร์โบลา: [h, a², k, b²]   พาราโบลา: [h, p, k] */
+function gEqTex(shape, nums){
+  const t = v => isNaN(v) ? '\\square' : v, p = v => isNaN(v) ? '▢' : v;
+  if (shape === 'hyper'){                                            // ไฮเพอร์โบลาเปิดซ้าย-ขวา: nums = [h, a², k, b²]
+    const [hx, hp] = gTexPart('x', nums[0]), [ky, kp] = gTexPart('y', nums[2]);
+    return [`\\dfrac{${hx}}{${t(nums[1])}}-\\dfrac{${ky}}{${t(nums[3])}}=1`, `${hp}/${p(nums[1])} − ${kp}/${p(nums[3])} = 1`];
+  }
+  if (shape === 'parab'){                                            // พาราโบลาเปิดขึ้น: nums = [h, p, k]   (x − h)² = 4p(y − k)
+    const [hx, hp] = gTexPart('x', nums[0]), k = nums[2], pv = nums[1];
+    const yl = isNaN(k) ? ['(y-\\square)', '(y − ▢)'] : k === 0 ? ['y', 'y'] : k > 0 ? [`(y-${k})`, `(y − ${k})`] : [`(y+${-k})`, `(y + ${-k})`];
+    const pl = isNaN(pv) ? ['\\square', '▢'] : pv < 0 ? [`(${pv})`, `(${gsg(pv)})`] : [`${pv}`, `${pv}`];
+    return [`${hx}=4\\cdot ${pl[0]}\\cdot ${yl[0]}`, `${hp} = 4·${pl[1]}·${yl[1]}`];
+  }
+  if (shape === 'ellipse'){
+    const [hx, hp] = gTexPart('x', nums[0]), [ky, kp] = gTexPart('y', nums[2]);
+    return [`\\dfrac{${hx}}{${t(nums[1])}}+\\dfrac{${ky}}{${t(nums[3])}}=1`, `${hp}/${p(nums[1])} + ${kp}/${p(nums[3])} = 1`];
+  }
+  const [hx, hp] = gTexPart('x', nums[0]), [ky, kp] = gTexPart('y', nums[1]);
+  return [`${hx}+${ky}=${t(nums[2])}`, `${hp} + ${kp} = ${p(nums[2])}`];
+}
+function gRefresh(){
+  const m = GP[G.i], labels = m.ell ? ['h', 'a²', 'k', 'b²'] : m.par ? ['h', 'p', 'k'] : ['h', 'k', 'r²'];
+  document.querySelectorAll('#cgScreen .cg-f').forEach(b => {
+    const f = +b.dataset.f, v = G.v[f];
+    b.textContent = v === '' ? labels[f] : gsg(v);
+    b.classList.toggle('on', f === G.f); b.classList.toggle('empty', v === '');
+  });
+  const key = G.v.join('|');
+  if (key !== G.pk){ G.pk = key; const [tex, pl] = gEqTex(m.shape, G.v.map(gNum)); window.mgTex($('cgPrev'), tex, pl); }
+}
+function gSetMission(){
+  const m = GP[G.i], c = `C(${gsg(m.c[0])}, ${gsg(m.c[1])})`;
+  G.nf = m.ell ? 4 : 3; G.v = Array(G.nf).fill(''); G.f = 0; G.pk = ''; G.bad = null;
+  const F = i => `<button class="cg-f" data-f="${i}"></button>`;
+  $('cgEq').className = 'cg-eq' + (m.ell ? ' ell' : '');
+  $('cgEq').innerHTML = m.hyp
+    ? `( x − ${F(0)} )² <span class="cg-sl">/</span> ${F(1)} − ( y − ${F(2)} )² <span class="cg-sl">/</span> ${F(3)} = 1`
+    : m.ell
+    ? `( x − ${F(0)} )² <span class="cg-sl">/</span> ${F(1)} + ( y − ${F(2)} )² <span class="cg-sl">/</span> ${F(3)} = 1`
+    : m.par
+    ? `( x − ${F(0)} )² = 4 · ${F(1)} · ( y − ${F(2)} )`
+    : `( x − ${F(0)} )² + ( y − ${F(1)} )² = ${F(2)}`;
+  const pt = p => `(${gsg(p[0])}, ${gsg(p[1])})`;
+  let txt;
+  if (m.mode === 'graph')       txt = `ชิ้นส่วน “${m.n}” · อ่านจากกราฟ: วงกลมประสีฟ้ามีจุดศูนย์กลาง C และรัศมีเท่าไร? เติมสมการให้ถูกเพื่อประกอบ`;
+  else if (m.mode === 'radius') txt = `ชิ้นส่วน “${m.n}” · วงกลมมีจุดศูนย์กลาง ${c} และรัศมี ${m.rtxt || m.rx} หน่วย`;
+  else if (m.mode === 'point')  txt = `ชิ้นส่วน “${m.n}” · วงกลมมีจุดศูนย์กลาง ${c} และผ่านจุด P${pt(m.p)}`;
+  else if (m.mode === 'para')   txt = `ชิ้นส่วน “${m.n}” · พาราโบลาเปิดขึ้น (แกนสมมาตรอยู่แนวตั้ง) มีจุดยอด V${pt(m.v)} และผ่านจุดเชื่อมระหว่างตัวยานกับไอพ่นทั้งสอง A${pt(m.pts[0])}, B${pt(m.pts[1])} (หา p ให้ได้ ฐานจะเลื่อนลงตามแกน z ยาวเท่าไอพ่น)`;
+  else if (m.mode === 'hv')     txt = `ชิ้นส่วน “${m.n}” · ไฮเพอร์โบลาเปิดซ้าย-ขวา อยู่ข้างไอพ่นทั้งสอง )o0o( มีจุดศูนย์กลาง ${c} จุดยอด V₁${pt(m.pts[0])}, V₂${pt(m.pts[1])} แตะขอบนอกของไอพ่นพอดี และกิ่งโค้งผ่านจุด P${pt(m.p)}`;
+  else if (m.mode === 'egraph') txt = `ชิ้นส่วน “${m.n}” · อ่านจากกราฟ: วงรีประสีฟ้ามีจุดศูนย์กลาง C ครึ่งแกนนอน a และครึ่งแกนตั้ง b เท่าไร? เติมสมการวงรีให้ถูก`;
+  else if (m.mode === 'eab')    txt = `ชิ้นส่วน “${m.n}” · วงรีมีจุดศูนย์กลาง ${c} แกนนอนยาว ${2 * m.rx} หน่วย และแกนตั้งยาว ${2 * m.ry} หน่วย`;
+  else                          txt = `ชิ้นส่วน “${m.n}” · วงรีครอบตัวยาน แตะไอพ่นซ้ายและขวาพอดีที่จุด V₁${pt(m.pts[0])}, V₂${pt(m.pts[1])} (ปลายแกนนอน) และผ่านจุด W${pt(m.pts[2])} (ปลายแกนตั้งข้างบน) · หาจุดศูนย์กลางก่อน`;
+  if (m.note) txt += ` · ${m.note}`;
+  $('cgMission').textContent = txt;
+  $('cgProg').textContent = `ชิ้นส่วน ${G.i}/${GP.length - 1}`;
+  $('cgHint').textContent = '👁️ มุมมอง 2D จากด้านบนของยาน';
+  $('cgKeys').style.display = 'grid'; $('cgNext').style.display = 'none';
+  gMsg(m.ell ? 'พิมพ์ตัวเลขลงช่อง h, a², k และ b² (แตะช่องเพื่อเลือก)' : m.par ? 'พิมพ์ตัวเลขลงช่อง h, p และ k (แตะช่องเพื่อเลือก)' : 'พิมพ์ตัวเลขลงช่อง h, k และ r² (แตะช่องเพื่อเลือก)', 'info'); gRefresh();
+}
+function gPress(k){
+  if (G.phase !== '2d') return;
+  if (k === 'ok') return gCheck();
+  if (k === 'next'){ G.f = (G.f + 1) % G.nf; return gRefresh(); }
+  let v = G.v[G.f];
+  if (k === 'back') v = v.slice(0, -1);
+  else if (k === 'neg') v = v.startsWith('-') ? v.slice(1) : '-' + v;
+  else if (v.replace('-', '').length < 3) v += k;
+  G.v[G.f] = v; gRefresh();
+}
+function gCheck(){
+  const m = GP[G.i], nums = G.v.map(gNum);
+  if (nums.some(isNaN)){ gMsg(`กรอกให้ครบทั้ง ${nums.length} ช่องก่อนนะ ✏️`, 'info'); return; }
+  let h, k, A, B, p, ok, okC;
+  if (m.ell){ [h, A, k, B] = nums; okC = h === m.c[0] && k === m.c[1]; ok = okC && A === m.a2 && B === m.b2; }      // วงรี และไฮเพอร์โบลาเปิดซ้าย-ขวา (ช่องเรียงเหมือนกัน)
+  else if (m.par){ [h, p, k] = nums; okC = h === m.par.h && k === m.par.k; ok = okC && p === m.par.p; }
+  else      { [h, k, A] = nums;    okC = h === m.c[0] && k === m.c[1]; ok = okC && A === m.r2; B = A; }
+  if (!ok && m.par && p === 0){ gMsg('p ต้องไม่เป็นศูนย์นะ (ถ้า p = 0 จะไม่เกิดพาราโบลา) 🙂', 'bad'); return; }
+  if (!ok && !m.par && (A <= 0 || B <= 0)){ gMsg(m.ell ? 'a² และ b² ต้องเป็นจำนวนบวกนะ (ครึ่งแกนยกกำลังสองติดลบหรือเป็นศูนย์ไม่ได้) 🙂' : 'r² ต้องเป็นจำนวนบวกนะ (รัศมียกกำลังสองติดลบหรือเป็นศูนย์ไม่ได้) 🙂', 'bad'); return; }
+  if (ok){
+    $('cgMsg').className = 'cg-msg good'; $('cgMsg').innerHTML = '🎉 ถูกต้อง! <span id="cgOK"></span>';
+    const [tex, pl] = gEqTex(m.shape, nums); window.mgTex($('cgOK'), tex, pl);
+    $('cgKeys').style.display = 'none'; $('cgHint').textContent = '🔧 กำลังประกอบชิ้นส่วน…';
+    G.phase = 'anim'; G.an = { type:'up', t0:performance.now(), d:3000, y0:G.yaw, fit:false };
+    return;
+  }
+  let why = 'ยังไม่ถูกนะ ลองอ่านจุดศูนย์กลางและรัศมีอีกครั้ง 🔍';
+  if (m.hyp){
+    why = 'ยังไม่ถูกนะ ลองหาจุดศูนย์กลางจากจุดยอด V₁, V₂ แล้วหา a² จากระยะศูนย์กลาง→จุดยอด ส่วน b² ให้แทนจุด P 🔍';
+    if (okC && A === m.b2 && B === m.a2) why = 'จุดศูนย์กลางถูกแล้ว! แต่ a² กับ b² สลับกัน — ไฮเพอร์โบลานี้เปิดซ้าย-ขวา จึงให้ a² อยู่ใต้ (x − h)² และ b² อยู่ใต้ (y − k)² 💡';
+    else if (okC && (A === Math.sqrt(m.a2) || B === Math.sqrt(m.b2))) why = 'จุดศูนย์กลางถูกแล้ว! แต่ใต้เศษส่วนต้องเป็น a² และ b² (ยกกำลังสองแล้ว) ไม่ใช่ a กับ b 💡';
+    else if (okC && A === m.a2) why = 'a² ถูกแล้ว! ลองแทนจุด P ลงในสมการเพื่อหา b² 💡';
+    else if (okC && B === m.b2) why = 'b² ถูกแล้ว! ลองดู a² จากระยะระหว่างจุดศูนย์กลางกับจุดยอด (แล้วยกกำลังสอง) 💡';
+    else if (okC) why = 'จุดศูนย์กลางถูกแล้ว! a คือระยะจากศูนย์กลางถึงจุดยอด ส่วน b² หาได้จากการแทนจุด P 💡';
+    else why = 'จุดศูนย์กลางต้องอยู่กึ่งกลางระหว่างจุดยอด V₁ กับ V₂ — ใช้สูตรจุดกึ่งกลาง 💡';
+  } else if (m.par){
+    why = 'ยังไม่ถูกนะ จุดยอดคือ (h, k) ส่วน p หาได้จากการแทนจุด A หรือ B ลงใน (x − h)² = 4p(y − k) 🔍';
+    if (okC && p === 4 * m.par.p) why = 'จุดยอดถูกแล้ว! แต่ช่องนี้คือ p ไม่ใช่ 4p (สมการเขียน 4 · p อยู่แล้ว) ลองหารด้วย 4 💡';
+    else if (okC && p === -m.par.p) why = 'จุดยอดถูกแล้ว! แต่พาราโบลานี้เปิดขึ้น p จึงต้องเป็นบวก 💡';
+    else if (okC) why = `จุดยอดถูกแล้ว! แทนจุด A${gpt(m.pts[1])} ลงใน (x − h)² = 4p(y − k) แล้วแก้สมการหา p 💡`;
+    else if (h === -m.par.h && k === -m.par.k) why = 'เครื่องหมายของ h, k สลับกัน ช่อง h, k คือพิกัดจุดยอดตรงๆ (สมการจะเขียน x − h) 💡';
+    else if (h === m.par.k && k === m.par.h) why = 'h กับ k สลับกัน h คือค่า x ของจุดยอด และ k คือค่า y 💡';
+    else why = `จุดยอดต้องเป็นไปตามโจทย์ V${gpt(m.v)}: h คือค่า x และ k คือค่า y ของจุดยอด 💡`;
+  } else if (m.ell){
+    why = 'ยังไม่ถูกนะ ลองหาจุดศูนย์กลาง ครึ่งแกนนอน a และครึ่งแกนตั้ง b อีกครั้ง 🔍';
+    if (okC && A === m.b2 && B === m.a2 && m.a2 !== m.b2) why = 'จุดศูนย์กลางถูกแล้ว! แต่ a² กับ b² สลับกัน — a² อยู่ใต้ (x − h)² (แนวนอน) และ b² อยู่ใต้ (y − k)² (แนวตั้ง) 💡';
+    else if (okC && m.mode === 'eab' && (A === (2 * m.rx) ** 2 || B === (2 * m.ry) ** 2 || A === 2 * m.rx || B === 2 * m.ry)) why = 'จุดศูนย์กลางถูกแล้ว! แต่โจทย์ให้ความยาวของแกนทั้งเส้น (2a, 2b) ต้องแบ่งครึ่งเป็น a, b ก่อน แล้วค่อยยกกำลังสอง 💡';
+    else if (okC && A === m.rx && B === m.ry && (A !== m.a2 || B !== m.b2)) why = 'จุดศูนย์กลางถูกแล้ว! แต่ใต้เศษส่วนต้องเป็น a² และ b² (ยกกำลังสองแล้ว) ไม่ใช่ a กับ b 💡';
+    else if (okC) why = 'จุดศูนย์กลางถูกแล้ว! ลองดูครึ่งแกนนอน a และครึ่งแกนตั้ง b อีกครั้ง แล้วยกกำลังสอง 💡';
+    else if (h === -m.c[0] && k === -m.c[1] && (m.c[0] || m.c[1])) why = 'เครื่องหมายของ h, k สลับกัน ช่อง h, k คือพิกัดจุดศูนย์กลางตรงๆ (สมการจะเขียน x − h) ดูตัวอย่างสมการด้านล่างช่วยเช็กได้ 💡';
+    else if (m.mode === 'evtx') why = 'จุดศูนย์กลางต้องอยู่กึ่งกลางระหว่าง V₁ กับ V₂ — ใช้สูตรจุดกึ่งกลาง ((x₁+x₂)/2 , (y₁+y₂)/2) แล้ว a = ครึ่งหนึ่งของ V₁V₂ และ b = ระยะจากศูนย์กลางถึง W 💡';
+  } else {
+    const r = m.rx;
+    if (okC && Number.isInteger(r) && A === r && r !== m.r2) why = 'จุดศูนย์กลางถูกแล้ว! แต่ฝั่งขวาของสมการคือ r² (รัศมียกกำลังสอง) ไม่ใช่ r 💡';
+    else if (okC) why = m.mode === 'point' ? 'จุดศูนย์กลางถูกแล้ว! ลองหา r² จาก (x_P − h)² + (y_P − k)² 💡' : 'จุดศูนย์กลางถูกแล้ว! ลองดูรัศมีอีกครั้ง แล้วยกกำลังสอง 💡';
+    else if (h === -m.c[0] && k === -m.c[1] && (m.c[0] || m.c[1])) why = 'เครื่องหมายของ h, k สลับกัน ช่อง h, k คือพิกัดจุดศูนย์กลางตรงๆ (สมการจะเขียน x − h) ดูตัวอย่างสมการด้านล่างช่วยเช็กได้ 💡';
+  }
+  G.why = why;
+  const ox = GOFF.x, oy = GOFF.y, cl = v => Math.max(-11, Math.min(11, v)), clx = v => ox + cl(v - ox), cly = v => oy + cl(v - oy);   // หน่วงให้อยู่ในพื้นแท่นรอบตัวยาน
+  if (m.hyp) G.bad = { wing:true, segs: clipSegs(hypBranches(clx(h), A, cly(k), B, 10, 120), FLOOR + .4, ox, oy), cx:ox, cy:oy + 6.5, z:m.hz + 3.4, a:0 };
+  else if (m.par) G.bad = { wing:true, segs: clipSegs([parabPts(clx(h), p, cly(k), 14, 140)], FLOOR + .4, ox, oy), cx:ox, cy:oy - 6.5, z:m.hz + 3.4, a:0 };
+  else G.bad = { cx:clx(h), cy:cly(k), rx:Math.min(11, Math.sqrt(A)), ry:Math.min(11, Math.sqrt(B)), z:m.hz + 3.4, a:0 };
+  $('cgKeys').style.display = 'none'; $('cgHint').textContent = '🔧 กำลังประกอบตามสมการที่กรอก…'; gMsg('🔧 กำลังประกอบตามสมการที่กรอก…', 'info');
+  G.phase = 'anim'; G.an = { type:'fail', t0:performance.now(), d:3000, y0:G.yaw, fit:false };
+}
+function gFailed(){
+  gMsg('❌ ผิดพลาด! วงแหวนประกอบเข้าไม่พอดี\n' + G.why, 'bad');
+  $('cgHint').textContent = '🌀 ลากนิ้วหมุนดูว่าวงแหวนเข้าไม่พอดีตรงไหน';
+  $('cgNext').textContent = '🔧 แก้สมการแล้วลองใหม่'; $('cgNext').style.display = 'block';
+}
+function gAssembled(){
+  const last = G.i === GP.length - 1;
+  $('cgHint').textContent = '🌀 ลากนิ้วเพื่อหมุนดูยาน (3D)';
+  if (last) gMsg('🏆 ประกอบยานอวกาศครบทุกชิ้นส่วนแล้ว! เครื่องยนต์ติดแล้ว ลากหมุนดูยานของเราได้เลย', 'good');
+  $('cgNext').textContent = last ? '🔄 เล่นใหม่' : 'ชิ้นส่วนต่อไป ▶'; $('cgNext').style.display = 'block';
+}
+function gGoCam(to, d, via){ G.ct = { f:[G.cx, G.cy, G.zoom], t:to, t0:performance.now(), d, via }; }
+function gNext(){
+  if (G.phase === 'fail'){                                           // กลับมุมมอง 2D แล้วแก้สมการต่อ (ค่าที่กรอกยังอยู่)
+    G.bad = null; G.yaw = G.yaw - Math.round(G.yaw / TAU) * TAU;
+    G.phase = 'anim'; G.an = { type:'down', t0:performance.now(), d:900, p0:G.pitch, y0:G.yaw };
+    $('cgKeys').style.display = 'grid'; $('cgNext').style.display = 'none';
+    $('cgHint').textContent = '👁️ มุมมอง 2D จากด้านบนของยาน'; gMsg('ลองแก้สมการแล้วตรวจใหม่อีกครั้ง', 'info'); gRefresh();
+    return;
+  }
+  if (G.i === GP.length - 1){ G.i = 1; G.done = [true]; gRandShift(); } else G.i++;      // เล่นใหม่ → สุ่มพิกัดใหม่ทั้งยาน (ลำตัวยานชิ้นที่ 0 ประกอบไว้แล้วเสมอ)
+  G.yaw = G.yaw - Math.round(G.yaw / TAU) * TAU;
+  G.phase = 'anim'; G.an = { type:'down', t0:performance.now(), d:1800, p0:G.pitch, y0:G.yaw };
+  gGoCam(GP[G.i].cam, 1800, true);                                   // ซูมออกให้เห็นทั้งยาน แล้วซูมเข้าหาชิ้นถัดไป
+  gSetMission();
+}
+
+function gBuild(){
+  if ($('cgScreen')) return;
+  const el = document.createElement('div');
+  el.className = 'cn-screen cg-screen'; el.id = 'cgScreen';
+  const keys = ['7', '8', '9', 'back', '4', '5', '6', 'neg', '1', '2', '3', 'next'].map(k =>
+    `<button class="cg-key${k.length > 1 ? ' fn' : ''}" data-k="${k}">${{ back:'⌫', neg:'±', next:'ช่องถัดไป ▶' }[k] || k}</button>`).join('');
+  el.innerHTML = `
+    <div class="cn-top">
+      <button class="back-btn" id="cgBack" aria-label="ย้อนกลับ"><img src="Icon/back.png" alt="ย้อนกลับ"></button>
+      <div class="cn-title">🚀 ประกอบยานอวกาศ</div>
+      <div class="cg-chip" id="cgProg"></div>
+    </div>
+    <div class="cn-view"><canvas id="cgCv"></canvas><div class="cn-hint" id="cgHint"></div></div>
+    <div class="cn-panel">
+      <div class="cg-mission" id="cgMission"></div>
+      <div class="cg-eq" id="cgEq"></div>
+      <div class="cg-prev"><span id="cgPrev"></span></div>
+      <div class="cg-msg info" id="cgMsg"></div>
+      <div class="cg-keys" id="cgKeys">${keys}<button class="cg-key zero" data-k="0">0</button><button class="cg-key ok" data-k="ok">✓ ตรวจคำตอบ</button></div>
+      <button class="cg-next" id="cgNext" style="display:none"></button>
+    </div>`;
+  (document.getElementById('dashboard') || document.body).appendChild(el);
+  $('cgBack').addEventListener('click', closeGame);
+  $('cgNext').addEventListener('click', gNext);
+  $('cgEq').addEventListener('click', e => { const b = e.target.closest('.cg-f'); if (b && G.phase === '2d'){ G.f = +b.dataset.f; gRefresh(); } });   // ช่องถูกสร้างใหม่ทุกชิ้นส่วน จึงใช้ delegation
+  $('cgKeys').addEventListener('click', e => { const b = e.target.closest('.cg-key'); if (b) gPress(b.dataset.k); });
+  const cv = $('cgCv');
+  cv.addEventListener('pointerdown', e => { if (G.phase === '3d' || G.phase === 'fail'){ G.drag = { x:e.clientX, y:e.clientY }; cv.setPointerCapture(e.pointerId); } });
+  cv.addEventListener('pointermove', e => {
+    if (!G.drag) return;
+    G.yaw += (e.clientX - G.drag.x) * .01; G.pitch = Math.max(.25, Math.min(1.25, G.pitch + (e.clientY - G.drag.y) * .006));
+    G.drag = { x:e.clientX, y:e.clientY };
+  });
+  const up = () => { G.drag = null; };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+}
+function openGame(){
+  gBuild();
+  cancelAnimationFrame(S.raf);                                       // พักกรวย 3 มิติไว้ก่อน
+  gRandShift();                                                      // สุ่มพิกัดใหม่ทุกครั้งที่เริ่มเกม
+  Object.assign(G, { open:true, i:1, done:[true], pitch:PI2, yaw:0, phase:'2d', an:null, ringA:0, flash:0, shake:0, fl:null, bad:null, drag:null, last:0, zoom:1, cx:GOFF.x, cy:GOFF.y, ct:null });
+  $('cgScreen').style.display = 'flex';
+  gSetMission();
+  gGoCam(GP[1].cam, 1400, false);                                    // เริ่มจากเห็นทั้งยาน แล้วซูมเข้าหาไอพ่นตัวแรก
+  cancelAnimationFrame(G.raf); G.raf = requestAnimationFrame(gframe);
+}
+function closeGame(){
+  G.open = false; cancelAnimationFrame(G.raf);
+  $('cgScreen').style.display = 'none';
+  if (S.open){ S.last = 0; S.raf = requestAnimationFrame(frame); }
+}
+
+window.openConicScreen = openConicScreen;
+window.closeConicScreen = closeConic;
 })();
