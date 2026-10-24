@@ -596,3 +596,93 @@
 }
 .ld-rock.mother::after{ display:none; }
 .ld-lbl.r.mother{ background:#b9ffd9; color:#0f4a2c; }
+
+
+/* ================= เกมภาคตัดกรวย ================= */
+.cn-screen{
+  display:none; position:fixed; top:0; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px; height:100dvh; z-index:112; flex-direction:column;
+  background:radial-gradient(circle at 50% 30%,#1d2766 0%,#0b1030 72%); color:#e8ecff;
+  font-family:'Mitr',sans-serif; box-shadow:0 0 30px rgba(0,0,0,.6);
+  overflow:hidden; user-select:none; -webkit-user-select:none;
+}
+.cn-top{ display:flex; align-items:center; justify-content:space-between; padding:calc(env(safe-area-inset-top) + 8px) 12px 6px; }
+.cn-title{ font-weight:700; font-size:16px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6); }
+.cn-view{ position:relative; flex:1; min-height:200px; }
+.cn-view canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; cursor:grab; }
+.cn-hint{ position:absolute; left:0; right:0; bottom:4px; text-align:center; font-size:11px; color:#9fb2ff; pointer-events:none; }
+.cn-panel{
+  padding:10px 12px calc(env(safe-area-inset-bottom) + 12px);
+  background:rgba(8,12,40,.88); border-top:2px solid #3a4a9a; border-radius:18px 18px 0 0;
+}
+.cn-btns{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.cn-btn{
+  border:2px solid var(--c); background:#141a4a; color:#fff; border-radius:12px; padding:9px 2px;
+  font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,.4);
+}
+.cn-btn.on{ background:var(--c); color:#10163f; }
+.cn-btn:active{ transform:translateY(2px); box-shadow:none; }
+.cn-slide{ display:flex; align-items:center; gap:8px; margin:10px 0 2px; font-size:12px; color:#bcc8ff; }
+.cn-slide input{ flex:1; accent-color:#ffd84a; }
+.cn-slide b{ min-width:44px; text-align:right; color:#ffd84a; }
+.cn-note{ font-size:10.5px; color:#8f9fe0; margin-bottom:8px; }
+.cn-info{ display:flex; gap:10px; align-items:center; }
+.cn-flat{ width:112px; height:112px; flex:none; border-radius:12px; background:#0b1030; border:2px solid #3a4a9a; }
+.cn-txt{ flex:1; min-width:0; font-size:12px; line-height:1.45; }
+.cn-name{ font-size:17px; font-weight:700; }
+.cn-eq{ font-family:'Baloo 2','Mitr',sans-serif; color:#ffd84a; font-size:13px; font-weight:600; }
+
+/* ---- สมการ LaTeX (KaTeX) ---- */
+.ld-formula .ldf{ display:block; margin:3px 0; }
+.ld-formula .ldf .k{ display:inline-block; }
+.ld-formula .katex{ font-size:1.08em; color:#1d2766; }
+.cn-eqrow{ font-family:'Mitr',sans-serif; font-weight:500; color:#bcc8ff; }
+.cn-eqrow .katex, .cn-erow .katex{ font-size:1.18em; color:#ffd84a; }
+.cn-note .katex{ font-size:1.05em; }
+
+/* ---- ปุ่มเล่นเกม + เกมประกอบยานอวกาศ ---- */
+.cn-play{
+  border:2px solid #ffd84a; background:#ffd84a; color:#5b3a06; border-radius:16px; padding:6px 12px;
+  font-family:'Mitr',sans-serif; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 3px 0 #d9a514;
+  animation:cnPulse 1.6s ease-in-out infinite;
+}
+.cn-play:active{ transform:translateY(2px); box-shadow:none; }
+@keyframes cnPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.07); } }
+.cg-screen{ z-index:113; }
+.cg-chip{ min-width:44px; text-align:right; font-size:12px; font-weight:600; color:#ffd84a; }
+.cg-mission{ font-size:12.5px; line-height:1.5; color:#e8ecff; min-height:38px; margin-bottom:6px; }
+.cg-eq{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:4px;
+  font-family:'Baloo 2','Mitr',sans-serif; font-size:17px; font-weight:600; color:#fff;
+}
+.cg-f{
+  min-width:48px; height:32px; padding:0 6px; border:2px solid #3a4a9a; border-radius:10px; background:#141a4a;
+  color:#ffd84a; font-family:inherit; font-size:16px; font-weight:700; cursor:pointer;
+}
+.cg-f.empty{ color:#6f7fc0; font-weight:500; }
+.cg-f.on{ border-color:#ffd84a; box-shadow:0 0 0 2px rgba(255,216,74,.3); }
+.cg-eq.shake{ animation:cgShake .4s linear; }
+@keyframes cgShake{ 0%,100%{ transform:translateX(0); } 20%,60%{ transform:translateX(-6px); } 40%,80%{ transform:translateX(6px); } }
+.cg-prev{ text-align:center; min-height:30px; margin:2px 0; color:#bcc8ff; font-size:13px; }
+.cg-prev .katex{ font-size:1.15em; color:#7df9ff; }
+.cg-msg{ white-space:pre-line; min-height:34px; text-align:center; font-size:12.5px; font-weight:600; line-height:1.45; margin-bottom:4px; }
+.cg-msg.good{ color:#6ee7b7; } .cg-msg.bad{ color:#ff9a8a; } .cg-msg.info{ color:#9fb2ff; }
+.cg-msg .katex{ color:#ffd84a; }
+.cg-keys{ display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+.cg-key{
+  height:36px; border:none; border-radius:10px; background:#232c70; color:#fff; font-family:'Baloo 2','Mitr',sans-serif;
+  font-size:17px; font-weight:700; cursor:pointer; box-shadow:0 3px 0 #10163f;
+}
+.cg-key:active{ transform:translateY(2px); box-shadow:none; }
+.cg-key.fn{ background:#3a4a9a; font-size:11px; font-family:'Mitr',sans-serif; }
+.cg-key.zero{ grid-column:span 2; }
+.cg-key.ok{ grid-column:span 2; background:#22b573; box-shadow:0 3px 0 #13804f; font-size:14px; font-family:'Mitr',sans-serif; }
+.cg-next{
+  width:100%; height:44px; border:none; border-radius:14px; background:#ffd84a; color:#5b3a06;
+  font-family:'Mitr',sans-serif; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 0 #d9a514;
+}
+.cg-next:active{ transform:translateY(3px); box-shadow:none; }
+/* ---- เกมประกอบยาน: โหมดวงรี (4 ช่อง: h, a², k, b²) ---- */
+.cg-eq.ell{ font-size:14px; gap:3px; }
+.cg-eq.ell .cg-f{ min-width:38px; height:30px; padding:0 4px; font-size:14px; }
+.cg-sl{ color:#9fb2ff; font-weight:400; }
