@@ -18,13 +18,13 @@
         <div class="mg-coin-chip">💰 <span id="mgHubCoins" class="num">0</span></div>
       </div>
       <div class="mghub-grid">
-        <button class="mghub-card" onclick="mgHubGo('math')"><img src="Icon/cal.png" alt=""><b>บวก ลบ คูณ หาร</b><small>ตอบถูกข้อละ +1 💰</small></button>
-        <button class="mghub-card" onclick="mgHubGo('factor')"><img src="Icon/factor.png" alt=""><b>แยกตัวประกอบ</b><small>ลากกล่องไปวางให้ครบ</small></button>
-        <button class="mghub-card" onclick="mgHubGo('equation')"><img src="Icon/equation.png" alt=""><b>แก้สมการ</b><small>หาค่า x และ y</small></button>
-        <button class="mghub-card" onclick="mgHubGo('plant')"><img src="Icon/Plant.png" alt=""><b>แปลงผัก</b><small>ซ่อมเครื่องจักรด้วยคณิตศาสตร์</small></button>
+        <button class="mghub-card" onclick="mgHubGo('math')"><img src="Icon/cal.png" alt=""><b>บวก ลบ คูณ หาร</b><small>ตอบถูกข้อละ +10 💰</small></button>
+        <button class="mghub-card" onclick="mgHubGo('factor')"><img src="Icon/factor.png" alt=""><b>แยกตัวประกอบ</b><small>ถูกข้อละ +20 💰</small></button>
+        <button class="mghub-card" onclick="mgHubGo('equation')"><img src="Icon/equation.png" alt=""><b>แก้สมการ</b><small>ถูกข้อละ +20 💰 (2 ตัวแปร +50)</small></button>
+        <button class="mghub-card" onclick="mgHubGo('plant')"><img src="Icon/Plant.png" alt=""><b>แปลงผัก</b><small>ซ่อมสำเร็จ +500 💰 ต่อแปลง</small></button>
         <button class="mghub-card" onclick="mgHubGo('roulette')"><img src="Icon/random.png" alt=""><b>สุ่มของ</b><small>หมุนวงล้อ 200 💰</small></button>
-        <button class="mghub-card" onclick="mgHubGo('landing')"><span class="mghub-emoji">🚀</span><b>ลงจอดยานอวกาศ</b><small>ใช้สูตรระยะห่างสองจุด</small></button>
-        <button class="mghub-card" onclick="mgHubGo('conic')"><span class="mghub-new">ใหม่!</span><span class="mghub-emoji">🔺</span><b>ภาคตัดกรวย</b><small>ตัดกรวยเป็นวงกลม วงรี พาราโบลา ไฮเพอร์โบลา</small></button>
+        <button class="mghub-card" onclick="mgHubGo('landing')"><span class="mghub-emoji">🚀</span><b>ลงจอดยานอวกาศ</b><small>ลงจอดสำเร็จ +100 💰</small></button>
+        <button class="mghub-card" onclick="mgHubGo('conic')"><span class="mghub-new">ใหม่!</span><span class="mghub-emoji">🔺</span><b>ภาคตัดกรวย</b><small>ประกอบยานครบ 5 ชิ้น +500 💰</small></button>
       </div>
     </div>
 
@@ -42,7 +42,7 @@
       <!-- โหมดตอบโจทย์เลข -->
       <div class="mg-pane" id="mgMathPane">
         <div class="mg-card">
-          <div class="mg-reward-line">ตอบถูกข้อละ <b>+1 💰 เหรียญ</b> และ <b>+1 ⭐ EXP</b></div>
+          <div class="mg-reward-line">ตอบถูกข้อละ <b>+10 💰 เหรียญ</b> และ <b>+10 ⭐ EXP</b></div>
           <div class="mg-timer-track"><div class="mg-timer-fill" id="mgTimerFill"></div></div>
           <div class="mg-timer-text" id="mgTimerText">เหลือเวลา 10 วินาที</div>
           <div class="mg-equation" id="mgEquation">-</div>
@@ -72,7 +72,7 @@
       <!-- โหมดแยกตัวประกอบ -->
       <div class="mg-pane" id="mgFactorPane">
         <div class="mg-card">
-          <div class="mg-reward-line">ลากกล่องไปวางให้ครบ 6 ช่อง แล้วกด <b>ตอบ</b> · ถูกข้อละ <b>+3 💰</b> และ <b>+3 ⭐ EXP</b></div>
+          <div class="mg-reward-line">ลากกล่องไปวางให้ครบ 6 ช่อง แล้วกด <b>ตอบ</b> · ถูกข้อละ <b>+20 💰</b> และ <b>+20 ⭐ EXP</b></div>
           <div id="fcPlay">
             <div class="mg-timer-track"><div class="mg-timer-fill" id="fcTimerFill"></div></div>
             <div class="mg-timer-text" id="fcTimerText">เหลือเวลา 3:00</div>
@@ -95,7 +95,7 @@
       <!-- โหมดแก้สมการ (จับเวลา 3 นาที/ข้อ) -->
       <div class="mg-pane" id="mgEquationPane">
         <div class="mg-card">
-          <div class="mg-reward-line">ถูกข้อละ <b>+5 💰</b> <b>+5 ⭐</b> · แบบ 2 ตัวแปร <b>+6 💰</b> <b>+6 ⭐</b> · ข้อละ 10 นาที</div>
+          <div class="mg-reward-line">ถูกข้อละ <b>+20 💰</b> <b>+20 ⭐</b> · แบบ 2 ตัวแปร <b>+50 💰</b> <b>+50 ⭐</b> · ข้อละ 10 นาที</div>
           <div class="mg-timer-track"><div class="mg-timer-fill" id="eqTimerFill"></div></div>
           <div class="mg-timer-text" id="eqTimerText">เหลือเวลา 3:00</div>
           <div class="mg-equation" id="eqEquation">-</div>
@@ -204,6 +204,17 @@
   };
 
   // 🚀 สะพานเชื่อมให้ landing.js ใช้เหรียญ/EXP/ข้อความของเกมหลัก
+  // 🔺 สะพานเชื่อมให้เกมภาคตัดกรวยใช้เหรียญ/EXP ของเกมหลัก (ประกอบยานครบ 5 ชิ้น)
+  window.ConicHost = {
+    reward(coin, xp){
+      const levelBefore = wallet.level;
+      wallet.coins += coin; wallet.exp += xp;
+      updateWalletUI();
+      if (wallet.level > levelBefore) popMessage(`🎉 เลเวลอัป! ตอนนี้ Lv.${wallet.level}`);
+      saveWalletAndData().catch(() => {});
+    }
+  };
+
   window.LandingHost = {
     coins: () => wallet.coins,
     reward(coin, xp){
@@ -220,17 +231,17 @@
 /* =====================================================================
    🎮 MINIGAME  (ไอคอน Icon/Minigame.png) → เกม 4 ช่องอยู่ในเมนูกระเป๋าเลย กดแล้วเข้าเกมตรงๆ
    1) 🧮 คิดเลข (Icon/cal.png)  บวก ลบ คูณ หาร (ใช้ generateMathChallenge ตัวเดียวกับตอนต่อสู้)
-        ตอบถูกข้อละ +1 เหรียญ +1 EXP
+        ตอบถูกข้อละ +10 เหรียญ +10 EXP
    2) 🎰 สุ่มของ (Icon/random.png)  วงล้อสุ่มไอเทม ราคา 200 เหรียญ / ครั้ง
         รางวัล: อาหาร, วัคซีน, มังกรไฟ (ถ้าสัตว์เต็มคอก → แปลงเป็นเงิน 1,000 เหรียญแทน)
    3) 📐 แก้สมการ (Icon/equation.png)  แบบ 1) ax + b = c  2) a + bx = c  3) ระบบสมการ 2 ตัวแปร  จับเวลา 3 นาที/ข้อ
-        แบบ 1,2 ตอบถูก +5 เหรียญ +5 EXP / แบบ 3 ตอบถูก +6 เหรียญ +6 EXP  (โอกาสออก 1:1:3)
+        แบบ 1,2 ตอบถูก +20 เหรียญ +20 EXP / แบบ 3 ตอบถูก +50 เหรียญ +50 EXP  (โอกาสออก 1:1:3)
    4) 🧩 แยกตัวประกอบ (Icon/factor.png)  x² ± ax ± b ลากกล่องใส่ช่อง ( )( ) จับเวลา 3 นาที/ข้อ (ตอบถูก=นับใหม่, หมดเวลา=เปลี่ยนโจทย์)
-        ตอบถูกข้อละ +3 เหรียญ +3 EXP
+        ตอบถูกข้อละ +20 เหรียญ +20 EXP
 ===================================================================== */
 
-const MG_REWARD_COIN = 1;          // เหรียญต่อ 1 ข้อที่ตอบถูก
-const MG_REWARD_EXP  = 1;          // EXP ต่อ 1 ข้อที่ตอบถูก
+const MG_REWARD_COIN = 10;         // เหรียญต่อ 1 ข้อที่ตอบถูก
+const MG_REWARD_EXP  = 10;         // EXP ต่อ 1 ข้อที่ตอบถูก
 const MG_MATH_NUM_COUNT = 3;       // จำนวนตัวเลขในโจทย์ (3 ตัว เท่ากับสกิล 2 ตอนต่อสู้)
 const ROULETTE_COST = 200;         // ราคาต่อการหมุน 1 ครั้ง
 const ROULETTE_FULL_COINS = 1000;  // เงินที่ได้แทนมังกรไฟ เมื่อสัตว์เต็มคอก
@@ -452,14 +463,14 @@ function mgKeyHandler(e) {
     แบบที่ 3)  ax + by = c  /  ix + jy = k
                สุ่ม x, y ∈ [-9, 9]  → สุ่ม a, i ∈ [1, 5]  → สุ่ม b, j ∈ [-9, 9]
                → คำนวณ c = ax + by,  k = ix + jy   (สุ่มใหม่ถ้า a·j − b·i = 0 เพราะจะหาคำตอบเดียวไม่ได้)
-    รางวัล: แบบ 1, 2 → +5 เหรียญ +5 EXP    แบบ 3 → +6 เหรียญ +6 EXP
+    รางวัล: แบบ 1, 2 → +20 เหรียญ +20 EXP    แบบ 3 → +50 เหรียญ +50 EXP
     เวลา: 3 นาทีต่อข้อ (ตอบถูก/ตอบผิด = ขึ้นข้อใหม่แล้วนับใหม่, หมดเวลา = เฉลยแล้วเปลี่ยนโจทย์) */
 
 const EQ_TIME_LIMIT   = 600;   // วินาที ต่อ 1 โจทย์
-const EQ_REWARD_COIN  = 5;     // แบบที่ 1, 2
-const EQ_REWARD_EXP   = 5;
-const EQ3_REWARD_COIN = 6;     // แบบที่ 3 (2 ตัวแปร)
-const EQ3_REWARD_EXP  = 6;
+const EQ_REWARD_COIN  = 20;     // แบบที่ 1, 2
+const EQ_REWARD_EXP   = 20;
+const EQ3_REWARD_COIN = 50;     // แบบที่ 3 (2 ตัวแปร)
+const EQ3_REWARD_EXP  = 50;
 const EQ_FORM_WEIGHTS = [1, 1, 3];   // แบบที่ 1 : 2 : 3
 
 let eqForm = 1;
@@ -702,8 +713,8 @@ function eqSubmit() {
     ตัด 0 ออก เพราะไม่มีกล่องเลข 0 ให้ลาก และตัดกรณี a = 0 เพื่อให้โจทย์อยู่ในรูป x² ± ax ± b เสมอ */
 
 const FC_TIME_LIMIT  = 180;   // วินาที ต่อ 1 โจทย์ (ตอบถูก/หมดเวลา → เริ่มนับใหม่ที่โจทย์ถัดไป)
-const FC_REWARD_COIN = 3;     // เหรียญต่อข้อที่ถูก
-const FC_REWARD_EXP  = 3;     // EXP ต่อข้อที่ถูก
+const FC_REWARD_COIN = 20;     // เหรียญต่อข้อที่ถูก
+const FC_REWARD_EXP  = 20;     // EXP ต่อข้อที่ถูก
 const FC_MAX_NUM     = 13;    // กล่องเลข 1 – 13
 const FC_SLOT_COUNT  = 6;     // ( x ± n )( x ± n )
 
@@ -1949,6 +1960,7 @@ function slopeCheck(){
   msg(`📈 ที่ x = ${x}: ${nm} = ${Number.isInteger(sl) ? sl : sl.toFixed(2)}  ${txt}`, 'info');
 }
 
+const PL_REWARD_COIN = 500, PL_REWARD_EXP = 100;   // รางวัลต่อแปลงที่ซ่อมสำเร็จ
 function finish(v, r){
   if (!S.open) return;
   S.busy = false; S.anim = null; S.ok = r.ok;
@@ -1958,7 +1970,7 @@ function finish(v, r){
   if (r.ok){
     S.done = true; S.flash = performance.now();
     const left = S.tries;
-    const coin = 4 + 3*S.lvl + 2*left + st.bonus, xp = 3 + 2*S.lvl + left + Math.round(st.bonus/2);
+    const coin = PL_REWARD_COIN, xp = PL_REWARD_EXP;   // ซ่อมสำเร็จ 1 แปลง = +500 เหรียญ +100 EXP (ไม่ขึ้นกับระดับ/น้ำที่เหลือ)
     H.setQ(S.sel, H.today());          // บันทึก Qn = วันนี้ (ลง LastFed) แล้วค่อยให้รางวัล/เซฟ
     H.reward(coin, xp);
     S.save.used[S.sel] = 0; writeSave();
@@ -3046,7 +3058,7 @@ const sq = v => v < 0 ? `(${sg(v)})²` : `${v}²`;
 const MAX_TANKS = 16;
 const PER_CHOICES = [0.5, 1, 1.5, 2];      // เชื้อเพลิง 1 ถังบินได้ไกลกี่เมตร
 const SNAP_DEG = 6;                         // ลากให้ใกล้ทิศเป้าหมายในช่วงนี้ → ลูกศรล็อกเป้าให้
-const REWARD_FIRST = 5, REWARD_RETRY = 3;
+const REWARD_COIN = 100, REWARD_EXP = 50;   // ลงจอดสำเร็จ 1 ครั้ง
 const SOLVED_EASY = 2;                      // 2 ข้อแรก: ให้พิกัด A, B ตรงๆ ก่อน
 const PAIRS     = [[3,4],[5,12],[6,8]];     // คู่อันดับผลต่างพิกัด (ระยะ 5, 13, 10)
 const SOLVED_BRIDGE   = 4;                 // ผ่านครบ 4 ด่าน → ด่านถัดไปเจอ "สะพานอวกาศ" ครั้งแรก (ระยะจากจุดถึงเส้นตรง)
@@ -3496,7 +3508,7 @@ function finish(fx, fy, range){
       g.style.display = lb.style.display = 'block';
       lb.textContent = (m.kind === 'rt' ? '⛽ P ' : 'B ') + pt(m.gx, m.gy); placeLbl(lb, m.gx, m.gy, m.vis / VSPAN * 100 + 1.5);
     }
-    const coin = S.tries === 1 ? REWARD_FIRST : REWARD_RETRY;
+    const coin = REWARD_COIN, xp = REWARD_EXP;
     const dx = m.gx - m.sx, dy = m.gy - m.sy;
     const midLine = `B = ((${sg(m.sx)}+${sg(m.rx)})/2 , (${sg(m.sy)}+${sg(m.ry)})/2) = ${pt(m.gx, m.gy)}`;
     const rs = m.rm + m.rn;
@@ -3509,9 +3521,9 @@ function finish(fx, fy, range){
       const L1 = m.ln[0], L2 = m.ln[1];
       dLine = `d = |c₁ − c₂| / √(a² + b²) = |${sg(L1.c)} − (${sg(L2.c)})| / ${fmt(m.h)} = ${Math.abs(L1.c - L2.c)} / ${fmt(m.h)} = ${fmt(m.d)} เมตร`;
     }
-    setMsg(`🎉 ลงจอดสำเร็จ!${m.kind === 'rt' ? ' เติมเชื้อเพลิงเรียบร้อย ⛽' : ''} +${coin} 💰 +${coin} ⭐\n${m.kind === 'rt' ? rtLine : m.mid ? midLine : dLine}`, 'good');
+    setMsg(`🎉 ลงจอดสำเร็จ!${m.kind === 'rt' ? ' เติมเชื้อเพลิงเรียบร้อย ⛽' : ''} +${coin} 💰 +${xp} ⭐\n${m.kind === 'rt' ? rtLine : m.mid ? midLine : dLine}`, 'good');
     $('ldHint').textContent = `ภารกิจที่สำเร็จ ${S.solved} · กด “ภารกิจต่อไป” เพื่อบินต่อจากจุดนี้`;
-    try { window.LandingHost.reward(coin, coin); } catch(_){}
+    try { window.LandingHost.reward(coin, xp); } catch(_){}
     refreshCoins();
   } else {
     ship.className = 'ld-ship crash';
@@ -3598,7 +3610,7 @@ window.closeLandingScreen = closeLanding;
    • กดปุ่มรูปร่าง → ระนาบเอียงไปมุมที่ถูกต้องแล้วตัดกรวยให้ดู   • สไลเดอร์ปรับมุมเองได้   • ลากนิ้วเพื่อหมุนกรวย
    • คณิตศาสตร์จริง: เส้นกำเนิดกรวยทำมุม α = 35° กับแกน, ระนาบเอียง θ จากแนวนอน
        θ = 0 → วงกลม · θ < 90°−α → วงรี · θ = 90°−α (= 55°) → พาราโบลา · θ > 90°−α → ไฮเพอร์โบลา      e = sin θ / cos α
-   ต้องมี window.mgHubReturn() จากหน้ารวมมินิเกม (ไม่ให้เหรียญ/EXP เพราะเป็นเกมสำรวจ)
+   ต้องมี window.mgHubReturn() จากหน้ารวมมินิเกม (โหมดสำรวจไม่ให้รางวัล · เกมประกอบยานให้ +500 เหรียญ +50 EXP เมื่อครบ 5 ชิ้น ผ่าน window.ConicHost)
    • ปุ่ม "เล่นเกม!" มุมขวาบน → เกมประกอบยานอวกาศด้วยสมการวงกลม (ดูบล็อก GP / gdraw ด้านล่าง)
 ===================================================================== */
 (function(){
@@ -4376,10 +4388,18 @@ function gFailed(){
   $('cgHint').textContent = '🌀 ลากนิ้วหมุนดูว่าวงแหวนเข้าไม่พอดีตรงไหน';
   $('cgNext').textContent = '🔧 แก้สมการแล้วลองใหม่'; $('cgNext').style.display = 'block';
 }
+const GP_REWARD_COIN = 500, GP_REWARD_EXP = 50;   // ประกอบครบ 5 ชิ้น
 function gAssembled(){
   const last = G.i === GP.length - 1;
   $('cgHint').textContent = '🌀 ลากนิ้วเพื่อหมุนดูยาน (3D)';
-  if (last) gMsg('🏆 ประกอบยานอวกาศครบทุกชิ้นส่วนแล้ว! เครื่องยนต์ติดแล้ว ลากหมุนดูยานของเราได้เลย', 'good');
+  if (last){
+    let extra = '';
+    if (!G.paid){                                                    // จ่ายครั้งเดียวต่อรอบ (เล่นใหม่แล้วค่อยรับได้อีก)
+      G.paid = true;
+      try { window.ConicHost.reward(GP_REWARD_COIN, GP_REWARD_EXP); extra = ` +${GP_REWARD_COIN} 💰 +${GP_REWARD_EXP} ⭐`; } catch(_){}
+    }
+    gMsg('🏆 ประกอบยานอวกาศครบทุกชิ้นส่วนแล้ว! เครื่องยนต์ติดแล้ว ลากหมุนดูยานของเราได้เลย' + extra, 'good');
+  }
   $('cgNext').textContent = last ? '🔄 เล่นใหม่' : 'ชิ้นส่วนต่อไป ▶'; $('cgNext').style.display = 'block';
 }
 function gGoCam(to, d, via){ G.ct = { f:[G.cx, G.cy, G.zoom], t:to, t0:performance.now(), d, via }; }
@@ -4391,7 +4411,7 @@ function gNext(){
     $('cgHint').textContent = '👁️ มุมมอง 2D จากด้านบนของยาน'; gMsg('ลองแก้สมการแล้วตรวจใหม่อีกครั้ง', 'info'); gRefresh();
     return;
   }
-  if (G.i === GP.length - 1){ G.i = 1; G.done = [true]; gRandShift(); } else G.i++;      // เล่นใหม่ → สุ่มพิกัดใหม่ทั้งยาน (ลำตัวยานชิ้นที่ 0 ประกอบไว้แล้วเสมอ)
+  if (G.i === GP.length - 1){ G.i = 1; G.done = [true]; G.paid = false; gRandShift(); } else G.i++;      // เล่นใหม่ → สุ่มพิกัดใหม่ทั้งยาน (ลำตัวยานชิ้นที่ 0 ประกอบไว้แล้วเสมอ)
   G.yaw = G.yaw - Math.round(G.yaw / TAU) * TAU;
   G.phase = 'anim'; G.an = { type:'down', t0:performance.now(), d:1800, p0:G.pitch, y0:G.yaw };
   gGoCam(GP[G.i].cam, 1800, true);                                   // ซูมออกให้เห็นทั้งยาน แล้วซูมเข้าหาชิ้นถัดไป
@@ -4438,7 +4458,7 @@ function openGame(){
   gBuild();
   cancelAnimationFrame(S.raf);                                       // พักกรวย 3 มิติไว้ก่อน
   gRandShift();                                                      // สุ่มพิกัดใหม่ทุกครั้งที่เริ่มเกม
-  Object.assign(G, { open:true, i:1, done:[true], pitch:PI2, yaw:0, phase:'2d', an:null, ringA:0, flash:0, shake:0, fl:null, bad:null, drag:null, last:0, zoom:1, cx:GOFF.x, cy:GOFF.y, ct:null });
+  Object.assign(G, { open:true, paid:false, i:1, done:[true], pitch:PI2, yaw:0, phase:'2d', an:null, ringA:0, flash:0, shake:0, fl:null, bad:null, drag:null, last:0, zoom:1, cx:GOFF.x, cy:GOFF.y, ct:null });
   $('cgScreen').style.display = 'flex';
   gSetMission();
   gGoCam(GP[1].cam, 1400, false);                                    // เริ่มจากเห็นทั้งยาน แล้วซูมเข้าหาไอพ่นตัวแรก
