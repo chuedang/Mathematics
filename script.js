@@ -4,6 +4,10 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzTMBFqzbRJNZDIu4lJVUox
   //    ถ้ายังไม่เคยให้อาหารเลย จะนับจากวันที่สัตว์ตัวนั้นเกิด/ซื้อมาแทน
   const PET_DEAD_AFTER_DAYS = 10;
 
+  // ⭐ สัตว์ชนิดที่ "ไม่มีวันตาย" (ยังหิวน้ำ/หิวอาหาร/ป่วยได้ปกติ แค่ไม่ตาย)
+  const PET_IMMORTAL_TYPES = ["firedragon"];
+  function isPetImmortal(pet){ return !!pet && PET_IMMORTAL_TYPES.indexOf(pet.type) !== -1; }
+
   // ⭐ การสุ่มป่วย: สัตว์จะเริ่มเสี่ยงป่วยเมื่อไม่ได้ให้น้ำครบ PET_SICK_NEGLECT_DAYS วัน
   //    สุ่มแยกทีละตัว วันละ 1 ครั้ง/ตัว (โอกาส PET_SICK_CHANCE_PER_DAY ต่อวันที่ละเลย) จึงไม่ป่วยพร้อมกันหมด
   const PET_SICK_NEGLECT_DAYS = 3;
@@ -1505,7 +1509,11 @@ function isMissionDone(mission) {
 
       // 💀 ตายเมื่อไม่ได้กินอาหารเกิน PET_DEAD_AFTER_DAYS วัน (นับจากหมดอิ่ม หรือวันเกิดของตัวนั้น ถ้าใหม่กว่า)
       const hungerStart = (validUntil && validUntil > pet.born) ? validUntil : pet.born;
-      if (!pet.dead && diffDays(nowStr, hungerStart) > PET_DEAD_AFTER_DAYS) pet.dead = true;
+      if (isPetImmortal(pet)) {
+        pet.dead = false;   // 🐉 ไม่มีวันตาย (รวมถึงชุบตัวที่เคยตายไปแล้วในข้อมูลเก่ากลับมา)
+      } else if (!pet.dead && diffDays(nowStr, hungerStart) > PET_DEAD_AFTER_DAYS) {
+        pet.dead = true;
+      }
     });
   }
 
