@@ -3867,6 +3867,24 @@ throw new Error(
     renderBattleSelectLockedPet();
   }
 
+  // 👑 Admin (รหัสนักเรียน "0000" ในชีต Catrpg) ไม่อยู่ใน ranking เพราะไม่มีฝั่ง Kruchauy
+  // → ดึงข้อมูลสดจาก action=visit แล้วเพิ่มเข้ารายชื่อต่อสู้อย่างเดียว (ไม่ยุ่งกับหน้าอันดับ)
+  const ADMIN_ID = "0000";
+  async function fetchAdminAsFriend() {
+    if (String(studentKey || "").trim() === ADMIN_ID) return null;      // ตัวเองเป็น Admin อยู่แล้ว
+    try {
+      const d = await fetchWithRetry(`${API_URL}?action=visit&id=${encodeURIComponent(ADMIN_ID)}`);
+      if (d && d.success && d.student) {
+        const st = Object.assign({}, d.student);
+        const sid = String(st["รหัสนักเรียน"] || "").trim();
+        if (sid && sid !== ADMIN_ID) return null;                         // ได้คนอื่นมา ไม่ใช่ Admin
+        st["รหัสนักเรียน"] = ADMIN_ID;                                    // ใช้เป็น id ตอนบันทึกผลต่อสู้ (saveGameData)
+        return st;
+      }
+    } catch (err) { console.warn("โหลด Admin ไม่สำเร็จ:", err); }
+    return null;
+  }
+
   async function fetchFriendsForBattle() {
     if (battleLockedMyPetIndex === null) {
       const readyIdx = currentStudent.pets.findIndex(p => !p.dead && !isPetBaby(p.born));
@@ -3894,6 +3912,10 @@ throw new Error(
       const data = await fetchWithRetry(`${API_URL}?action=ranking`);
       if (data.success && Array.isArray(data.ranking)) {
         allFriendsCache = data.ranking.filter(s => String(s["รหัสนักเรียน"] || "").trim() !== studentKey);
+        if (!allFriendsCache.some(s => String(s["รหัสนักเรียน"] || "").trim() === ADMIN_ID)) {
+          const adm = await fetchAdminAsFriend();                         // ranking ไม่มี Admin → เติมเข้ามาเฉพาะรายชื่อต่อสู้
+          if (adm) allFriendsCache.push(adm);
+        }
         renderFriendListUI();
       } else {
         area.innerHTML = `<div style="color:#e74f66; font-size:13px;">ไม่สามารถโหลดรายชื่อเพื่อนได้</div>`;
@@ -5144,6 +5166,10 @@ async function openVisitModal() {
     const data = await fetchWithRetry(`${API_URL}?action=ranking`);
     if (data.success && Array.isArray(data.ranking)) {
       visitFriends = data.ranking.filter(s => String(s["รหัสนักเรียน"] || "").trim() !== String(studentKey || "").trim());
+      if (!visitFriends.some(s => String(s["รหัสนักเรียน"] || "").trim() === ADMIN_ID)) {
+        const adm = await fetchAdminAsFriend();                           // 👑 ranking ไม่มี Admin → เติมเข้ารายชื่อบ้านเพื่อน
+        if (adm) visitFriends.push(adm);
+      }
       renderVisitList();
     } else {
       body.innerHTML = "<p style='text-align:center; color:#e74f66;'>ไม่สามารถโหลดรายชื่อบ้านได้</p>";
@@ -5370,6 +5396,10 @@ async function challengeFromVisit() {
       const sid = String(base["รหัสนักเรียน"] || "").trim();
       const fresh = data.ranking.find(s => String(s["รหัสนักเรียน"] || "").trim() === sid);
       if (fresh) friend = fresh;
+      else if (sid === ADMIN_ID) {                                        // 👑 Admin ไม่อยู่ใน ranking → ดึงสดจาก action=visit แทน
+        const adm = await fetchAdminAsFriend();
+        if (adm) friend = adm;
+      }
     }
   } catch (err) { /* ใช้ข้อมูลจากรายชื่อแทน */ }
   setBusy(false);
