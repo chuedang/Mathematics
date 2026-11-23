@@ -139,8 +139,19 @@
 .rl-spin-btn:disabled { background:#c7c4b8; color:#8a887c; box-shadow:0 5px 0 #a9a698; cursor:not-allowed; }
 
 .rl-prize-title { font-size:12px; font-weight:600; color:var(--ink); margin:4px 0 6px; text-align:center; }
-.rl-prize-list { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; width:100%; }
-.rl-mini { aspect-ratio:1/1; background:#fff; border:2px solid #e2d7c3; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:3px; }
+#mgRoulettePane > * { flex-shrink:0; }
+#mgRoulettePane > .rl-prize-list { flex-shrink:1; }
+.rl-prize-list {
+  display:grid; grid-template-columns:repeat(6,1fr); gap:6px; width:100%;
+  flex:1 1 auto; min-height:120px;   /* ใช้พื้นที่ที่เหลือทั้งหมด ถ้ารางวัลเยอะเกินก็เลื่อนในกรอบ */
+  overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y;
+  -webkit-overflow-scrolling:touch; align-content:start;
+  padding:2px 4px 4px 2px; box-sizing:border-box;
+  scrollbar-width:thin; scrollbar-color:#e0b86a transparent;
+}
+.rl-prize-list::-webkit-scrollbar { width:5px; }
+.rl-prize-list::-webkit-scrollbar-thumb { background:#e0b86a; border-radius:3px; }
+.rl-mini { cursor:pointer; aspect-ratio:1/1; background:#fff; border:2px solid #e2d7c3; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:3px; }
 .rl-mini img { width:100%; height:100%; object-fit:contain; }
 
 /* ---------- Result card ---------- */
