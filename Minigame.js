@@ -1,7 +1,7 @@
 /* 🎮 Minigame.js — มินิเกมทั้งหมดอยู่ไฟล์นี้ (ต้องโหลดหลัง script.js และใช้ Minigame.css)
    1) หน้ารวมมินิเกม (ปุ่ม Icon/Minigame.png ในเมนูกระเป๋า → menuGo('minigame') → openMgHub)
-   2) 🧮 คิดเลข  3) 🎰 สุ่มของ  4) 📐 แก้สมการ  5) 🧩 แยกตัวประกอบ
-   6) 🌱 แปลงผัก (2.5D)      7) 🚀 ลงจอดยานอวกาศ      8) 🔺 ภาคตัดกรวย
+   2) 🧮 คิดเลข  3) 🎰 สุ่มของ (ปุ่มแยกข้างมินิเกมในกระเป๋า ไม่อยู่ในหน้ารวมแล้ว)  4) 📐 แก้สมการ  5) 🧩 แยกตัวประกอบ
+   6) 🌱 แปลงผัก (2.5D)      7) 🚀 ลงจอดยานอวกาศ      8) 🔺 ภาคตัดกรวย      9) 🍔 ทำเบอร์เกอร์ (อยู่ท้ายไฟล์นี้ + โฟลเดอร์ Burger/)
    ใช้ตัวแปร/ฟังก์ชันส่วนกลางของ script.js: wallet, inventory, popMessage, updateWalletUI, saveWalletAndData ฯลฯ */
 
 /* ---------- วาง HTML ของหน้าจอเกมทั้งหมดลงใน #dashboard ---------- */
@@ -22,8 +22,8 @@
         <button class="mghub-card" onclick="mgHubGo('factor')"><img src="Icon/factor.png" alt=""><b>แยกตัวประกอบ</b><small>ถูกข้อละ +20 💰</small></button>
         <button class="mghub-card" onclick="mgHubGo('equation')"><img src="Icon/equation.png" alt=""><b>แก้สมการ</b><small>ถูกข้อละ +20 💰 (2 ตัวแปร +50)</small></button>
         <button class="mghub-card" onclick="mgHubGo('plant')"><img src="Icon/Plant.png" alt=""><b>แปลงผัก</b><small>ซ่อมสำเร็จ +500 💰 ต่อแปลง</small></button>
-        <button class="mghub-card" onclick="mgHubGo('roulette')"><img src="Icon/random.png" alt=""><b>สุ่มของ</b><small>หมุนวงล้อ 200 💰</small></button>
         <button class="mghub-card" onclick="mgHubGo('landing')"><span class="mghub-emoji">🚀</span><b>ลงจอดยานอวกาศ</b><small>ลงจอดสำเร็จ +100 💰</small></button>
+        <button class="mghub-card" onclick="mgHubGo('burger')"><span class="mghub-new">ใหม่!</span><span class="mghub-emoji">🍔</span><b>ทำเบอร์เกอร์</b><small>เสิร์ฟครบออเดอร์ +30~130 💰</small></button>
         <button class="mghub-card" onclick="mgHubGo('conic')"><span class="mghub-new">ใหม่!</span><span class="mghub-emoji">🔺</span><b>ภาคตัดกรวย</b><small>ประกอบยานครบ 5 ชิ้น +500 💰</small></button>
       </div>
     </div>
@@ -139,7 +139,7 @@
           </div>
         </div>
         <button class="rl-spin-btn" id="rlSpinBtn" onclick="spinRoulette()">🎰 หมุนเลย! (200 💰)</button>
-        <div class="rl-prize-title" style="margin-top:14px;">ของรางวัลที่ลุ้นได้</div>
+        <div class="rl-prize-title" style="margin-top:14px;">ของรางวัลที่ลุ้นได้ <small style="font-weight:400;color:var(--ink-soft);">(เลื่อนดู / แตะดูชื่อได้)</small></div>
         <div class="rl-prize-list" id="rlPrizeList"></div>
       </div>
 
@@ -173,11 +173,15 @@
     mgFromHub = true;
     if (game === 'plant'){ if (window.openPlantScreen) window.openPlantScreen(); else { popMessage('แปลงผักยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ 🌱'); openMgHub(); } }
     else if (game === 'landing'){ if (window.openLandingScreen) window.openLandingScreen(); else { popMessage('เกมลงจอดยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ 🚀'); openMgHub(); } }
+    else if (game === 'burger'){ if (window.openBurgerScreen) window.openBurgerScreen(); else { popMessage('เกมทำเบอร์เกอร์ยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ 🍔'); openMgHub(); } }
     else if (game === 'conic'){ if (window.openConicScreen) window.openConicScreen(); else { popMessage('เกมภาคตัดกรวยยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ 🔺'); openMgHub(); } }
     else openMinigame(game);
   }
   // เกมปิดแล้ว → ถ้าเข้ามาจากหน้ารวม ให้กลับไปหน้ารวม
   function mgHubReturn(){ if (mgFromHub) openMgHub(); }
+  // 🎰 สุ่มของ: เปิดจากปุ่มในเมนูกระเป๋า (ข้างปุ่มมินิเกม) ไม่ผ่านหน้ารวมมินิเกม → ปิดแล้วกลับหน้าหลัก
+  function openRouletteDirect(){ mgFromHub = false; openMinigame('roulette'); }
+  window.openRouletteDirect = openRouletteDirect;
   window.openMgHub = openMgHub; window.closeMgHub = closeMgHub; window.mgHubGo = mgHubGo; window.mgHubReturn = mgHubReturn;
 
   // 🌱 สะพานเชื่อมให้ plant.js ใช้เหรียญ/EXP/ข้อความของเกมหลัก
@@ -213,6 +217,18 @@
       if (wallet.level > levelBefore) popMessage(`🎉 เลเวลอัป! ตอนนี้ Lv.${wallet.level}`);
       saveWalletAndData().catch(() => {});
     }
+  };
+
+  // 🍔 สะพานเชื่อมให้ burger-game.js ใช้เหรียญ/EXP ของเกมหลัก (ให้ทุกครั้งที่เสิร์ฟครบออเดอร์)
+  window.BurgerHost = {
+    reward(coin, xp){
+      const levelBefore = wallet.level;
+      wallet.coins += coin; wallet.exp += xp;
+      updateWalletUI();
+      if (wallet.level > levelBefore) popMessage(`🎉 เลเวลอัป! ตอนนี้ Lv.${wallet.level}`);
+      saveWalletAndData().catch(() => {});
+    },
+    closed: () => { updateWalletUI(); mgHubReturn(); }
   };
 
   window.LandingHost = {
@@ -1056,16 +1072,26 @@ function rlCardHTML(p) {
   return `<div class="rl-card r-${p.rarity}"><img src="${p.img}" alt=""><span>${p.name}</span></div>`;
 }
 
+let rlPrizeListSorted = [];
+
 function renderRoulettePrizeList() {
   const pool = getRoulettePool();
   const listEl = document.getElementById("rlPrizeList");
   if (listEl) {
     const order = { legend: 0, uncommon: 1, rare: 2, common: 3 };
-    listEl.innerHTML = [...pool]
-      .sort((a, b) => order[a.rarity] - order[b.rarity])
-      .map(p => `<div class="rl-mini r-${p.rarity}" title="${p.name}"><img src="${p.img}" alt="${p.name}"></div>`)
+    rlPrizeListSorted = [...pool].sort((a, b) => order[a.rarity] - order[b.rarity]);
+    listEl.innerHTML = rlPrizeListSorted
+      .map((p, i) => `<div class="rl-mini r-${p.rarity}" title="${p.name}" onclick="rlShowPrizeInfo(${i})"><img src="${p.img}" alt="${p.name}"></div>`)
       .join("");
   }
+}
+
+// แตะไอคอนในรายการของรางวัล → บอกชื่อ + โอกาสที่จะได้
+function rlShowPrizeInfo(i) {
+  const p = rlPrizeListSorted[i];
+  if (!p) return;
+  const pct = Math.round(p.weight * 10) / 10;
+  popMessage(`${p.name} · โอกาส ${pct}%`);
 }
 
 // แถบเริ่มต้น (ก่อนหมุนครั้งแรก) ให้มีไอเทมโชว์เต็มหน้าต่าง
@@ -3868,7 +3894,7 @@ const GP = [   // ชิ้นส่วนของยาน: c = จุดศ�
     bands:[[0, .32, '#59627c'], [.32, 3.2, '#dfe7ff'], [3.2, 3.7, '#e74f66'], [3.7, 5.4, '#dfe7ff']] },
   // ไอพ่น 2 ตัว: วงกลมรัศมี 2 (r² = 4) สมการเหมือนกัน เปลี่ยนแค่จุดศูนย์กลาง · ขอบในอยู่ที่ x = ±4 ขอบนอกที่ x = ±8
   { n:'ไอพ่นซ้าย',  kind:'engine', c:[-6, 0], r2:4, hz:1.7, fitz:.7, col:'#ff9f68', mode:'radius', cam:[-6, 0, 2.4] },
-  { n:'ไอพ่นขวา',   kind:'engine', c:[6, 0],  r2:4, hz:1.7, fitz:.7, col:'#ff9f68', mode:'radius', cam:[6, 0, 2.4], note:'สมการวงกลมเหมือนไอพ่นซ้าย เปลี่ยนแค่จุดศูนย์กลาง' },
+  { n:'ไอพ่นขวา',   kind:'engine', c:[6, 0],  r2:4, hz:1.7, fitz:.7, col:'#ff9f68', mode:'radius', cam:[6, 0, 2.4] },
   // เกราะ: วงรี x²/16 + y²/9 = 1 ครอบตัวยาน ปลายแกนนอน (±4, 0) แตะขอบในของไอพ่นทั้งสองพอดี
   { n:'เกราะป้องกัน', kind:'shield', c:[0, 0],  a2:16, b2:9, hz:.3, fitz:.05, col:'#7df9ff', mode:'evtx', pts:[[-4, 0], [4, 0], [0, 3]], cam:[0, 0, 2] },
   // ฐานโค้ง: พาราโบลา (x − h)² = 4p(y − k) จุดยอด (0, −4) ผ่านจุดต่อยาน-ไอพ่น (±4, 0) → p = 1  (x² = 4(y + 4)) ลากลงตามแกน z สูงเท่าไอพ่น
@@ -4194,10 +4220,29 @@ function gdraw(){
       g.strokeStyle = '#7df9ff'; g.lineWidth = 1.6; path(g, [[c0[0] - 6, c0[1]], [c0[0] + 6, c0[1]]]); g.stroke(); path(g, [[c0[0], c0[1] - 6], [c0[0], c0[1] + 6]]); g.stroke();
       g.fillText('C', c0[0] + 8, c0[1] - 9);
     }
-    if (m.mode === 'point'){ const q = P(m.p[0], m.p[1], m.hz); g.fillStyle = '#ffd84a'; g.beginPath(); g.arc(q[0], q[1], 4.5, 0, TAU); g.fill(); g.fillText('P', q[0] + 8, q[1] - 9); }
-    if (m.mode === 'evtx') m.pts.forEach((p, j) => { const q = P(p[0], p[1], m.hz); g.fillStyle = '#ffd84a'; g.beginPath(); g.arc(q[0], q[1], 4.5, 0, TAU); g.fill(); g.fillText(['V₁', 'V₂', 'W'][j], q[0] + 8, q[1] - 9); });
-    if (m.mode === 'hv') [[m.p, 'P'], [m.pts[0], 'V₁'], [m.pts[1], 'V₂']].forEach(([p, nm]) => { const q = P(p[0], p[1], m.hz); g.fillStyle = '#ffd84a'; g.beginPath(); g.arc(q[0], q[1], 4.5, 0, TAU); g.fill(); g.fillText(nm, q[0] + 8, q[1] - 9); });
-    if (m.mode === 'para') [[m.v, 'V'], [m.pts[0], 'A'], [m.pts[1], 'B']].forEach(([p, nm]) => { const q = P(p[0], p[1], m.hz); g.fillStyle = '#ffd84a'; g.beginPath(); g.arc(q[0], q[1], 4.5, 0, TAU); g.fill(); g.fillText(nm, q[0] + 8, q[1] - 9); });
+    // จุดสำคัญ: วาดวงกลมเหลืองบนกราฟ · ถ้าจุดอยู่นอกจอ (กล้องซูมเข้า) จะขึ้นกรอบบอกพิกัดที่ขอบจอแทน
+    const markPt = (p, nm) => {
+      const q = P(p[0], p[1], m.hz), mg = 14;
+      const out = q[0] < mg || q[0] > W - mg || q[1] < mg || q[1] > Hh - mg;
+      if (!out){ g.fillStyle = '#ffd84a'; g.beginPath(); g.arc(q[0], q[1], 4.5, 0, TAU); g.fill(); g.fillText(nm, q[0] + 8, q[1] - 9); return; }
+      const bx = Math.max(mg + 4, Math.min(W - mg - 4, q[0])), by = Math.max(mg + 4, Math.min(Hh - mg - 4, q[1]));
+      const ang = Math.atan2(q[1] - Hh / 2, q[0] - W / 2), txt = `${nm} ${gpt(p)}`;
+      g.save(); g.font = '700 12px "Baloo 2", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      const tw = g.measureText(txt).width + 16, th = 22;
+      const rx0 = Math.max(4, Math.min(W - tw - 4, bx - tw / 2)), ry0 = Math.max(4, Math.min(Hh - th - 4, by - th / 2));
+      g.fillStyle = 'rgba(8,14,50,.92)'; g.strokeStyle = '#ffd84a'; g.lineWidth = 1.6;
+      g.beginPath(); g.moveTo(rx0 + 6, ry0); g.lineTo(rx0 + tw - 6, ry0); g.quadraticCurveTo(rx0 + tw, ry0, rx0 + tw, ry0 + 6);
+      g.lineTo(rx0 + tw, ry0 + th - 6); g.quadraticCurveTo(rx0 + tw, ry0 + th, rx0 + tw - 6, ry0 + th); g.lineTo(rx0 + 6, ry0 + th);
+      g.quadraticCurveTo(rx0, ry0 + th, rx0, ry0 + th - 6); g.lineTo(rx0, ry0 + 6); g.quadraticCurveTo(rx0, ry0, rx0 + 6, ry0); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = '#ffd84a'; g.fillText(txt, rx0 + tw / 2, ry0 + th / 2 + 1);
+      const ax = rx0 + tw / 2 + Math.cos(ang) * (tw / 2 + 6), ay = ry0 + th / 2 + Math.sin(ang) * (th / 2 + 6);   // ลูกศรชี้ไปทางที่จุดอยู่
+      g.beginPath(); g.moveTo(ax + Math.cos(ang) * 7, ay + Math.sin(ang) * 7); g.lineTo(ax + Math.cos(ang + 2.4) * 5, ay + Math.sin(ang + 2.4) * 5); g.lineTo(ax + Math.cos(ang - 2.4) * 5, ay + Math.sin(ang - 2.4) * 5); g.closePath(); g.fill();
+      g.restore();
+    };
+    if (m.mode === 'point') markPt(m.p, 'P');
+    if (m.mode === 'evtx') m.pts.forEach((p, j) => markPt(p, ['V₁', 'V₂', 'W'][j]));
+    if (m.mode === 'hv') [[m.p, 'P'], [m.pts[0], 'V₁'], [m.pts[1], 'V₂']].forEach(([p, nm]) => markPt(p, nm));
+    if (m.mode === 'para') [[m.v, 'V'], [m.pts[0], 'A'], [m.pts[1], 'B']].forEach(([p, nm]) => markPt(p, nm));
     g.globalAlpha = 1;
   }
   if (G.flash > 0 && G.fl){                                          // แสงวาบตอนวงแหวนลงถึงที่ (ขาว = พอดี / แดง = ไม่พอดี)
@@ -4303,14 +4348,16 @@ function gSetMission(){
     : `( x − ${F(0)} )² + ( y − ${F(1)} )² = ${F(2)}`;
   const pt = p => `(${gsg(p[0])}, ${gsg(p[1])})`;
   let txt;
-  if (m.mode === 'graph')       txt = `ชิ้นส่วน “${m.n}” · อ่านจากกราฟ: วงกลมประสีฟ้ามีจุดศูนย์กลาง C และรัศมีเท่าไร? เติมสมการให้ถูกเพื่อประกอบ`;
-  else if (m.mode === 'radius') txt = `ชิ้นส่วน “${m.n}” · วงกลมมีจุดศูนย์กลาง ${c} และรัศมี ${m.rtxt || m.rx} หน่วย`;
-  else if (m.mode === 'point')  txt = `ชิ้นส่วน “${m.n}” · วงกลมมีจุดศูนย์กลาง ${c} และผ่านจุด P${pt(m.p)}`;
-  else if (m.mode === 'para')   txt = `ชิ้นส่วน “${m.n}” · พาราโบลาเปิดขึ้น (แกนสมมาตรอยู่แนวตั้ง) มีจุดยอด V${pt(m.v)} และผ่านจุดเชื่อมระหว่างตัวยานกับไอพ่นทั้งสอง A${pt(m.pts[0])}, B${pt(m.pts[1])} (หา p ให้ได้ ฐานจะเลื่อนลงตามแกน z ยาวเท่าไอพ่น)`;
-  else if (m.mode === 'hv')     txt = `ชิ้นส่วน “${m.n}” · ไฮเพอร์โบลาเปิดซ้าย-ขวา อยู่ข้างไอพ่นทั้งสอง )o0o( มีจุดศูนย์กลาง ${c} จุดยอด V₁${pt(m.pts[0])}, V₂${pt(m.pts[1])} แตะขอบนอกของไอพ่นพอดี และกิ่งโค้งผ่านจุด P${pt(m.p)}`;
-  else if (m.mode === 'egraph') txt = `ชิ้นส่วน “${m.n}” · อ่านจากกราฟ: วงรีประสีฟ้ามีจุดศูนย์กลาง C ครึ่งแกนนอน a และครึ่งแกนตั้ง b เท่าไร? เติมสมการวงรีให้ถูก`;
-  else if (m.mode === 'eab')    txt = `ชิ้นส่วน “${m.n}” · วงรีมีจุดศูนย์กลาง ${c} แกนนอนยาว ${2 * m.rx} หน่วย และแกนตั้งยาว ${2 * m.ry} หน่วย`;
-  else                          txt = `ชิ้นส่วน “${m.n}” · วงรีครอบตัวยาน แตะไอพ่นซ้ายและขวาพอดีที่จุด V₁${pt(m.pts[0])}, V₂${pt(m.pts[1])} (ปลายแกนนอน) และผ่านจุด W${pt(m.pts[2])} (ปลายแกนตั้งข้างบน) · หาจุดศูนย์กลางก่อน`;
+  // ข้อความโจทย์: บอกแค่วิธีดูสั้นๆ — ไม่บอกค่า/พิกัดใดๆ ให้อ่านจากกราฟเอง (เส้นประสีฟ้า + จุดเหลืองบนกราฟ)
+  const lead = `ชิ้นส่วน “${m.n}” · `;
+  if (m.mode === 'graph')       txt = lead + 'ดูวงกลมสีฟ้าบนกราฟ อ่านจุดศูนย์กลาง C และรัศมี แล้วเติมสมการ';
+  else if (m.mode === 'radius') txt = lead + 'อ่านจุดศูนย์กลาง C และรัศมีของวงกลมจากกราฟ (ช่องสุดท้ายคือ r²)';
+  else if (m.mode === 'point')  txt = lead + 'อ่านจุดศูนย์กลาง C และจุด P จากกราฟ รัศมีคือระยะจาก C ถึง P';
+  else if (m.mode === 'para')   txt = lead + 'พาราโบลา: อ่านจุดยอด V และจุด A, B จากกราฟ แล้วหาค่า p';
+  else if (m.mode === 'hv')     txt = lead + 'ไฮเพอร์โบลา: อ่านจุดศูนย์กลาง C จุดยอด V₁, V₂ และจุด P จากกราฟ';
+  else if (m.mode === 'egraph') txt = lead + 'ดูวงรีสีฟ้าบนกราฟ อ่านจุดศูนย์กลาง C ครึ่งแกนนอน a และครึ่งแกนตั้ง b แล้วเติมสมการ';
+  else if (m.mode === 'eab')    txt = lead + 'อ่านจุดศูนย์กลาง C และความยาวแกนนอน/แกนตั้งของวงรีจากกราฟ (ครึ่งแกน = a, b)';
+  else                          txt = lead + 'วงรี: อ่านจุด V₁, V₂, W จากกราฟ แล้วหาจุดศูนย์กลาง C ครึ่งแกนนอน a และครึ่งแกนตั้ง b';
   if (m.note) txt += ` · ${m.note}`;
   $('cgMission').textContent = txt;
   $('cgProg').textContent = `ชิ้นส่วน ${G.i}/${GP.length - 1}`;
@@ -4360,7 +4407,7 @@ function gCheck(){
     else if (okC) why = `จุดยอดถูกแล้ว! แทนจุด A${gpt(m.pts[1])} ลงใน (x − h)² = 4p(y − k) แล้วแก้สมการหา p 💡`;
     else if (h === -m.par.h && k === -m.par.k) why = 'เครื่องหมายของ h, k สลับกัน ช่อง h, k คือพิกัดจุดยอดตรงๆ (สมการจะเขียน x − h) 💡';
     else if (h === m.par.k && k === m.par.h) why = 'h กับ k สลับกัน h คือค่า x ของจุดยอด และ k คือค่า y 💡';
-    else why = `จุดยอดต้องเป็นไปตามโจทย์ V${gpt(m.v)}: h คือค่า x และ k คือค่า y ของจุดยอด 💡`;
+    else why = 'ลองอ่านพิกัดจุดยอด V จากกราฟอีกครั้ง: h คือค่า x และ k คือค่า y ของจุดยอด 💡';
   } else if (m.ell){
     why = 'ยังไม่ถูกนะ ลองหาจุดศูนย์กลาง ครึ่งแกนนอน a และครึ่งแกนตั้ง b อีกครั้ง 🔍';
     if (okC && A === m.b2 && B === m.a2 && m.a2 !== m.b2) why = 'จุดศูนย์กลางถูกแล้ว! แต่ a² กับ b² สลับกัน — a² อยู่ใต้ (x − h)² (แนวนอน) และ b² อยู่ใต้ (y − k)² (แนวตั้ง) 💡';
@@ -4472,4 +4519,523 @@ function closeGame(){
 
 window.openConicScreen = openConicScreen;
 window.closeConicScreen = closeConic;
+})();
+
+/* ======================================================================
+   🍔 มินิเกมทำเบอร์เกอร์ (รวมจาก burger-game.js เดิม) — ภาพอยู่ในโฟลเดอร์ Burger/ · CSS ใส่ไว้ในโค้ดส่วนนี้เอง
+   ====================================================================== */
+/* 🍔 burger-game.js — มินิเกมทำเบอร์เกอร์ (ภาพทั้งหมดอยู่ในโฟลเดอร์ Burger/)
+   เลย์เอาต์ใหม่ (ตามภาพ Burger_shop.jpg): ทุกอย่างอยู่บนโต๊ะในฉากเดียว
+   • กลางโต๊ะ = ถาดสีแดง → ลากวัตถุดิบมาเรียงเบอร์เกอร์บนถาดนี้เลย (ลากเบอร์เกอร์บนถาดขึ้นไปที่หน้าต่างเพื่อเสิร์ฟ)
+   • ฝั่งซ้ายบนโต๊ะ = ตู้กดน้ำ (+ แก้วเปล่า) · ฝั่งขวาบนโต๊ะ = เฟรนฟราย (กองใหญ่ + กล่อง)
+   • ใต้โต๊ะ = แถววัตถุดิบเบอร์เกอร์แนวนอน (ลากขึ้นไปวางบนถาด หรือแตะเพื่อใส่ทีละชั้น) + ปุ่มเอาชั้นบนออก / ถังขยะ
+   • ลูกค้ายืนในช่องหน้าต่าง · เสิร์ฟ = ลากเบอร์เกอร์ / กล่องเฟรนฟราย / แก้วโคล่าไปวางที่ช่องหน้าต่าง
+   • ตำแหน่งทุกชิ้นในฉากเป็น % ของภาพ 1199×1130 (ถาด x 21.9–79.4% · y 70.4–92.9%) → ปรับตำแหน่งได้ที่ CSS ด้านล่าง
+   • ต้องโหลดหลัง Minigame.js (ใช้ window.BurgerHost ให้เหรียญ/EXP) · CSS ใส่ในไฟล์นี้เอง ไม่ต้องแก้ไฟล์ .css */
+(function () {
+  'use strict';
+
+  /* ---------- ค่าที่ปรับได้ ---------- */
+  const IMG = 'Burger/';
+  const SHOP_BG = IMG + 'Burger_shop.jpg';   // ภาพพื้นหลังร้าน 1199×1130
+  const CUSTOMER_INTERVAL = 60;   // วินาที ต่อลูกค้า 1 คน
+  const PATIENCE = 100;           // วินาทีที่ลูกค้ายอมรอหลังถึงเคาน์เตอร์
+  const FILL_TIME = 3;            // วินาทีที่เครื่องกดน้ำเติมโคล่า
+  const MAX_LAYERS = 12, MAX_QUEUE = 3;   // MAX_LAYERS = จำนวนชั้นสูงสุดที่วางบนถาดได้
+  const TALL_CHANCE = .3;         // โอกาสที่ลูกค้าจะสั่งเบอร์เกอร์สูง (9–11 ชั้น)
+  const RUSH_AFTER = 20;          // รอไปแล้วกี่วินาที ถึงจะสุ่มว่าลูกค้าคนถัดไปจะมาเลยไหม (สุ่มครั้งเดียวต่อรอบ)
+  const RUSH_CHANCE = .2;         // โอกาสที่ลูกค้าคนถัดไปจะมาเลยตอนสุ่ม
+  const CUSTOMER_MAX_PROBE = 40;  // ใส่รูป Burger/customer_1.png ... customer_40.png กี่รูปก็ได้ (เว้นเลขได้) ระบบหาเองแล้วสุ่ม
+  const POS = [30, 17, 5];        // ตำแหน่ง (% ความกว้างฉาก) คนหน้าเคาน์เตอร์ / คนที่ต่อคิว
+  const WALK_MS = 2000;
+  const STACK_W = .0022;          // ขนาดเบอร์เกอร์บนถาด: สเกล = ความกว้างฉาก(px) × ค่านี้ (ขนมปัง 132px × สเกล)
+  const STACK_MAX_H = .40;        // เบอร์เกอร์บนถาดสูงไม่เกินกี่ส่วนของความสูงฉาก (ชั้นเยอะจะย่ออัตโนมัติ)
+
+  // ชั้นเบอร์เกอร์: w = ความกว้างบนจาน(px), t = ความหนาที่เห็นก่อนชั้นถัดไปมาทับ(px), a = สัดส่วนสูง/กว้างของรูป, dy = เลื่อนรูปลง(ค่าลบ, px) ให้แนบกับชั้นข้างล่าง
+    const LAYERS = {
+    bunB:   { img: 'bun_bottom', name: 'ขนมปังล่าง', w: 112, t: 22, a: 170 / 339 },
+    patty:  { img: 'patty', name: 'เนื้อ', w: 120, t: 22, a: 180 / 339 },
+    lettuce:{ img: 'lettuce', name: 'ผัก', w: 128, t: 14, a: 196 / 340 },
+    cheese: { img: 'cheese', name: 'ชีส', w: 128, t: 17, dy: -20, a: 179 / 340 },
+    onion:  { img: 'onion', name: 'หอมใหญ่', w: 122, t: 17, a: 155 / 300 },
+    tomato: { img: 'tomato', name: 'มะเขือเทศ', w: 122, t: 3, dy: -13, a: 182 / 294 },
+    bunT:   { img: 'bun_top', name: 'ขนมปังบน', w: 127, t: 40, a: 183 / 340 }
+  };
+  const ING_ORDER = ['bunB', 'patty', 'lettuce', 'cheese', 'onion', 'tomato', 'bunT'];
+  const KIND_NAME = { burger: 'เบอร์เกอร์', fries: 'เฟรนฟราย', cola: 'โคล่า' };
+
+  /* ---------- CSS ----------
+     ฉาก (.bg-stage) คืออัตราส่วนเดียวกับภาพ 1199:1130 ทุกอย่างในฉากวางเป็น % ของภาพ → ตรงกับหน้าต่าง/โต๊ะ/ถาดในรูปเสมอ
+     พิกัดอ้างอิงในรูป: หน้าต่าง x 14.5%–87.5% · ขอบโต๊ะ y ≈ 68% · ถาด x 21.9–79.4% y 70.4–92.9% (กึ่งกลาง 50.6%, 81.6%) */
+  const css = `
+  .bg-screen,.bg-screen *{box-sizing:border-box}
+  .bg-screen{display:none;position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:100dvh;z-index:112;flex-direction:column;
+    padding:calc(env(safe-area-inset-top) + 8px) 12px 0;
+    background:linear-gradient(180deg,#341b1b 0,#4a2724 40%,#5a302b 100%);box-shadow:0 0 30px rgba(0,0,0,.5);overflow:hidden;
+    user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;font-family:'Mitr',sans-serif}
+  .bg-screen img{-webkit-user-drag:none;user-drag:none}
+  .bg-screen .mg-top-bar{padding-bottom:8px}
+  .bg-screen .mg-title{color:#fff3df;text-shadow:0 1px 3px rgba(0,0,0,.55)}
+
+  /* --- ฉากร้าน (โต๊ะ + ถาด + ตู้น้ำ + เฟรนฟราย อยู่ในนี้ทั้งหมด) --- */
+  .bg-scene{position:relative;flex:0 0 auto;width:calc(100% + 24px);margin:0 -12px;aspect-ratio:1199/1130;max-height:calc(100dvh - 250px);min-height:240px;overflow:hidden;background:#fde4c2}
+  .bg-stage{position:absolute;left:0;bottom:0;width:100%;aspect-ratio:1199/1130;background:url(${SHOP_BG}) 0 0/100% 100% no-repeat}
+  .bg-lane{position:absolute;inset:0;z-index:5;clip-path:inset(0 13.5% 0 16.5%)}   /* ลูกค้าเดินอยู่หลังกรอบหน้าต่าง */
+  .bg-window{position:absolute;left:14.5%;width:73%;top:6%;height:58%;z-index:8}   /* ช่องหน้าต่าง = จุดเสิร์ฟ */
+  .bg-window.bg-hot{outline:3px dashed #ff6b81;outline-offset:-3px;background:rgba(255,255,255,.16)}
+  .bg-fg{position:absolute;inset:0;z-index:15;pointer-events:none;background:url(${SHOP_BG}) 0 0/100% 100% no-repeat;clip-path:inset(62% 0 0 0)}   /* โต๊ะ+ขอบหน้าต่าง ทับตัวลูกค้า */
+  .bg-cust{position:absolute;bottom:33.5%;height:46%;transition:left ${WALK_MS}ms ease-in-out}
+  .bg-cust img{height:100%;width:auto;display:block;filter:drop-shadow(0 4px 6px rgba(70,30,10,.35))}
+  .bg-cust.walk img{animation:bgBob .35s ease-in-out infinite alternate}
+  .bg-cust.q{filter:brightness(.85)}
+  .bg-cust.shake{animation:bgShake .4s}
+  .bg-mood{position:absolute;left:50%;top:-12px;transform:translateX(-50%);font-size:26px}
+
+  /* ถาดกลางโต๊ะ: โซนวางวัตถุดิบ (ใหญ่กว่าถาดนิดหน่อยให้วางง่าย) + ไฮไลต์รูปถาดตอนลากมาเหนือ */
+  .bg-platezone{position:absolute;left:21.9%;top:50%;width:57.3%;height:44%;z-index:16}
+  .bg-platezone.bg-hot{outline:none}
+  .bg-trayzone{position:absolute;left:0;width:100%;top:46.2%;height:51.2%;background:rgba(255,255,255,.55);
+    clip-path:polygon(15% 0,86% 0,100% 100%,0 100%);opacity:0;transition:opacity .15s}
+  .bg-platezone.bg-hot .bg-trayzone{opacity:1;animation:bgZone .7s ease-in-out infinite alternate}
+  .bg-trayhint{position:absolute;left:21.9%;width:57.3%;top:78%;z-index:17;text-align:center;pointer-events:none;font-size:11px;font-weight:600;line-height:1.3;
+    color:#b5504a;text-shadow:0 1px 0 rgba(255,255,255,.7);padding:0 14%}
+  .bg-stack.bg-pstack{position:absolute;left:50.6%;bottom:13%;width:32%;min-height:0;transform:translateX(-50%);z-index:18;cursor:grab}
+  .bg-pstack.has::after{content:"";position:absolute;left:12%;right:12%;bottom:-5px;height:12px;border-radius:50%;background:rgba(80,30,10,.3);z-index:0}
+
+  /* ฝั่งซ้ายของโต๊ะ: ตู้กดน้ำ + แก้วเปล่า */
+  .bg-left{position:absolute;left:0;bottom:7%;width:23%;z-index:20;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .bg-disp{position:relative;width:100%;border-radius:10px}
+  .bg-disp>img{width:100%;height:auto;display:block;pointer-events:none}
+  .bg-dtray{position:absolute;left:50%;transform:translateX(-50%);bottom:17%;height:43%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+  .bg-dtray img{height:100%;width:auto;touch-action:none}
+  .bg-dtray img.ready{cursor:grab;animation:bgPulse .8s ease-in-out infinite alternate}
+  .bg-prog{position:absolute;left:-6px;right:-6px;bottom:-9px;height:6px;background:#2b2b35;border-radius:4px;overflow:hidden;border:1px solid #fff}
+  .bg-prog i{display:block;height:100%;width:0;background:#7df9ff;animation:bgProg ${FILL_TIME}s linear forwards}
+  .bg-cups{width:100%;display:flex;flex-direction:column;align-items:center;font-size:9px;font-weight:600;color:#fff3df;text-shadow:0 1px 2px rgba(90,25,0,.85)}
+  .bg-cups img{width:34%;height:auto;display:block;touch-action:none;cursor:grab;filter:drop-shadow(0 3px 2px rgba(60,20,0,.35))}
+
+  /* ฝั่งขวาของโต๊ะ: เฟรนฟราย (กองใหญ่ + กล่อง) */
+  .bg-right{position:absolute;right:0;bottom:7%;width:21%;z-index:20;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .bg-pile{width:86%;height:auto;display:block;touch-action:none;cursor:grab;filter:drop-shadow(0 3px 2px rgba(60,20,0,.3))}
+  .bg-box{width:70%;padding:3px;border-radius:10px;display:flex;justify-content:center}
+  .bg-box img{width:100%;height:auto;display:block;touch-action:none;filter:drop-shadow(0 3px 2px rgba(60,20,0,.3))}
+
+  /* บับเบิลออเดอร์ / ข้อมูล / ข้อความ */
+  .bg-bub{display:none;position:absolute;left:57%;top:max(30px,14%);width:35%;min-width:118px;z-index:18;background:#fff;border:3px solid #7a4a22;border-radius:14px;padding:5px 7px 6px;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+  .bg-bub::before{content:"";position:absolute;left:-11px;bottom:16px;border:7px solid transparent;border-right:9px solid #7a4a22}
+  .bg-pat{height:6px;border-radius:4px;background:#e9dfcd;overflow:hidden;margin-bottom:4px}
+  .bg-pat i{display:block;height:100%;width:100%;background:#4bbf73}
+  .bg-bub-row{display:flex;align-items:flex-end;justify-content:center;gap:8px}
+  .bg-mini{position:relative;width:56px;flex:none}
+  .bg-sides{display:flex;flex-direction:column;gap:3px;align-items:center}
+  .bg-sides span{position:relative}
+  .bg-sides img{height:34px;display:block}
+  .bg-sides span.ok img,.bg-mini.ok .bg-stack{opacity:.35}
+  .bg-sides span.ok::after,.bg-mini.ok::after{content:"✅";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:20px}
+  .bg-info{position:absolute;left:50%;top:6px;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:600;color:#6b4423;background:rgba(255,255,255,.82);padding:1px 9px;border-radius:9px;z-index:20;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .bg-toast{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) scale(.9);z-index:25;background:rgba(40,30,20,.9);color:#fff;font-size:13px;padding:6px 14px;border-radius:14px;opacity:0;pointer-events:none;transition:.2s;text-align:center;max-width:90%}
+  .bg-toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  .bg-stack{position:relative;width:100%;min-height:34px;touch-action:none;z-index:2}
+  .bg-stack img{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none}
+
+  /* --- ใต้โต๊ะ: ตู้เก็บวัตถุดิบ (แถวแนวนอน) --- */
+  .bg-under{flex:1;min-height:0;margin:0 -12px;padding:12px 12px calc(env(safe-area-inset-bottom) + 10px);display:flex;flex-direction:column;justify-content:flex-start;gap:9px;
+    background:linear-gradient(#8f2e0e 0,#7a2609 45%,#611d07 100%);box-shadow:inset 0 5px 7px -3px rgba(0,0,0,.35)}
+  .bg-under-title{text-align:center;font-size:10px;font-weight:600;color:#ffd9b0;opacity:.9}
+  .bg-ing{display:flex;gap:4px;justify-content:space-between;padding:6px 5px 7px;border-radius:14px;background:rgba(40,10,0,.32);box-shadow:inset 0 2px 5px rgba(0,0,0,.4),0 1px 0 rgba(255,190,130,.22)}
+  .bg-ing-b{flex:1;min-width:0;background:#fff8ea;border:2px solid #f0d3a6;border-radius:12px;padding:5px 2px 3px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;box-shadow:0 3px 0 #c98f4c;touch-action:none;cursor:grab}
+  .bg-ing-b:active{transform:translateY(2px);box-shadow:0 1px 0 #c98f4c}
+  .bg-ing-b img{width:90%;height:clamp(30px,6.2dvh,54px);object-fit:contain;pointer-events:none}
+  .bg-ing-b span{font-size:10px;font-weight:600;color:#5b3a16;white-space:nowrap;pointer-events:none}
+  .bg-bottom{display:flex;gap:8px;align-items:stretch}
+  .bg-bottom button,.bg-trash{flex:1;border-radius:12px;border:2px solid #f1c88f;background:#fff8ea;font-family:inherit;font-size:12px;font-weight:600;padding:10px 4px;color:#5b3a16;box-shadow:0 3px 0 #c98f4c;text-align:center;cursor:pointer}
+  .bg-trash{background:#fde8e8;border-color:#f0b5b5;box-shadow:0 3px 0 #d79a9a;color:#8a2a2a}
+  .bg-bottom button:active{transform:translateY(2px);box-shadow:none}
+  .bg-hot{outline:3px dashed #ff6b81;outline-offset:-3px}
+  .bg-ghost{position:absolute;pointer-events:none;z-index:300;transform:translate(-50%,-65%);filter:drop-shadow(0 8px 6px rgba(0,0,0,.35))}
+  .bg-ghost img{display:block}
+  .bg-intro{position:absolute;inset:0;z-index:400;background:rgba(40,25,10,.72);display:flex;align-items:center;justify-content:center;padding:20px}
+  .bg-intro-card{background:#fff9ee;border-radius:22px;padding:18px 16px;max-width:340px;text-align:center;box-shadow:0 14px 30px rgba(0,0,0,.4)}
+  .bg-intro-card h3{margin:0 0 8px;font-size:18px;color:#8a3b12}
+  .bg-intro-card p{margin:0 0 6px;font-size:13px;line-height:1.5;color:#3b3a45;text-align:left}
+  .bg-intro-card button{margin-top:8px;border:none;border-radius:16px;padding:10px 26px;font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:#3f9463;box-shadow:0 4px 0 #2d6b47;cursor:pointer}
+  @media (max-height:700px){
+    .bg-ing-b span{display:none}.bg-ing-b img{height:28px}
+    .bg-under{gap:6px;padding-top:6px}.bg-bottom button,.bg-trash{padding:5px 4px}
+  }
+  @keyframes bgBob{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+  @keyframes bgShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  @keyframes bgProg{from{width:0}to{width:100%}}
+  @keyframes bgPulse{from{transform:scale(1)}to{transform:scale(1.07)}}
+  @keyframes bgZone{from{background:rgba(255,255,255,.35)}to{background:rgba(255,255,255,.7)}}
+  `;
+  const stEl = document.createElement('style'); stEl.textContent = css; document.head.appendChild(stEl);
+
+  /* ---------- HTML ---------- */
+  const host = document.getElementById('dashboard') || document.body;
+  host.insertAdjacentHTML('beforeend', `
+  <div class="bg-screen" id="burgerScreen">
+    <div class="mg-top-bar">
+      <button class="back-btn" onclick="closeBurgerScreen()" aria-label="ย้อนกลับ"><img src="Icon/back.png" alt="ย้อนกลับ"></button>
+      <div class="mg-title">🍔 ร้านเบอร์เกอร์</div>
+      <div class="mg-coin-chip">💰 <span id="bgEarn" class="num">+0</span></div>
+    </div>
+    <div class="bg-scene" id="bgScene">
+      <div class="bg-stage" id="bgStage">
+        <div class="bg-lane" id="bgCusts"></div>
+        <div class="bg-window" data-drop="window"></div>
+        <div class="bg-fg"></div>
+
+        <!-- ซ้ายบนโต๊ะ: ตู้กดน้ำ + แก้วเปล่า -->
+        <div class="bg-left">
+          <div class="bg-disp" data-drop="disp"><img src="${IMG}cola_dispenser.png" alt=""><div class="bg-dtray" id="bgDTray"></div></div>
+          <div class="bg-cups"><img src="${IMG}cup_empty.png" alt="" data-drag="cup"><span>แก้วเปล่า</span></div>
+        </div>
+
+        <!-- กลางโต๊ะ: ถาด = ที่เรียงเบอร์เกอร์ -->
+        <div class="bg-platezone" data-drop="plate"><div class="bg-trayzone"></div></div>
+        <div class="bg-trayhint" id="bgTrayHint">⬇ ลากวัตถุดิบจากใต้โต๊ะ<br>ขึ้นมาเรียงบนถาด</div>
+        <div class="bg-stack bg-pstack" id="bgStack" data-drag="stack"></div>
+
+        <!-- ขวาบนโต๊ะ: เฟรนฟราย -->
+        <div class="bg-right">
+          <div class="bg-box" data-drop="box"><img id="bgBoxImg" src="${IMG}fries_box_empty.png" alt=""></div>
+          <img class="bg-pile" src="${IMG}fries_pile_big.png" alt="" data-drag="pile">
+        </div>
+      </div>
+      <div class="bg-bub" id="bgBubble"></div>
+      <div class="bg-info" id="bgInfo"></div>
+      <div class="bg-toast" id="bgToast"></div>
+    </div>
+
+    <!-- ใต้โต๊ะ: วัตถุดิบแนวนอน -->
+    <div class="bg-under">
+      <div class="bg-under-title">🧺 วัตถุดิบใต้โต๊ะ · ลากขึ้นไปวางบนถาด (แตะก็ใส่ได้)</div>
+      <div class="bg-ing" id="bgIng"></div>
+      <div class="bg-bottom"><button id="bgUndo" type="button">↩ เอาชั้นบนสุดออก</button><div class="bg-trash" data-drop="trash">🗑 ลากมาทิ้ง</div></div>
+    </div>
+
+    <div class="bg-intro" id="bgIntro"><div class="bg-intro-card">
+      <h3>🍔 เปิดร้านเบอร์เกอร์!</h3>
+      <p>1) ดูออเดอร์ในบับเบิลของลูกค้า แล้ว<b>ลากวัตถุดิบจากใต้โต๊ะขึ้นมาเรียงบนถาด</b>ให้ตรง (แตะก็ใส่ได้)</p>
+      <p>2) <b>เฟรนฟราย (ขวา):</b> กดค้างกองเฟรนฟราย แล้วลากไปใส่กล่องเปล่า</p>
+      <p>3) <b>โคล่า (ซ้าย):</b> ลากแก้วเปล่าไปที่ตู้กดน้ำ รอ ${FILL_TIME} วิ ได้โคล่าเต็มแก้ว</p>
+      <p>4) ลาก<b>เบอร์เกอร์บนถาด / กล่องเฟรนฟราย / แก้วโคล่า</b>ไปวางที่<b>ช่องหน้าต่าง</b>เพื่อเสิร์ฟลูกค้า · ลูกค้ามาใหม่ทุก ${CUSTOMER_INTERVAL >= 60 ? Math.round(CUSTOMER_INTERVAL / 60) + ' นาที' : CUSTOMER_INTERVAL + ' วินาที'} หรือทันทีที่เสิร์ฟลูกค้าเสร็จ · บางทีก็มาไวกว่านั้น · <b>เสิร์ฟเบอร์เกอร์ผิด ลูกค้าจะโกรธเดินหนีเลย</b></p>
+      <button type="button" id="bgStartBtn">เริ่มเปิดร้าน 🍔</button>
+    </div></div>
+  </div>`);
+
+  const $ = id => document.getElementById(id);
+  const screen = $('burgerScreen');
+  let G = null;
+
+  /* ---------- วาดชั้นเบอร์เกอร์ ---------- */
+  function stackMarkup(layers, k, maxH) {
+    if (!layers.length) return { html: '', h: 0 };
+    let tot = 0; layers.forEach((id, i) => { if (i < layers.length - 1) tot += LAYERS[id].t; });
+    const L = LAYERS[layers[layers.length - 1]];
+    const H1 = tot + L.w * L.a;
+    let s = k; if (maxH && H1 * k > maxH) s = maxH / H1;
+    let y = 0, html = '';
+    layers.forEach((id, i) => {
+      const l = LAYERS[id];
+      html += `<img src="${IMG}${l.img}.png" alt="" draggable="false" style="width:${(l.w * s).toFixed(1)}px;bottom:${Math.max(0, y + (l.dy || 0) * s).toFixed(1)}px;z-index:${i + 1}">`;
+      y += l.t * s;
+    });
+    return { html, h: H1 * s };
+  }
+  function paintStack(el, layers, k, maxH) {
+    const r = stackMarkup(layers, k, maxH);
+    el.style.height = r.h ? r.h.toFixed(1) + 'px' : '';
+    el.innerHTML = r.html;
+  }
+
+  /* ---------- วัตถุดิบ ---------- */
+  $('bgIng').innerHTML = ING_ORDER.map(id =>
+    `<button class="bg-ing-b" type="button" data-drag="ing:${id}"><img src="${IMG}${LAYERS[id].img}.png" alt=""><span>${LAYERS[id].name}</span></button>`).join('');
+
+  /* ---------- ข้อความ ---------- */
+  let toastT = 0;
+  function toast(msg) {
+    const t = $('bgToast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1900);
+  }
+
+  /* ---------- ออเดอร์ / ลูกค้า ---------- */
+  function mkOrder() {
+    const pool = ['lettuce', 'cheese', 'onion', 'tomato'];
+    let o;
+    for (let n = 0; n < 30; n++) {
+      const shuffle = a => a.sort(() => Math.random() - .5);
+      const mid = ['patty'];
+      if (Math.random() < TALL_CHANCE) {            // ออเดอร์เบอร์เกอร์สูง: รวม 9–11 ชั้น (เนื้อ 2–3 แผ่น + ผักหลายชั้น)
+        const total = 9 + Math.floor(Math.random() * 3), np = 2 + Math.floor(Math.random() * 2);
+        mid.length = 0;
+        for (let i = 0; i < np; i++) mid.push('patty');
+        mid.push(...shuffle(pool.concat(pool)).slice(0, total - 2 - np));
+      } else {
+        if (Math.random() < .25) mid.push('patty');
+        mid.push(...shuffle(pool.slice()).slice(0, Math.floor(Math.random() * 4)));
+      }
+      o = { layers: ['bunB', ...shuffle(mid), 'bunT'], fries: Math.random() < .55, cola: Math.random() < .55 };
+      const sig = o.layers.join() + o.fries + o.cola;
+      if (sig !== G.lastSig) { G.lastSig = sig; break; }
+    }
+    return o;
+  }
+  // หารูปลูกค้าทั้งหมดที่มีจริง (customer_1.png ... customer_N.png) ครั้งเดียวแล้วจำไว้
+  let avatarsP = null;
+  function loadAvatars() {
+    if (!avatarsP) avatarsP = Promise.all(Array.from({ length: CUSTOMER_MAX_PROBE }, (_, i) => new Promise(res => {
+      const im = new Image(); im.onload = () => res(i + 1); im.onerror = () => res(0); im.src = `${IMG}customer_${i + 1}.png`;
+    }))).then(a => { const l = a.filter(Boolean); return l.length ? l : [1, 2, 3, 4, 5]; });
+    return avatarsP;
+  }
+  function pickAvatar() {
+    const all = G.avatars || [1, 2, 3, 4, 5], used = G.custs.map(c => c.av);
+    let pool = all.filter(a => a !== G.lastAv && !used.includes(a));   // ไม่ซ้ำคนก่อนหน้า/คนที่ยืนอยู่
+    if (!pool.length) pool = all.filter(a => a !== G.lastAv);
+    if (!pool.length) pool = all;
+    const a = pool[Math.floor(Math.random() * pool.length)];
+    G.lastAv = a; return a;
+  }
+  function resetNext() { G.spawnIn = CUSTOMER_INTERVAL; G.rushRolled = false; }   // เริ่มนับรอบใหม่ (ยังไม่ได้สุ่มมาเร็ว)
+  function spawn() {
+    const c = { state: 'walk', served: {}, order: mkOrder(), pat: PATIENCE, av: pickAvatar() };
+    const el = document.createElement('div');
+    el.className = 'bg-cust walk'; el.style.left = '-30%';
+    el.innerHTML = `<img src="${IMG}customer_${c.av}.png" alt="" draggable="false">`;
+    $('bgCusts').appendChild(el); c.el = el; G.custs.push(c);
+    requestAnimationFrame(() => requestAnimationFrame(layout));
+  }
+  function layout() {
+    if (!G) return;
+    G.custs.forEach((c, i) => {
+      c.el.style.left = POS[Math.min(i, POS.length - 1)] + '%';
+      c.el.style.zIndex = 10 - i;
+      c.el.classList.toggle('q', i > 0);
+      if (c.slot !== i) {                       // เปลี่ยนตำแหน่งในคิว → เดินไปที่ใหม่
+        c.slot = i; c.arrived = false; clearTimeout(c.arr); c.el.classList.add('walk');
+        c.arr = setTimeout(() => { c.arr = 0; if (!G || c.state === 'leave') return; c.arrived = true; c.el.classList.remove('walk'); layout(); }, WALK_MS + 100);
+      }
+    });
+    const f = G.custs[0];
+    if (f && f.arrived && f.state === 'walk') { f.state = 'wait'; showBubble(f); }
+    renderInfo();
+  }
+  function showBubble(c) {
+    const b = $('bgBubble');
+    if (!c || G.custs[0] !== c || c.state !== 'wait') { b.style.display = 'none'; return; }
+    const o = c.order;
+    b.innerHTML = `<div class="bg-pat"><i id="bgPatI"></i></div><div class="bg-bub-row">
+      <div class="bg-mini ${c.served.burger ? 'ok' : ''}"><div class="bg-stack" id="bgMini"></div></div>
+      <div class="bg-sides">${o.fries ? `<span class="${c.served.fries ? 'ok' : ''}"><img src="${IMG}fries_box_full.png" alt=""></span>` : ''}${o.cola ? `<span class="${c.served.cola ? 'ok' : ''}"><img src="${IMG}cola_full.png" alt=""></span>` : ''}</div></div>`;
+    paintStack($('bgMini'), o.layers, .4, 100);
+    b.style.display = 'block';
+    updatePatience(c);
+  }
+  function updatePatience(c) {
+    const i = $('bgPatI'); if (!i) return;
+    const p = Math.max(0, c.pat / PATIENCE); i.style.width = (p * 100) + '%';
+    i.style.background = p > .5 ? '#4bbf73' : p > .25 ? '#f4b63c' : '#e74f66';
+  }
+  function renderInfo() {
+    if (!G) return;
+    const next = G.custs.length >= MAX_QUEUE ? 'คิวเต็ม' : `คนต่อไปใน ${Math.ceil(G.spawnIn)} วิ`;
+    $('bgInfo').textContent = `เสิร์ฟแล้ว ${G.served} · พลาด ${G.missed} · ${next}`;
+  }
+  function leave(c, happy) {
+    G.custs = G.custs.filter(x => x !== c); c.state = 'leave';
+    clearTimeout(c.arr);
+    $('bgBubble').style.display = 'none';
+    c.el.classList.add('walk'); c.el.classList.remove('q'); c.el.style.left = '112%';
+    c.el.insertAdjacentHTML('beforeend', `<div class="bg-mood">${happy ? '😊' : '😤'}</div>`);
+    setTimeout(() => c.el.remove(), WALK_MS + 300);
+    layout();
+  }
+
+  /* ---------- เสิร์ฟ (ลากไปวางที่ช่องหน้าต่าง) ---------- */
+  function reject(c, msg) {
+    toast(msg);
+    if (c) { c.el.classList.remove('shake'); void c.el.offsetWidth; c.el.classList.add('shake'); }
+    return false;
+  }
+  function serve(kind) {
+    const c = G.custs[0];
+    if (!c || c.state !== 'wait') return reject(null, 'ยังไม่มีลูกค้ารออยู่ที่หน้าต่าง 🕐');
+    const o = c.order;
+    if (kind === 'burger') {
+      if (c.served.burger) return reject(c, 'ส่งเบอร์เกอร์ไปแล้วนะ');
+      if (G.layers.join() !== o.layers.join()) {   // เสิร์ฟเบอร์เกอร์ผิด → ลูกค้าโกรธ เดินหนีทันที (นับเป็นพลาด, เบอร์เกอร์ถูกส่งไปแล้ว)
+        G.missed++; toast('😡 เบอร์เกอร์ไม่ตรงออเดอร์! ลูกค้าโกรธแล้วเดินหนี');
+        leave(c, false);
+        if (G.running && G.custs.length < MAX_QUEUE) { spawn(); resetNext(); }   // เสิร์ฟพลาด → ลูกค้าคนใหม่มาทันที
+        return true;
+      }
+    } else {
+      if (!o[kind]) return reject(c, kind === 'fries' ? 'ลูกค้าไม่ได้สั่งเฟรนฟราย' : 'ลูกค้าไม่ได้สั่งโคล่า');
+      if (c.served[kind]) return reject(c, 'ส่งไปแล้วนะ');
+    }
+    c.served[kind] = true;
+    showBubble(c);
+    if (c.served.burger && (!o.fries || c.served.fries) && (!o.cola || c.served.cola)) finishOrder(c);
+    else toast(`ส่ง${KIND_NAME[kind]}ให้ลูกค้าแล้ว ✅`);
+    return true;
+  }
+  function finishOrder(c) {
+    const o = c.order, extras = o.layers.length - 3;
+    let coin = 30 + 8 * extras + (o.fries ? 25 : 0) + (o.cola ? 25 : 0);
+    if (c.pat > PATIENCE * .5) coin += 10;   // เสิร์ฟไว = ทิป
+    const xp = Math.round(coin / 3);
+    G.served++; G.earn += coin;
+    $('bgEarn').textContent = '+' + G.earn;
+    if (window.BurgerHost) window.BurgerHost.reward(coin, xp);
+    toast(`😊 ลูกค้าพอใจ! +${coin} 💰 +${xp} ⭐`);
+    leave(c, true);
+    if (G.running && G.custs.length < MAX_QUEUE) { spawn(); resetNext(); }   // เสิร์ฟเสร็จ → ลูกค้าคนใหม่มาทันที (รีเซ็ตเวลานับถอยหลัง)
+  }
+
+  /* ---------- สถานี ---------- */
+  const stackK = () => ($('bgStage').clientWidth || 360) * STACK_W;                 // สเกลเบอร์เกอร์บนถาด
+  const stackMaxH = () => ($('bgStage').clientHeight || 340) * STACK_MAX_H;          // ความสูงสูงสุดของเบอร์เกอร์บนถาด
+  function renderPlate() {
+    const el = $('bgStack'), n = G ? G.layers.length : 0;
+    paintStack(el, G ? G.layers : [], stackK(), stackMaxH());
+    el.classList.toggle('has', n > 0);
+    $('bgTrayHint').style.display = n ? 'none' : '';
+  }
+  function renderBox() {
+    const im = $('bgBoxImg');
+    im.src = IMG + (G.box === 'full' ? 'fries_box_full.png' : 'fries_box_empty.png');
+    if (G.box === 'full') im.setAttribute('data-drag', 'box'); else im.removeAttribute('data-drag');
+  }
+  function renderDisp() {
+    const t = $('bgDTray');
+    if (G.disp === 'filling') t.innerHTML = `<img src="${IMG}cup_empty.png" alt=""><div class="bg-prog"><i></i></div>`;
+    else if (G.disp === 'ready') t.innerHTML = `<img class="ready" src="${IMG}cola_full.png" alt="" data-drag="cola">`;
+    else t.innerHTML = '';
+  }
+  function addLayer(id) {
+    if (G.layers.length >= MAX_LAYERS) return toast('เบอร์เกอร์สูงเกินไปแล้ว!');
+    G.layers.push(id); renderPlate();
+  }
+  function startFill() {
+    G.disp = 'filling'; renderDisp(); clearTimeout(G.dt);
+    G.dt = setTimeout(() => { if (G && G.running) { G.disp = 'ready'; renderDisp(); } }, FILL_TIME * 1000);
+  }
+
+  /* ---------- ลากวาง ---------- */
+  function beginDrag(ev, o) {
+    ev.preventDefault();
+    const r = screen.getBoundingClientRect();
+    const g = document.createElement('div'); g.className = 'bg-ghost'; g.innerHTML = o.html; screen.appendChild(g);
+    const sx = ev.clientX, sy = ev.clientY; let moved = false, hot = null;
+    const pos = e => { g.style.left = (e.clientX - r.left) + 'px'; g.style.top = (e.clientY - r.top) + 'px'; };
+    // หาโซนที่รับของชิ้นนี้ได้ จากทุกชั้นที่ซ้อนกันใต้นิ้ว (ไม่ให้ตู้น้ำ/ถาดบังช่องหน้าต่างที่อยู่ข้างหลัง)
+    const zoneAt = e => {
+      for (const t of document.elementsFromPoint(e.clientX, e.clientY)) {
+        const z = t.closest && t.closest('[data-drop]');
+        if (z && o.ok.includes(z.dataset.drop)) return z;
+      }
+      return null;
+    };
+    pos(ev);
+    const mv = e => {
+      if (Math.hypot(e.clientX - sx, e.clientY - sy) > 8) moved = true;
+      pos(e); const z = zoneAt(e);
+      if (z !== hot) { if (hot) hot.classList.remove('bg-hot'); hot = z; if (hot) hot.classList.add('bg-hot'); }
+    };
+    const end = e => {
+      window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end);
+      if (hot) hot.classList.remove('bg-hot'); g.remove();
+      if (!G || !G.running) return;
+      const z = e.type === 'pointercancel' ? null : zoneAt(e);
+      o.drop(z ? z.dataset.drop : null, moved);
+    };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
+  }
+  const gImg = (src, w) => `<img src="${IMG}${src}.png" alt="" style="width:${w}px">`;
+
+  screen.addEventListener('pointerdown', e => {
+    if (!G || !G.running || e.button > 0) return;
+    const el = e.target.closest('[data-drag]'); if (!el) return;
+    const k = el.dataset.drag;
+    if (k.startsWith('ing:')) {
+      const id = k.slice(4);
+      beginDrag(e, { html: gImg(LAYERS[id].img, Math.round(LAYERS[id].w * stackK())), ok: ['plate'], drop: (z, moved) => { if (!moved || z === 'plate') addLayer(id); } });
+    } else if (k === 'stack') {
+      if (!G.layers.length) return;
+      const kk = stackK() * .8, r = stackMarkup(G.layers, kk, 0);
+      beginDrag(e, { html: `<div class="bg-stack" style="width:${Math.round(140 * kk)}px;height:${r.h}px">${r.html}</div>`, ok: ['window', 'trash'],
+        drop: z => { if (z === 'window') { if (serve('burger')) { G.layers = []; renderPlate(); } } else if (z === 'trash') { G.layers = []; renderPlate(); toast('ทิ้งเบอร์เกอร์แล้ว 🗑'); } } });
+    } else if (k === 'pile') {
+      beginDrag(e, { html: gImg('fries_pile_small', 78), ok: ['box'],
+        drop: z => { if (z !== 'box') return; if (G.box === 'full') toast('กล่องเต็มแล้ว ส่งให้ลูกค้าก่อนนะ'); else { G.box = 'full'; renderBox(); } } });
+    } else if (k === 'box') {
+      beginDrag(e, { html: gImg('fries_box_full', 74), ok: ['window', 'trash'],
+        drop: z => { if (z === 'window') { if (serve('fries')) { G.box = 'empty'; renderBox(); } } else if (z === 'trash') { G.box = 'empty'; renderBox(); toast('ทิ้งเฟรนฟรายแล้ว 🗑'); } } });
+    } else if (k === 'cup') {
+      beginDrag(e, { html: gImg('cup_empty', 56), ok: ['disp'],
+        drop: z => { if (z !== 'disp') return; if (G.disp !== 'idle') toast('เครื่องกดน้ำยังไม่ว่าง'); else startFill(); } });
+    } else if (k === 'cola') {
+      beginDrag(e, { html: gImg('cola_full', 52), ok: ['window', 'trash'],
+        drop: z => { if (z === 'window') { if (serve('cola')) { G.disp = 'idle'; renderDisp(); } } else if (z === 'trash') { G.disp = 'idle'; renderDisp(); toast('ทิ้งโคล่าแล้ว 🗑'); } } });
+    }
+  });
+  screen.addEventListener('contextmenu', e => e.preventDefault());
+  $('bgUndo').addEventListener('click', () => { if (G && G.running && G.layers.length) { G.layers.pop(); renderPlate(); } });
+  // หมุนจอ/ย่อขยาย → วาดเบอร์เกอร์บนถาดใหม่ให้ได้สเกลพอดีกับฉาก
+  window.addEventListener('resize', () => { if (G && screen.style.display === 'flex') renderPlate(); });
+  if (window.ResizeObserver) new ResizeObserver(() => { if (G && screen.style.display === 'flex') renderPlate(); }).observe($('bgStage'));
+
+  /* ---------- วงจรเกม ---------- */
+  function tick() {
+    if (!G || !G.running) return;
+    const dt = .25;
+    G.spawnIn -= dt;
+    if (!G.rushRolled && CUSTOMER_INTERVAL - G.spawnIn >= RUSH_AFTER) {   // รอครบ 20 วิ → สุ่มครั้งเดียว 20% ว่าคนต่อไปมาเลย
+      G.rushRolled = true;
+      if (Math.random() < RUSH_CHANCE) G.spawnIn = 0;
+    }
+    if (G.spawnIn <= 0) { resetNext(); if (G.custs.length < MAX_QUEUE) spawn(); }
+    const c = G.custs[0];
+    if (c && c.state === 'wait') {
+      c.pat -= dt; updatePatience(c);
+      if (c.pat <= 0) { G.missed++; toast('😤 ลูกค้ารอนานเกินไปแล้วกลับไป'); leave(c, false); }
+    }
+    renderInfo();
+  }
+  function startGame() {
+    const g = G; if (!g || g.running || g.starting) return;
+    g.starting = true; $('bgStartBtn').textContent = 'กำลังเตรียมร้าน...';
+    loadAvatars().then(list => {
+      if (G !== g) return;                    // ปิดเกมไประหว่างโหลด
+      g.avatars = list; g.starting = false; $('bgStartBtn').textContent = 'เริ่มเปิดร้าน 🍔';
+      $('bgIntro').style.display = 'none';
+      g.running = true; g.spawnIn = 0.1;
+      g.loop = setInterval(tick, 250);
+    });
+  }
+  function resetState() {
+    if (G) { clearInterval(G.loop); clearTimeout(G.dt); G.custs.forEach(c => { clearTimeout(c.arr); c.el.remove(); }); }
+    G = { running: false, layers: [], box: 'empty', disp: 'idle', custs: [], spawnIn: CUSTOMER_INTERVAL, rushRolled: true, served: 0, missed: 0, earn: 0, lastSig: '', lastAv: 0, loop: 0, dt: 0 };
+    $('bgCusts').innerHTML = ''; $('bgBubble').style.display = 'none';
+    $('bgEarn').textContent = '+0';
+    renderPlate(); renderBox(); renderDisp(); renderInfo();
+  }
+  $('bgStartBtn').addEventListener('click', startGame);
+
+  window.openBurgerScreen = function () {
+    resetState(); loadAvatars();
+    $('bgIntro').style.display = 'flex';
+    screen.style.display = 'flex';
+    renderPlate();                              // วัดขนาดฉากหลังจอแสดงแล้ว
+    requestAnimationFrame(renderPlate);
+  };
+  window.closeBurgerScreen = function () {
+    if (G) { G.running = false; clearInterval(G.loop); clearTimeout(G.dt); }
+    resetState();
+    screen.style.display = 'none';
+    if (window.BurgerHost) window.BurgerHost.closed();
+  };
 })();
