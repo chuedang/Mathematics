@@ -4554,12 +4554,12 @@ window.closeConicScreen = closeConic;
   // ชั้นเบอร์เกอร์: w = ความกว้างบนจาน(px), t = ความหนาที่เห็นก่อนชั้นถัดไปมาทับ(px), a = สัดส่วนสูง/กว้างของรูป, dy = เลื่อนรูปลง(ค่าลบ, px) ให้แนบกับชั้นข้างล่าง
     const LAYERS = {
     bunB:   { img: 'bun_bottom', name: 'ขนมปังล่าง', w: 112, t: 22, a: 170 / 339 },
-    patty:  { img: 'patty', name: 'เนื้อ', w: 120, t: 22, a: 180 / 339 },
+    patty:  { img: 'patty', name: 'เนื้อ', w: 120, t: 21, a: 180 / 339 },
     lettuce:{ img: 'lettuce', name: 'ผัก', w: 128, t: 14, a: 196 / 340 },
-    cheese: { img: 'cheese', name: 'ชีส', w: 128, t: 17, dy: -20, a: 179 / 340 },
+    cheese: { img: 'cheese', name: 'ชีส', w: 128, t: 8, dy: -21, a: 179 / 340 },
     onion:  { img: 'onion', name: 'หอมใหญ่', w: 122, t: 17, a: 155 / 300 },
-    tomato: { img: 'tomato', name: 'มะเขือเทศ', w: 122, t: 3, dy: -13, a: 182 / 294 },
-    bunT:   { img: 'bun_top', name: 'ขนมปังบน', w: 127, t: 40, a: 183 / 340 }
+    tomato: { img: 'tomato', name: 'มะเขือเทศ', w: 108, t: 12, a: 182 / 294 },
+    bunT:   { img: 'bun_top', name: 'ขนมปังบน', w: 132, t: 40, a: 183 / 340 }
   };
   const ING_ORDER = ['bunB', 'patty', 'lettuce', 'cheese', 'onion', 'tomato', 'bunT'];
   const KIND_NAME = { burger: 'เบอร์เกอร์', fries: 'เฟรนฟราย', cola: 'โคล่า' };
@@ -4642,15 +4642,19 @@ window.closeConicScreen = closeConic;
   .bg-under{flex:1;min-height:0;margin:0 -12px;padding:12px 12px calc(env(safe-area-inset-bottom) + 10px);display:flex;flex-direction:column;justify-content:flex-start;gap:9px;
     background:linear-gradient(#8f2e0e 0,#7a2609 45%,#611d07 100%);box-shadow:inset 0 5px 7px -3px rgba(0,0,0,.35)}
   .bg-under-title{text-align:center;font-size:10px;font-weight:600;color:#ffd9b0;opacity:.9}
-  .bg-ing{display:flex;gap:4px;justify-content:space-between;padding:6px 5px 7px;border-radius:14px;background:rgba(40,10,0,.32);box-shadow:inset 0 2px 5px rgba(0,0,0,.4),0 1px 0 rgba(255,190,130,.22)}
-  .bg-ing-b{flex:1;min-width:0;background:#fff8ea;border:2px solid #f0d3a6;border-radius:12px;padding:5px 2px 3px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;box-shadow:0 3px 0 #c98f4c;touch-action:none;cursor:grab}
+  /* วัตถุดิบเต็มพื้นที่ใต้โต๊ะ: กริด 4 คอลัมน์ ยืดตามความสูงที่เหลือ · ช่องที่ 8 (ขวาล่าง) = ถังขยะเล็ก */
+  .bg-ing{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:8px;padding:8px;border-radius:14px;background:rgba(40,10,0,.32);box-shadow:inset 0 2px 5px rgba(0,0,0,.4),0 1px 0 rgba(255,190,130,.22)}
+  .bg-ing-b{min-width:0;min-height:0;background:#fff8ea;border:2px solid #f0d3a6;border-radius:14px;padding:6px 4px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-shadow:0 3px 0 #c98f4c;touch-action:none;cursor:grab}
   .bg-ing-b:active{transform:translateY(2px);box-shadow:0 1px 0 #c98f4c}
-  .bg-ing-b img{width:90%;height:clamp(30px,6.2dvh,54px);object-fit:contain;pointer-events:none}
-  .bg-ing-b span{font-size:10px;font-weight:600;color:#5b3a16;white-space:nowrap;pointer-events:none}
-  .bg-bottom{display:flex;gap:8px;align-items:stretch}
-  .bg-bottom button,.bg-trash{flex:1;border-radius:12px;border:2px solid #f1c88f;background:#fff8ea;font-family:inherit;font-size:12px;font-weight:600;padding:10px 4px;color:#5b3a16;box-shadow:0 3px 0 #c98f4c;text-align:center;cursor:pointer}
-  .bg-trash{background:#fde8e8;border-color:#f0b5b5;box-shadow:0 3px 0 #d79a9a;color:#8a2a2a}
-  .bg-bottom button:active{transform:translateY(2px);box-shadow:none}
+  .bg-ing-b img{width:88%;flex:1 1 0;min-height:0;object-fit:contain;pointer-events:none}
+  .bg-ing-b span{font-size:12px;font-weight:600;color:#5b3a16;white-space:nowrap;pointer-events:none}
+  .bg-trashcell{min-width:0;min-height:0;display:flex;align-items:flex-end;justify-content:flex-end}
+  .bg-trash{position:relative;z-index:5;width:52px;height:52px;border-radius:50%;background:#fde8e8;border:2px solid #f0b5b5;box-shadow:0 3px 0 #d79a9a;color:#8a2a2a;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:24px;line-height:1;transform-origin:100% 100%;transition:transform .15s ease,background .15s;cursor:default}
+  .bg-trash::before{content:"";position:absolute;inset:-16px}   /* ขยายพื้นที่รับของให้ลากมาวางง่ายขึ้น */
+  .bg-trash b{display:none;font-size:11px;font-weight:700;margin-top:1px;white-space:nowrap}
+  .bg-trash.bg-hot{outline:none;transform:scale(2.4);background:#ffb3b3;border-color:#e46a6a}
+  .bg-trash.bg-hot b{display:block}
   .bg-hot{outline:3px dashed #ff6b81;outline-offset:-3px}
   .bg-ghost{position:absolute;pointer-events:none;z-index:300;transform:translate(-50%,-65%);filter:drop-shadow(0 8px 6px rgba(0,0,0,.35))}
   .bg-ghost img{display:block}
@@ -4660,8 +4664,8 @@ window.closeConicScreen = closeConic;
   .bg-intro-card p{margin:0 0 6px;font-size:13px;line-height:1.5;color:#3b3a45;text-align:left}
   .bg-intro-card button{margin-top:8px;border:none;border-radius:16px;padding:10px 26px;font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:#3f9463;box-shadow:0 4px 0 #2d6b47;cursor:pointer}
   @media (max-height:700px){
-    .bg-ing-b span{display:none}.bg-ing-b img{height:28px}
-    .bg-under{gap:6px;padding-top:6px}.bg-bottom button,.bg-trash{padding:5px 4px}
+    .bg-ing-b span{display:none}
+    .bg-under{gap:6px;padding-top:6px}
   }
   @keyframes bgBob{from{transform:translateY(0)}to{transform:translateY(-5px)}}
   @keyframes bgShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
@@ -4712,7 +4716,6 @@ window.closeConicScreen = closeConic;
     <div class="bg-under">
       <div class="bg-under-title">🧺 วัตถุดิบใต้โต๊ะ · ลากขึ้นไปวางบนถาด (แตะก็ใส่ได้)</div>
       <div class="bg-ing" id="bgIng"></div>
-      <div class="bg-bottom"><button id="bgUndo" type="button">↩ เอาชั้นบนสุดออก</button><div class="bg-trash" data-drop="trash">🗑 ลากมาทิ้ง</div></div>
     </div>
 
     <div class="bg-intro" id="bgIntro"><div class="bg-intro-card">
@@ -4752,7 +4755,8 @@ window.closeConicScreen = closeConic;
 
   /* ---------- วัตถุดิบ ---------- */
   $('bgIng').innerHTML = ING_ORDER.map(id =>
-    `<button class="bg-ing-b" type="button" data-drag="ing:${id}"><img src="${IMG}${LAYERS[id].img}.png" alt=""><span>${LAYERS[id].name}</span></button>`).join('');
+    `<button class="bg-ing-b" type="button" data-drag="ing:${id}"><img src="${IMG}${LAYERS[id].img}.png" alt=""><span>${LAYERS[id].name}</span></button>`).join('')
+    + '<div class="bg-trashcell"><div class="bg-trash" data-drop="trash">🗑<b>ทิ้ง!</b></div></div>';
 
   /* ---------- ข้อความ ---------- */
   let toastT = 0;
@@ -4983,7 +4987,6 @@ window.closeConicScreen = closeConic;
     }
   });
   screen.addEventListener('contextmenu', e => e.preventDefault());
-  $('bgUndo').addEventListener('click', () => { if (G && G.running && G.layers.length) { G.layers.pop(); renderPlate(); } });
   // หมุนจอ/ย่อขยาย → วาดเบอร์เกอร์บนถาดใหม่ให้ได้สเกลพอดีกับฉาก
   window.addEventListener('resize', () => { if (G && screen.style.display === 'flex') renderPlate(); });
   if (window.ResizeObserver) new ResizeObserver(() => { if (G && screen.style.display === 'flex') renderPlate(); }).observe($('bgStage'));
